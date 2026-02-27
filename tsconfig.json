@@ -1,0 +1,20 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./*"],
+      "theo-kit-native": ["../theo-kit/packages/ui-native/src/index.ts"],
+      "theo-kit-native/*": ["../theo-kit/packages/ui-native/src/*"],
+      "theo-kit-core": ["../theo-kit/packages/ui-core/src/index.ts"],
+      "theo-kit-core/*": ["../theo-kit/packages/ui-core/src/*"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
+}

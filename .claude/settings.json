@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx expo install nativewind react-native-reanimated react-native-safe-area-context)"
+    ]
+  }
+}
