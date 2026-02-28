@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx expo install nativewind react-native-reanimated react-native-safe-area-context)"
+      "Bash(npx expo install nativewind react-native-reanimated react-native-safe-area-context)",
+      "Bash(npm view theo-kit-native@0.0.3 dependencies)",
+      "Bash(npm view theo-kit-core@latest version)"
     ]
   }
 }

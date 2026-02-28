@@ -5109,20 +5109,20 @@ thenify-all@^1.0.0:
   dependencies:
     any-promise "^1.0.0"
 
-theo-kit-core@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/theo-kit-core/-/theo-kit-core-0.0.1.tgz#175fc991aa7c702b844b03c349837e6725cd8a00"
-  integrity sha512-uViSvRWpzW6RIcPWT7K+AKR5bVfMxmFPNLZpUE9PQAobtBRuBELncTAX3vqj7SIfFyc3YQ5tao4k+gFElQmuvA==
+theo-kit-core@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/theo-kit-core/-/theo-kit-core-0.0.2.tgz#7d75494933f40eb4daf7ff4313ba81d3364e304f"
+  integrity sha512-VSNP5x2aETdkq9Y20QH805tCgmNuCzJ2BUZwCKphC5Rs4MvOFo6btfG9IvUABK/C3R9ewt+jgno2O4FOUz/pvQ==
   dependencies:
     clsx "^2.1.1"
     tailwind-merge "^3.4.0"
 
-theo-kit-native@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/theo-kit-native/-/theo-kit-native-0.0.1.tgz#638beb094341543798f6a5eb00b0ccb7e57abaca"
-  integrity sha512-hqo1twqI2j4xzCw5e/9xOYGYr16wt0XeGDvSk4IzdTs0JQloDoKxVb5pPpaPsE35UwxEOpZ4dybe0Y8AxUsX3g==
+theo-kit-native@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/theo-kit-native/-/theo-kit-native-0.0.3.tgz#8307257ad5852ce0eb2a8f7b063e667307cc4d10"
+  integrity sha512-Bv5gcvCKZVvhwTH/d6jMKSUFjBzXHeZfaKMxS8qvqSoDf9vCbJ2lms8wVVsizXB2aPw/zwhUWxYqTjP6u39QyA==
   dependencies:
-    theo-kit-core "^0.0.1"
+    theo-kit-core "^0.0.2"
 
 throat@^5.0.0:
   version "5.0.0"
