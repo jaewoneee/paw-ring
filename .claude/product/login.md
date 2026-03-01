@@ -13,6 +13,7 @@
 - **DB**: Cloud Firestore
 - **프론트엔드**: Expo (React Native) + TypeScript
 - **백엔드 서버**: 없음 (Firebase SDK 직접 통신)
+- **Firebase SDK**: Firebase JS SDK (`firebase` npm 패키지) — Expo Go 호환
 
 ## 사용자 시나리오
 
@@ -184,11 +185,12 @@ utils/
 ```
 
 **주요 라이브러리:**
-- `@react-native-firebase/app`: Firebase 코어
-- `@react-native-firebase/auth`: Firebase Auth
-- `@react-native-firebase/firestore`: Cloud Firestore
+- `firebase`: Firebase JS SDK (인증, Firestore 등 통합 패키지)
+- `@react-native-async-storage/async-storage`: Firebase Auth 세션 퍼시스턴스
 - `expo-auth-session` + `expo-web-browser`: 구글 OAuth (Expo 환경)
 - `expo-crypto`: nonce 생성 (구글 로그인용)
+
+> **참고**: `@react-native-firebase` 대신 Firebase JS SDK를 사용합니다. Expo Go에서 바로 테스트 가능하며, 인증/Firestore 기능에 충분합니다.
 
 ### Firebase 설정 (백엔드 서버 불필요)
 
@@ -287,7 +289,8 @@ service cloud.firestore {
 
 ## 참고 사항
 - Firebase Auth는 ID Token(1시간) 자동 갱신을 SDK 내부에서 처리하므로 별도 토큰 관리 로직 불필요
-- `@react-native-firebase`는 네이티브 SDK를 사용하므로 Expo Dev Client(커스텀 빌드)가 필요 (Expo Go에서는 동작하지 않음)
+- Firebase JS SDK를 사용하므로 Expo Go에서 바로 테스트 가능 (커스텀 빌드 불필요)
+- React Native 환경에서 세션 유지를 위해 `@react-native-async-storage/async-storage` + `getReactNativePersistence` 사용
 - Google Cloud Console에서 iOS(Bundle ID)와 Android(SHA-1) 각각 OAuth 클라이언트 ID 등록 필요
 - Firebase 무료 티어(Spark Plan): 인증 무제한, Firestore 일 5만 읽기/2만 쓰기
 - HTTPS는 Firebase SDK가 자동 처리

@@ -3,6 +3,7 @@ module.exports = {
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
+    "./contexts/**/*.{js,jsx,ts,tsx}",
     "../theo-kit/packages/ui-native/src/**/*.{js,jsx,ts,tsx}",
   ],
   presets: [require("nativewind/preset")],
