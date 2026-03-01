@@ -1,5 +1,5 @@
 import React, { createContext, useEffect, useState, useCallback } from "react";
-import { onAuthStateChanged, type User } from "firebase/auth";
+import { onAuthStateChanged, reload, type User } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import {
   registerWithEmail,
@@ -18,6 +18,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -70,6 +71,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await resetPassword(email);
   }, []);
 
+  const refreshUser = useCallback(async () => {
+    if (auth.currentUser) {
+      await reload(auth.currentUser);
+      // 새 객체로 설정해야 React가 변경을 감지함
+      setUser({ ...auth.currentUser });
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -80,6 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login,
         logout,
         forgotPassword,
+        refreshUser,
       }}
     >
       {children}

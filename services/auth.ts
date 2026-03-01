@@ -4,6 +4,7 @@ import {
   signOut as firebaseSignOut,
   sendPasswordResetEmail,
   sendEmailVerification,
+  reload,
   type UserCredential,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -34,4 +35,20 @@ export async function signOut(): Promise<void> {
 /** 비밀번호 재설정 이메일 발송 */
 export async function resetPassword(email: string): Promise<void> {
   return sendPasswordResetEmail(auth, email);
+}
+
+/** 인증 이메일 재발송 */
+export async function resendVerificationEmail(): Promise<void> {
+  if (auth.currentUser) {
+    await sendEmailVerification(auth.currentUser);
+  }
+}
+
+/** 현재 사용자 정보 새로고침 (이메일 인증 상태 갱신) */
+export async function reloadUser(): Promise<boolean> {
+  if (auth.currentUser) {
+    await reload(auth.currentUser);
+    return auth.currentUser.emailVerified;
+  }
+  return false;
 }

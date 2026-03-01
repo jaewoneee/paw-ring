@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, ScrollView, Alert } from "react-native";
+import { View, ScrollView } from "react-native";
 import { Button, Typography, Input } from "theo-kit-native";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -47,11 +47,7 @@ export default function RegisterScreen() {
     setLoading(true);
     try {
       await register(email, password, nickname);
-      Alert.alert(
-        "가입 완료",
-        "인증 이메일을 발송했습니다. 이메일을 확인해주세요.",
-        [{ text: "확인" }]
-      );
+      // 라우팅 가드가 자동으로 verify-email 화면으로 이동시킴
     } catch (err: any) {
       const code = err?.code ?? "";
       setError(getFirebaseErrorMessage(code));

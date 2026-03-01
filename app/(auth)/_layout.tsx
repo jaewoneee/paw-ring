@@ -25,6 +25,7 @@ export default function AuthLayout() {
           headerBackTitle: "뒤로",
         }}
       />
+      <Stack.Screen name="verify-email" />
     </Stack>
   );
 }

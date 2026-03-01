@@ -64,7 +64,9 @@ function RootLayoutNav() {
 
     if (!user && !inAuthGroup) {
       router.replace("/(auth)/login");
-    } else if (user && inAuthGroup) {
+    } else if (user && !user.emailVerified && segments[1] !== "verify-email") {
+      router.replace("/(auth)/verify-email");
+    } else if (user && user.emailVerified && inAuthGroup) {
       router.replace("/(tabs)");
     }
   }, [user, isLoading, segments]);
