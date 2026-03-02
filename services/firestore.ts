@@ -4,10 +4,15 @@ import {
   getDoc,
   updateDoc,
   deleteDoc,
+  collection,
+  getDocs,
+  query,
+  orderBy,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { UserProfile } from "@/types/auth";
+import type { Pet } from "@/types/pet";
 
 const USERS_COLLECTION = "users";
 
@@ -60,4 +65,14 @@ export async function updateUserProfile(
 export async function deleteUserProfile(uid: string): Promise<void> {
   const userRef = doc(db, USERS_COLLECTION, uid);
   await deleteDoc(userRef);
+}
+
+// ─── 반려동물 ───
+
+/** 유저의 반려동물 목록 조회 */
+export async function getUserPets(uid: string): Promise<Pet[]> {
+  const petsRef = collection(db, USERS_COLLECTION, uid, "pets");
+  const q = query(petsRef, orderBy("createdAt", "asc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }) as Pet);
 }

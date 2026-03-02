@@ -15,6 +15,7 @@ import "react-native-reanimated";
 import { Keyboard, Pressable } from "react-native";
 import { useColorScheme } from "@/components/useColorScheme";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PetProvider } from "@/contexts/PetContext";
 import { useAuth } from "@/hooks/useAuth";
 
 export { ErrorBoundary } from "expo-router";
@@ -41,7 +42,9 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <PetProvider>
+        <RootLayoutNav />
+      </PetProvider>
     </AuthProvider>
   );
 }
