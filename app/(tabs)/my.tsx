@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Typography } from "@/components/ui/Typography";
 
-export default function ProfileScreen() {
+export default function MyScreen() {
   const { user, userProfile, logout } = useAuth();
 
   const handleLogout = () => {
@@ -34,7 +34,7 @@ export default function ProfileScreen() {
   return (
     <ScrollView className="flex-1 bg-gray-50">
       <View className="p-4 gap-4">
-        <Typography className="text-2xl font-bold">프로필</Typography>
+        <Typography className="text-2xl font-bold">마이</Typography>
 
         <Card>
           <CardHeader>

@@ -41,26 +41,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="health"
+        name="calendar"
         options={{
-          title: "건강",
-          tabBarIcon: ({ color }) => <TabBarIcon name="heart" color={color} />,
+          title: "캘린더",
+          tabBarIcon: ({ color }) => (
+            <TabBarIcon name="calendar" color={color} />
+          ),
         }}
         listeners={requireAuth}
       />
       <Tabs.Screen
-        name="diary"
+        name="my"
         options={{
-          title: "다이어리",
-          tabBarIcon: ({ color }) => <TabBarIcon name="book" color={color} />,
-        }}
-        listeners={requireAuth}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "프로필",
-          tabBarIcon: ({ color }) => <TabBarIcon name="paw" color={color} />,
+          title: "마이",
+          tabBarIcon: ({ color }) => <TabBarIcon name="user" color={color} />,
         }}
         listeners={requireAuth}
       />
