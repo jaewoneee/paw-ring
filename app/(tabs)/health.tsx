@@ -1,5 +1,6 @@
 import { View, ScrollView } from "react-native";
-import { Typography, Card, CardHeader, CardTitle, CardContent } from "theo-kit-native";
+import { Typography } from "@/components/ui/Typography";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 
 export default function HealthScreen() {
   return (

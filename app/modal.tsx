@@ -1,6 +1,9 @@
 import { StatusBar } from "expo-status-bar";
 import { Platform, View } from "react-native";
-import { Typography, Input, Button, Card, CardContent } from "theo-kit-native";
+import { Typography } from "@/components/ui/Typography";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
 
 export default function AddPetModal() {
   return (

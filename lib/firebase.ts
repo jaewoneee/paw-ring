@@ -1,6 +1,9 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
+import { initializeAuth, getAuth, type Auth } from "firebase/auth";
+// @ts-expect-error: getReactNativePersistence is exported from RN-specific bundle, resolved by Metro at runtime
+import { getReactNativePersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 
 const firebaseConfig = {
@@ -12,10 +15,18 @@ const firebaseConfig = {
   appId: Constants.expoConfig?.extra?.firebaseAppId,
 };
 
-const app: FirebaseApp =
-  getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+let app: FirebaseApp;
+let auth: Auth;
 
-const auth: Auth = getAuth(app);
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(ReactNativeAsyncStorage),
+  });
+} else {
+  app = getApp();
+  auth = getAuth(app);
+}
 const db = getFirestore(app);
 
 export { app, auth, db };

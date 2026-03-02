@@ -62,9 +62,7 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === "(auth)";
 
-    if (!user && !inAuthGroup) {
-      router.replace("/(auth)/login");
-    } else if (user && !user.emailVerified && segments[1] !== "verify-email") {
+    if (user && !user.emailVerified && segments[1] !== "verify-email") {
       router.replace("/(auth)/verify-email");
     } else if (user && user.emailVerified && inAuthGroup) {
       router.replace("/(tabs)");

@@ -8,7 +8,8 @@
       "Bash(npx tsc --traceResolution)",
       "Bash(ls -la /c/Users/User/Desktop/project/paw-ring/app/\\\\\\(tabs\\\\\\)/)",
       "Bash(wc -l \"c:\\\\Users\\\\User\\\\Desktop\\\\project\\\\paw-ring\\\\app\\\\\\(auth\\)\\\\forgot-password.tsx\")",
-      "Bash(npx expo install expo@~54.0.0 --fix)"
+      "Bash(npx expo install expo@~54.0.0 --fix)",
+      "Bash(ls -la /c/Users/User/Desktop/project/paw-ring/app/\\\\\\(auth\\\\\\)/)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\project\\paw-ring",

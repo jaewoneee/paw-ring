@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { View, ScrollView } from "react-native";
-import { Button, Typography, Input } from "theo-kit-native";
+import { Button } from "@/components/ui/Button";
+import { Typography } from "@/components/ui/Typography";
+import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/hooks/useAuth";
 import {
   validateEmail,

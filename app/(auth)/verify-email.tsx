@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { View, ScrollView, Alert, AppState } from "react-native";
-import { Button, Typography } from "theo-kit-native";
+import { Button } from "@/components/ui/Button";
+import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "@/hooks/useAuth";
 import { resendVerificationEmail } from "@/services/auth";
 import { auth } from "@/lib/firebase";

@@ -1,23 +1,34 @@
-import { View, ScrollView } from "react-native";
-import {
-  Typography,
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  Button,
-} from "theo-kit-native";
 import { useAuth } from "@/hooks/useAuth";
+import { Alert, Platform, ScrollView, View } from "react-native";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Typography } from "@/components/ui/Typography";
 
 export default function ProfileScreen() {
   const { user, userProfile, logout } = useAuth();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch {
-      // 로그아웃 실패 시 무시 (거의 발생하지 않음)
+  const handleLogout = () => {
+    if (Platform.OS === "web") {
+      if (window.confirm("정말 로그아웃하시겠습니까?")) {
+        logout();
+      }
+      return;
     }
+
+    Alert.alert("로그아웃", "정말 로그아웃하시겠습니까?", [
+      { text: "취소", style: "cancel" },
+      {
+        text: "로그아웃",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await logout();
+          } catch {
+            // 로그아웃 실패 시 무시 (거의 발생하지 않음)
+          }
+        },
+      },
+    ]);
   };
 
   return (
