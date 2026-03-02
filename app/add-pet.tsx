@@ -1,13 +1,16 @@
-import { StatusBar } from "expo-status-bar";
-import { Platform, View } from "react-native";
+import { View, ScrollView } from "react-native";
 import { Typography } from "@/components/ui/Typography";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 
-export default function AddPetModal() {
+export default function AddPetScreen() {
   return (
-    <View className="flex-1 bg-gray-50 p-4">
+    <ScrollView
+      className="flex-1 bg-gray-50"
+      contentContainerStyle={{ padding: 16, gap: 16 }}
+      keyboardShouldPersistTaps="handled"
+    >
       <Card>
         <CardContent>
           <View className="gap-4">
@@ -21,7 +24,6 @@ export default function AddPetModal() {
           </View>
         </CardContent>
       </Card>
-      <StatusBar style={Platform.OS === "ios" ? "light" : "auto"} />
-    </View>
+    </ScrollView>
   );
 }

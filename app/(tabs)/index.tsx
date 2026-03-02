@@ -94,7 +94,7 @@ export default function HomeScreen() {
                   </Typography>
                   <Button
                     variant="outline"
-                    onPress={() => router.push("/modal")}
+                    onPress={() => router.push("/add-pet")}
                   >
                     반려동물 등록하기
                   </Button>
