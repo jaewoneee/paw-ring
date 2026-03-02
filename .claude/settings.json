@@ -6,7 +6,9 @@
       "Bash(npm view theo-kit-core@latest version)",
       "Bash(npx expo install firebase @react-native-async-storage/async-storage)",
       "Bash(npx tsc --traceResolution)",
-      "Bash(ls -la /c/Users/User/Desktop/project/paw-ring/app/\\\\\\(tabs\\\\\\)/)"
+      "Bash(ls -la /c/Users/User/Desktop/project/paw-ring/app/\\\\\\(tabs\\\\\\)/)",
+      "Bash(wc -l \"c:\\\\Users\\\\User\\\\Desktop\\\\project\\\\paw-ring\\\\app\\\\\\(auth\\)\\\\forgot-password.tsx\")",
+      "Bash(npx expo install expo@~54.0.0 --fix)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\project\\paw-ring",
