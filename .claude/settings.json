@@ -5,7 +5,8 @@
       "Bash(npm view theo-kit-native@0.0.3 dependencies)",
       "Bash(npm view theo-kit-core@latest version)",
       "Bash(npx expo install firebase @react-native-async-storage/async-storage)",
-      "Bash(npx tsc --traceResolution)"
+      "Bash(npx tsc --traceResolution)",
+      "Bash(ls -la /c/Users/User/Desktop/project/paw-ring/app/\\\\\\(tabs\\\\\\)/)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\project\\paw-ring",
