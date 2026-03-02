@@ -9,7 +9,6 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: "./assets/images/icon.png",
   scheme: "pawring",
   userInterfaceStyle: "automatic",
-  // @ts-expect-error -- Expo SDK 55 supports newArchEnabled
   newArchEnabled: true,
   splash: {
     image: "./assets/images/splash-icon.png",
