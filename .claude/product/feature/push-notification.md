@@ -10,9 +10,10 @@
 
 ## 기술 스택
 - **로컬 알림**: expo-notifications (Expo Notifications API)
-- **원격 알림**: Firebase Cloud Messaging (FCM)
-- **스케줄링**: expo-notifications의 스케줄 알림 또는 Firebase Cloud Functions
-- **토큰 관리**: Firestore에 디바이스 토큰 저장
+- **원격 알림**: Supabase Edge Functions + Firebase Cloud Messaging (FCM)
+- **스케줄링**: expo-notifications의 스케줄 알림 또는 Supabase Edge Functions (cron)
+- **토큰 관리**: Supabase `fcm_tokens` 테이블에 디바이스 토큰 저장
+- **데이터 아키텍처**: [data-architecture.md](../data-architecture.md) 참고
 
 ## 사용자 시나리오
 
@@ -97,33 +98,45 @@ utils/
 ├── notificationScheduler.ts      # 로컬 알림 스케줄 계산/등록
 ```
 
-### Backend (Phase 2 - Cloud Functions)
+### Backend (Phase 2 - Supabase Edge Functions)
 
 ```
-functions/
-├── scheduledNotification.ts      # 크론잡: 당일 스케줄 → FCM 발송
-├── onScheduleWrite.ts            # 트리거: 스케줄 생성/수정 시 알림 처리
+supabase/
+└── functions/
+    ├── scheduled-notification/   # 크론잡: 당일 스케줄 → FCM 발송
+    └── on-schedule-write/        # Webhook 트리거: 스케줄 생성/수정 시 알림 처리
 ```
 
 ## 데이터 모델
 
-### Firestore: `users/{uid}` 확장
-```typescript
-interface UserProfile {
-  // ... 기존 필드
-  fcmTokens: string[];              // FCM 디바이스 토큰 (다중 디바이스)
-  notificationEnabled: boolean;     // 전체 알림 ON/OFF
-}
+### Supabase: `users` 테이블 (알림 관련 필드)
+```sql
+-- users 테이블에 notification_enabled 컬럼 포함
+-- (data-architecture.md 참고)
 ```
 
-### Firestore: `petNotificationSettings` 컬렉션
-```typescript
-// petNotificationSettings/{petId}_{userId}
-interface PetNotificationSetting {
-  petId: string;
-  userId: string;
-  enabled: boolean;                 // 캘린더 단위 알림 ON/OFF
-}
+### Supabase: `fcm_tokens` 테이블
+```sql
+CREATE TABLE fcm_tokens (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token TEXT NOT NULL,
+  device_info TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (user_id, token)
+);
+```
+
+### Supabase: `pet_notification_settings` 테이블
+```sql
+CREATE TABLE pet_notification_settings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  enabled BOOLEAN DEFAULT TRUE,
+  UNIQUE (pet_id, user_id)
+);
 ```
 
 ## 예외 처리
@@ -145,7 +158,7 @@ interface PetNotificationSetting {
 5. 알림 탭 시 딥링크
 6. 스케줄/캘린더 단위 ON/OFF
 
-### Phase 2: 원격 알림 (FCM)
-1. FCM 토큰 관리
-2. Cloud Functions 크론잡 (당일 스케줄 → FCM 발송)
+### Phase 2: 원격 알림 (Supabase Edge Functions + FCM)
+1. FCM 토큰 관리 (Supabase `fcm_tokens` 테이블)
+2. Supabase Edge Functions 크론잡 (당일 스케줄 → FCM 발송)
 3. 공유 캘린더 참여자 알림

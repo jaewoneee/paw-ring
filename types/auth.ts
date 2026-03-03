@@ -1,14 +1,12 @@
-import { Timestamp } from "firebase/firestore";
-
-/** Firestore users/{uid} 문서 스키마 */
+/** Supabase users 테이블 스키마 */
 export interface UserProfile {
-  uid: string;
+  id: string;
   email: string;
   nickname: string;
-  profileImage: string;
+  profile_image: string | null;
   provider: "email" | "google";
-  emailVerified: boolean;
-  notificationEnabled: boolean;
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  email_verified: boolean;
+  notification_enabled: boolean;
+  created_at: string;
+  updated_at: string;
 }

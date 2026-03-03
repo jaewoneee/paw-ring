@@ -55,9 +55,9 @@ export default function ProfileScreen() {
         <View className="p-4 gap-6">
           {/* 프로필 이미지 */}
           <View className="items-center gap-3 py-4">
-            {userProfile?.profileImage ? (
+            {userProfile?.profile_image ? (
               <Image
-                source={{ uri: userProfile.profileImage }}
+                source={{ uri: userProfile.profile_image }}
                 className="w-24 h-24 rounded-full bg-surface"
               />
             ) : (

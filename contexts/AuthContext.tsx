@@ -13,7 +13,7 @@ import {
   getUserProfile,
   updateUserProfile,
   deleteUserData,
-} from "@/services/firestore";
+} from "@/services/user";
 import {
   reauthenticateWithEmail,
   deleteAccount as deleteAccountService,
@@ -32,7 +32,7 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   updateProfile: (
     data: Partial<
-      Pick<UserProfile, "nickname" | "profileImage" | "notificationEnabled">
+      Pick<UserProfile, "nickname" | "profile_image" | "notification_enabled">
     >
   ) => Promise<void>;
   deleteAccount: (password?: string) => Promise<void>;
@@ -50,7 +50,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(firebaseUser);
 
       if (firebaseUser) {
-        const profile = await getUserProfile(firebaseUser.uid);
+        let profile = await getUserProfile(firebaseUser.uid);
+        // Supabase에 프로필이 없으면 자동 생성 (Firestore → Supabase 마이그레이션 대응)
+        if (!profile) {
+          await createUserProfile(firebaseUser.uid, {
+            email: firebaseUser.email ?? "",
+            nickname: firebaseUser.displayName ?? "사용자",
+            provider: firebaseUser.providerData[0]?.providerId === "google.com"
+              ? "google"
+              : "email",
+            profile_image: firebaseUser.photoURL ?? undefined,
+          });
+          profile = await getUserProfile(firebaseUser.uid);
+        }
         setUserProfile(profile);
       } else {
         setUserProfile(null);
@@ -89,7 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: firebaseUser.email ?? "",
         nickname: firebaseUser.displayName ?? "사용자",
         provider: "google",
-        profileImage: firebaseUser.photoURL ?? "",
+        profile_image: firebaseUser.photoURL ?? "",
       });
     }
 
@@ -108,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const updateProfile = useCallback(
     async (
       data: Partial<
-        Pick<UserProfile, "nickname" | "profileImage" | "notificationEnabled">
+        Pick<UserProfile, "nickname" | "profile_image" | "notification_enabled">
       >
     ) => {
       if (!user) throw new Error("Not authenticated");

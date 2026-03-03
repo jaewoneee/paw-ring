@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { getUserPets } from "@/services/firestore";
+import { getUserPets } from "@/services/pet";
 import type { Pet } from "@/types/pet";
 
 interface PetContextType {

@@ -77,7 +77,7 @@ export default function MyScreen() {
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
   const [notificationEnabled, setNotificationEnabled] = useState(
-    userProfile?.notificationEnabled ?? true
+    userProfile?.notification_enabled ?? true
   );
   const [deleting, setDeleting] = useState(false);
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
@@ -86,7 +86,7 @@ export default function MyScreen() {
   const handleToggleNotification = async (value: boolean) => {
     setNotificationEnabled(value);
     try {
-      await updateProfile({ notificationEnabled: value });
+      await updateProfile({ notification_enabled: value });
     } catch {
       setNotificationEnabled(!value);
     }
@@ -204,9 +204,9 @@ export default function MyScreen() {
               className="flex-row items-center px-4 py-4 gap-3"
               onPress={() => router.push("/settings/profile")}
             >
-              {userProfile?.profileImage ? (
+              {userProfile?.profile_image ? (
                 <Image
-                  source={{ uri: userProfile.profileImage }}
+                  source={{ uri: userProfile.profile_image! }}
                   className="w-14 h-14 rounded-full bg-surface"
                 />
               ) : (

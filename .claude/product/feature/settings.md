@@ -10,9 +10,10 @@
 
 ## 기술 스택
 - **프론트엔드**: Expo (React Native) + TypeScript
-- **DB**: Cloud Firestore
-- **이미지 저장**: Firebase Storage
 - **인증**: Firebase Auth (회원 탈퇴, 비밀번호 변경)
+- **DB**: Supabase (PostgreSQL)
+- **이미지 저장**: Supabase Storage
+- **데이터 아키텍처**: [data-architecture.md](../data-architecture.md) 참고
 
 ## 사용자 시나리오
 
@@ -20,7 +21,7 @@
 1. 사용자가 설정 탭에 진입한다
 2. 프로필 영역(사진, 닉네임)을 탭한다
 3. 프로필 수정 화면에서 닉네임 변경, 프로필 사진 변경/삭제
-4. "저장"을 누르면 Firestore 유저 문서 업데이트
+4. "저장"을 누르면 Supabase `users` 레코드 업데이트
 
 ### 시나리오 2: 알림 설정
 1. 설정 화면에서 "알림" 메뉴를 탭한다
@@ -37,8 +38,8 @@
 2. 경고 다이얼로그: "모든 데이터가 삭제되며 복구할 수 없습니다"
 3. 비밀번호 재입력 (보안 확인)
 4. 확인 시:
-   - Firestore 유저 데이터 삭제 (반려동물, 스케줄, 공유 등)
-   - Firebase Storage 이미지 삭제
+   - Supabase 유저 데이터 삭제 (CASCADE로 반려동물, 스케줄, 공유 등 자동 삭제)
+   - Supabase Storage 이미지 삭제
    - Firebase Auth 계정 삭제
 5. 로그인 화면으로 이동
 
@@ -117,25 +118,25 @@ app/
 │   └── terms.tsx                 # 이용약관 WebView
 
 services/
-├── user.ts                       # 유저 프로필 CRUD
-├── account.ts                    # 계정 관리 (탈퇴, 비밀번호 변경)
+├── user.ts                       # 유저 프로필 CRUD (Supabase)
+├── account.ts                    # 계정 관리 (탈퇴: Firebase Auth + Supabase, 비밀번호 변경: Firebase Auth)
 ```
 
 ## 데이터 모델
 
-기존 `users/{uid}` 문서 활용 (login.md 참고)
+Supabase `users` 테이블 활용 (login.md, data-architecture.md 참고)
 
 ```typescript
 interface UserProfile {
-  uid: string;
+  id: string;                       // Firebase Auth UID
   email: string;
   nickname: string;
-  profileImage: string | null;
+  profile_image: string | null;
   provider: 'email' | 'google';
-  emailVerified: boolean;
-  notificationEnabled: boolean;     // 전체 알림 설정
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  email_verified: boolean;
+  notification_enabled: boolean;    // 전체 알림 설정
+  created_at: string;
+  updated_at: string;
 }
 ```
 

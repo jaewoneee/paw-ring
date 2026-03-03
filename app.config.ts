@@ -52,5 +52,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID,
     googleIosClientId: process.env.GOOGLE_IOS_CLIENT_ID,
     googleAndroidClientId: process.env.GOOGLE_ANDROID_CLIENT_ID,
+    supabaseUrl: process.env.SUPABASE_URL,
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY,
   },
 });

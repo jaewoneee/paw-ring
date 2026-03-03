@@ -1,7 +1,10 @@
 # Paw Ring - 기능 리스트
 
 > 앱 컨셉: [app-concept.md](./app-concept.md)
+> 데이터 아키텍처: [data-architecture.md](./data-architecture.md)
 > 각 기능의 상세 기획은 별도 문서로 관리
+>
+> **기술 스택**: Firebase Auth (인증) + Supabase PostgreSQL (서비스 데이터) + Supabase Storage (이미지)
 
 ## 범례
 

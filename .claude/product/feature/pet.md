@@ -11,9 +11,11 @@
 
 ## 기술 스택
 - **프론트엔드**: Expo (React Native) + TypeScript
-- **DB**: Cloud Firestore
-- **이미지 저장**: Firebase Storage
-- **상태 관리**: React Context 또는 Zustand
+- **인증**: Firebase Auth (기존 유지)
+- **DB**: Supabase (PostgreSQL)
+- **이미지 저장**: Supabase Storage
+- **상태 관리**: React Context
+- **데이터 아키텍처**: [data-architecture.md](../data-architecture.md) 참고
 
 ## 사용자 시나리오
 
@@ -23,7 +25,7 @@
 3. 필수 정보를 입력한다: 이름, 종류(강아지/고양이), 생년월일
 4. 선택 정보를 입력한다: 프로필 사진
 5. "등록하기" 버튼을 누른다
-6. Firestore에 반려동물 문서가 생성된다
+6. Supabase `pets` 테이블에 레코드가 생성된다
 7. 해당 반려동물의 캘린더가 자동 생성된다
 8. 메인 화면(반려동물 목록)으로 돌아간다
 
@@ -37,7 +39,7 @@
 1. 반려동물 카드의 설정 아이콘 또는 프로필 상세에서 "수정"을 누른다
 2. 기존 정보가 채워진 수정 화면이 표시된다
 3. 원하는 항목을 수정한다
-4. "저장" 버튼을 누르면 Firestore 문서가 업데이트된다
+4. "저장" 버튼을 누르면 Supabase `pets` 레코드가 업데이트된다
 
 ### 시나리오 4: 반려동물 삭제
 1. 프로필 수정 화면 하단의 "삭제하기"를 누른다
@@ -134,8 +136,8 @@ app/
 │   │   └── calendar.tsx          # 반려동물 캘린더 (→ 캘린더 기능)
 
 services/
-├── pet.ts                        # 반려동물 CRUD (Firestore)
-├── storage.ts                    # 이미지 업로드 (Firebase Storage)
+├── pet.ts                        # 반려동물 CRUD (Supabase)
+├── storage.ts                    # 이미지 업로드 (Supabase Storage)
 
 hooks/
 ├── usePets.ts                    # 반려동물 목록 조회 훅
@@ -144,30 +146,47 @@ hooks/
 
 ## 데이터 모델
 
-### Firestore: `pets` 컬렉션
+### Supabase: `pets` 테이블
+```sql
+CREATE TABLE pets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  species TEXT NOT NULL CHECK (species IN ('dog', 'cat')),
+  birth_date DATE NOT NULL,
+  profile_image TEXT,              -- Supabase Storage URL
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### TypeScript 인터페이스
 ```typescript
-// pets/{petId}
 interface Pet {
-  id: string;                     // 문서 ID (auto-generated)
-  ownerId: string;                // 생성자 UID
+  id: string;                     // UUID (auto-generated)
+  owner_id: string;               // Firebase Auth UID
   name: string;                   // 이름 (필수)
   species: 'dog' | 'cat';        // 종류 (필수)
-  birthDate: string;              // 생년월일 (필수)
-  profileImage?: string;          // 프로필 이미지 URL (Firebase Storage)
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  birth_date: string;             // 생년월일 (필수, ISO date)
+  profile_image?: string;         // 프로필 이미지 URL (Supabase Storage)
+  created_at: string;
+  updated_at: string;
 }
 ```
 
-### Firestore 보안 규칙
-```
-match /pets/{petId} {
-  // 소유자만 읽기/쓰기
-  allow read, write: if request.auth != null && request.auth.uid == resource.data.ownerId;
-  // 생성 시 ownerId가 본인인지 확인
-  allow create: if request.auth != null && request.auth.uid == request.resource.data.ownerId;
-  // 공유받은 유저도 읽기 가능 (sharing 기능에서 확장)
-}
+### RLS 정책
+```sql
+-- 소유자만 CRUD
+CREATE POLICY "Pet owners can manage own pets"
+  ON pets FOR ALL
+  USING (owner_id = auth.uid());
+
+-- 공유받은 유저도 읽기 가능 (sharing 기능에서 확장)
+CREATE POLICY "Shared users can view pets"
+  ON pets FOR SELECT
+  USING (
+    id IN (SELECT pet_id FROM calendar_shares WHERE shared_user_id = auth.uid() AND status = 'accepted')
+  );
 ```
 
 ## 예외 처리
@@ -185,12 +204,12 @@ match /pets/{petId} {
 ## 구현 순서
 
 ### Phase 1: 기본 CRUD
-1. Firestore `pets` 컬렉션 구조 설정
-2. 반려동물 등록 화면 UI + Firestore 연동
+1. Supabase 프로젝트 설정 + `pets` 테이블 생성
+2. 반려동물 등록 화면 UI + Supabase 연동
 3. 반려동물 목록 화면 UI (메인 화면)
 4. 반려동물 상세/수정 화면
 
 ### Phase 2: 이미지 & 삭제
-1. Firebase Storage 설정
+1. Supabase Storage 설정
 2. 프로필 사진 업로드 (expo-image-picker)
-3. 반려동물 삭제 + 연관 데이터 정리
+3. 반려동물 삭제 + 연관 데이터 정리 (CASCADE)

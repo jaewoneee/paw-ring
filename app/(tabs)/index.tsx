@@ -63,9 +63,9 @@ export default function HomeScreen() {
             className="flex-row items-center gap-3 flex-1 mr-3"
             onPress={() => setSheetVisible(true)}
           >
-            {selectedPet?.profileImage ? (
+            {selectedPet?.profile_image ? (
               <Image
-                source={{ uri: selectedPet.profileImage }}
+                source={{ uri: selectedPet.profile_image }}
                 className="w-9 h-9 rounded-full bg-surface"
               />
             ) : (
@@ -223,9 +223,9 @@ export default function HomeScreen() {
                 setSheetVisible(false);
               }}
             >
-              {pet.profileImage ? (
+              {pet.profile_image ? (
                 <Image
-                  source={{ uri: pet.profileImage }}
+                  source={{ uri: pet.profile_image }}
                   className="w-10 h-10 rounded-full bg-surface"
                 />
               ) : (

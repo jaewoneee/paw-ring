@@ -2,7 +2,6 @@ import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { initializeAuth, getAuth, type Auth } from "firebase/auth";
 // @ts-expect-error: getReactNativePersistence is exported from RN-specific bundle, resolved by Metro at runtime
 import { getReactNativePersistence } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
 
@@ -27,6 +26,4 @@ if (getApps().length === 0) {
   app = getApp();
   auth = getAuth(app);
 }
-const db = getFirestore(app);
-
-export { app, auth, db };
+export { app, auth };

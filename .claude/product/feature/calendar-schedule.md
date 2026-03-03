@@ -12,8 +12,10 @@
 ## 기술 스택
 - **프론트엔드**: Expo (React Native) + TypeScript
 - **캘린더 UI**: react-native-calendars 또는 커스텀 구현
-- **DB**: Cloud Firestore
+- **인증**: Firebase Auth (기존 유지)
+- **DB**: Supabase (PostgreSQL)
 - **반복 로직**: rrule (RFC 5545 기반 반복 규칙 라이브러리)
+- **데이터 아키텍처**: [data-architecture.md](../data-architecture.md) 참고
 
 ## 사용자 시나리오
 
@@ -213,7 +215,7 @@ components/
 │   └── CategoryBadge.tsx         # 카테고리 뱃지
 
 services/
-├── schedule.ts                   # 스케줄 CRUD (Firestore)
+├── schedule.ts                   # 스케줄 CRUD (Supabase)
 ├── recurrence.ts                 # 반복 규칙 처리 (rrule 래핑)
 
 hooks/
@@ -237,70 +239,96 @@ hooks/
 
 ## 데이터 모델
 
-### Firestore: `schedules` 컬렉션
+### Supabase: `schedules` 테이블
+```sql
+CREATE TABLE schedules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
+  owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'other',  -- 'walk','meal','hospital','medicine','bath','other'
+  memo TEXT,
+  start_date TIMESTAMPTZ NOT NULL,
+  is_all_day BOOLEAN DEFAULT FALSE,
+  is_recurring BOOLEAN DEFAULT FALSE,
+  rrule TEXT,                              -- RFC 5545 반복 규칙 (e.g. "FREQ=DAILY;INTERVAL=1")
+  recurrence_end_date TIMESTAMPTZ,
+  reminder TEXT DEFAULT 'none',            -- 'none','on_time','10min','30min','1hour'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### Supabase: `schedule_exceptions` 테이블
+```sql
+-- 반복 스케줄에서 특정 날짜만 수정/삭제한 경우
+CREATE TABLE schedule_exceptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  schedule_id UUID NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+  exception_date DATE NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('modified', 'deleted')),
+  modified_fields JSONB,                   -- 수정된 필드 (type='modified')
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (schedule_id, exception_date)
+);
+```
+
+### Supabase: `schedule_completions` 테이블
+```sql
+-- 날짜별 완료 상태
+CREATE TABLE schedule_completions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  schedule_id UUID NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+  completion_date DATE NOT NULL,
+  completed_by TEXT NOT NULL REFERENCES users(id),
+  completed_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (schedule_id, completion_date)
+);
+```
+
+### TypeScript 인터페이스
 ```typescript
-// schedules/{scheduleId}
 interface Schedule {
   id: string;
-  petId: string;                          // 소속 반려동물 ID
-  ownerId: string;                        // 생성자 UID
-  title: string;                          // 제목 (필수)
-  category: ScheduleCategory;             // 카테고리
-  memo: string | null;                    // 메모
-
-  // 시간
-  startDate: Timestamp;                   // 시작 날짜/시간
-  isAllDay: boolean;                      // 종일 여부
-
-  // 반복
-  isRecurring: boolean;                   // 반복 여부
-  rrule: string | null;                   // RFC 5545 반복 규칙 문자열 (e.g. "FREQ=DAILY;INTERVAL=1")
-  recurrenceEndDate: Timestamp | null;    // 반복 종료일
-
-  // 알림
-  reminder: ReminderType;                 // 알림 설정
-
-  createdAt: Timestamp;
-  updatedAt: Timestamp;
+  pet_id: string;
+  owner_id: string;
+  title: string;
+  category: ScheduleCategory;
+  memo: string | null;
+  start_date: string;
+  is_all_day: boolean;
+  is_recurring: boolean;
+  rrule: string | null;
+  recurrence_end_date: string | null;
+  reminder: ReminderType;
+  created_at: string;
+  updated_at: string;
 }
 
 type ScheduleCategory = 'walk' | 'meal' | 'hospital' | 'medicine' | 'bath' | 'other';
-
-type ReminderType = 'none' | 'on_time' | '10min' | '30min' | '1hour' | number; // number: 커스텀 (분 단위)
+type ReminderType = 'none' | 'on_time' | '10min' | '30min' | '1hour';
 ```
 
-### Firestore: `scheduleExceptions` 서브컬렉션
-```typescript
-// schedules/{scheduleId}/exceptions/{exceptionDate}
-// 반복 스케줄에서 특정 날짜만 수정/삭제한 경우
-interface ScheduleException {
-  date: string;                           // "2026-03-07" (해당 날짜)
-  type: 'modified' | 'deleted';           // 수정됨 / 삭제됨
-  modifiedFields: Partial<Schedule> | null; // 수정된 필드 (type=modified인 경우)
-}
-```
-
-### Firestore: `scheduleCompletions` 서브컬렉션
-```typescript
-// schedules/{scheduleId}/completions/{date}
-// 날짜별 완료 상태
-interface ScheduleCompletion {
-  date: string;                           // "2026-03-07"
-  completedAt: Timestamp;
-  completedBy: string;                    // 완료 처리한 유저 UID
-}
-```
-
-### Firestore 보안 규칙
-```
-match /schedules/{scheduleId} {
-  allow read: if request.auth != null && (
-    request.auth.uid == resource.data.ownerId ||
-    // 공유받은 유저도 읽기 가능 (sharing 기능에서 확장)
-    exists(/databases/$(database)/documents/calendarShares/$(resource.data.petId + '_' + request.auth.uid))
+### RLS 정책
+```sql
+-- 소유자 또는 공유받은 유저 읽기 가능
+CREATE POLICY "Schedule read access"
+  ON schedules FOR SELECT
+  USING (
+    owner_id = auth.uid()
+    OR pet_id IN (
+      SELECT pet_id FROM calendar_shares
+      WHERE shared_user_id = auth.uid() AND status = 'accepted'
+    )
   );
-  allow write: if request.auth != null && request.auth.uid == resource.data.ownerId;
-}
+
+-- 소유자만 쓰기
+CREATE POLICY "Schedule write access"
+  ON schedules FOR INSERT WITH CHECK (owner_id = auth.uid());
+CREATE POLICY "Schedule update access"
+  ON schedules FOR UPDATE USING (owner_id = auth.uid());
+CREATE POLICY "Schedule delete access"
+  ON schedules FOR DELETE USING (owner_id = auth.uid());
 ```
 
 ## 예외 처리
@@ -313,14 +341,14 @@ match /schedules/{scheduleId} {
 | 반복 종료일 < 시작일 | "반복 종료일은 시작일 이후여야 합니다" |
 | 반복 스케줄 수정 시 | "이 일정만 / 이후 모든 일정" 선택지 표시 |
 | 반복 스케줄 삭제 시 | "이 일정만 / 이후 모든 일정" 선택지 표시 |
-| 네트워크 오류 | "네트워크 연결을 확인해주세요" (오프라인 시 Firestore 캐시 활용) |
+| 네트워크 오류 | "네트워크 연결을 확인해주세요" |
 
 ## 구현 순서
 
 ### Phase 1: 캘린더 뷰 + 단건 스케줄
 1. 캘린더 월간 뷰 UI
 2. 일간 뷰 (날짜 탭 시 스케줄 리스트)
-3. 단건 스케줄 생성 화면 + Firestore 연동
+3. 단건 스케줄 생성 화면 + Supabase 연동
 4. 스케줄 상세 / 수정 / 삭제
 5. 카테고리 시스템 (기본 카테고리 + 색상/아이콘)
 

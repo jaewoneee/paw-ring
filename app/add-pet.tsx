@@ -3,8 +3,10 @@ import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
+  Alert,
   Image,
   Platform,
   Pressable,
@@ -22,6 +24,9 @@ import { Screen } from '@/components/ui/Screen';
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
+import { usePets } from '@/contexts/PetContext';
+import { useAuth } from '@/hooks/useAuth';
+import { createPet } from '@/services/pet';
 import type { PetSpecies } from '@/types/pet';
 import { formatDate } from '@/utils/date';
 
@@ -31,6 +36,9 @@ const SPECIES_OPTIONS: { label: string; value: PetSpecies }[] = [
 ];
 
 export default function AddPetScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { refreshPets } = usePets();
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
@@ -40,6 +48,7 @@ export default function AddPetScreen() {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [profileImage, setProfileImage] = useState<string | undefined>();
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
 
   const [tempDate, setTempDate] = useState<Date>(new Date());
 
@@ -95,9 +104,27 @@ export default function AddPetScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = () => {
-    if (!validate()) return;
-    // TODO: submit logic
+  const handleSubmit = async () => {
+    if (!validate() || !user || !species || !birthDate) return;
+
+    setSubmitting(true);
+    try {
+      const dateStr = birthDate.toISOString().split('T')[0]; // YYYY-MM-DD
+      await createPet({
+        owner_id: user.uid,
+        name: name.trim(),
+        species,
+        birth_date: dateStr,
+        // TODO: profile_image — Supabase Storage 연동 후 추가
+      });
+      await refreshPets();
+      router.back();
+    } catch (err) {
+      console.error('[AddPet] 등록 실패:', err);
+      Alert.alert('오류', '반려동물 등록에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -206,7 +233,7 @@ export default function AddPetScreen() {
               ) : null}
             </View>
 
-            <Button onPress={handleSubmit}>등록하기</Button>
+            <Button onPress={handleSubmit} loading={submitting}>등록하기</Button>
           </View>
         </CardContent>
       </Card>

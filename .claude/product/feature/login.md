@@ -8,12 +8,12 @@
 - 간편한 소셜 로그인으로 진입 장벽을 낮추고, 이메일 로그인으로 범용성 확보
 
 ## 기술 스택
-- **BaaS**: Firebase
-- **인증**: Firebase Auth (이메일/비밀번호, Google 로그인)
-- **DB**: Cloud Firestore
+- **인증**: Firebase Auth (이메일/비밀번호, Google 로그인) — 기존 유지
+- **유저 프로필 DB**: Supabase (PostgreSQL) `users` 테이블
 - **프론트엔드**: Expo (React Native) + TypeScript
-- **백엔드 서버**: 없음 (Firebase SDK 직접 통신)
+- **백엔드 서버**: 없음 (Firebase SDK + Supabase SDK 직접 통신)
 - **Firebase SDK**: Firebase JS SDK (`firebase` npm 패키지) — Expo Go 호환
+- **데이터 아키텍처**: [data-architecture.md](../data-architecture.md) 참고
 
 ## 사용자 시나리오
 
@@ -25,7 +25,7 @@
 5. "가입하기" 버튼을 누른다
 6. Firebase Auth가 계정을 생성한다
 7. Firebase Auth가 이메일 인증 링크를 발송한다
-8. Firestore에 사용자 프로필(닉네임 등) 문서를 생성한다
+8. Supabase `users` 테이블에 사용자 프로필(닉네임 등) 레코드를 생성한다
 9. 사용자가 이메일 인증을 완료하면 전체 기능을 사용할 수 있다
 10. 메인 화면(내 반려동물 탭)으로 이동한다
 
@@ -40,7 +40,7 @@
 2. 구글 OAuth 동의 화면이 표시된다
 3. 사용자가 구글 계정을 선택하고 권한을 허용한다
 4. Firebase Auth가 구글 credential로 로그인/가입 처리한다
-5. 신규 사용자면 Firestore에 프로필 문서를 생성한다
+5. 신규 사용자면 Supabase `users` 테이블에 프로필 레코드를 생성한다
 6. 메인 화면으로 이동한다
 
 ### 시나리오 4: 자동 로그인
@@ -178,7 +178,7 @@ hooks/
 
 services/
 ├── auth.ts                        # Firebase Auth 래핑 함수
-├── firestore.ts                   # Firestore 유틸 (사용자 프로필 CRUD)
+├── user.ts                        # Supabase 유저 프로필 CRUD
 
 utils/
 ├── validation.ts                  # 입력값 검증 유틸 (이메일, 비밀번호 규칙)
@@ -201,8 +201,8 @@ Firebase Console에서 설정할 항목:
    - 이메일 인증 템플릿 설정 (한국어)
    - 비밀번호 재설정 템플릿 설정 (한국어)
 
-2. **Cloud Firestore**
-   - 보안 규칙 설정 (인증된 사용자만 자신의 데이터 접근)
+2. **Supabase**
+   - `users` 테이블 생성 + RLS 정책 설정
 
 3. **Google Cloud Console**
    - OAuth 2.0 클라이언트 ID 생성 (iOS, Android 각각)
@@ -214,7 +214,7 @@ Firebase Console에서 설정할 항목:
 Client → createUserWithEmailAndPassword(email, password)
 Firebase Auth → 계정 생성 + ID Token 자동 발급
 Client → sendEmailVerification()
-Client → Firestore에 users/{uid} 문서 생성 (nickname 등)
+Client → Supabase users 테이블에 레코드 생성 (nickname 등)
 Client → onAuthStateChanged로 상태 감지 → 메인 화면 이동
 
 [이메일 로그인]
@@ -228,7 +228,7 @@ Google → ID Token 반환
 Client → GoogleAuthProvider.credential(idToken)
 Client → signInWithCredential(credential)
 Firebase Auth → 계정 생성/로그인 + 세션 관리
-Client → 신규 사용자면 Firestore에 프로필 문서 생성
+Client → 신규 사용자면 Supabase users 테이블에 프로필 레코드 생성
 Client → onAuthStateChanged로 상태 감지 → 메인 화면 이동
 
 [자동 로그인]
@@ -243,34 +243,44 @@ Firebase Auth → 재설정 이메일 발송
 
 ## 데이터 모델
 
-### Firestore: `users` 컬렉션
+### Supabase: `users` 테이블
+```sql
+CREATE TABLE users (
+  id TEXT PRIMARY KEY,              -- Firebase Auth UID
+  email TEXT NOT NULL,
+  nickname TEXT NOT NULL,
+  profile_image TEXT,
+  provider TEXT NOT NULL DEFAULT 'email',  -- 'email' | 'google'
+  email_verified BOOLEAN DEFAULT FALSE,
+  notification_enabled BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+### TypeScript 인터페이스
 ```typescript
-// users/{uid}
 interface UserProfile {
-  uid: string;              // Firebase Auth UID
-  email: string;            // 이메일
-  nickname: string;         // 닉네임
-  profileImage: string;     // 프로필 이미지 URL (구글 로그인 시 자동 설정)
-  provider: 'email' | 'google'; // 가입 방식
-  emailVerified: boolean;   // 이메일 인증 여부
-  createdAt: Timestamp;     // 생성일시
-  updatedAt: Timestamp;     // 수정일시
+  id: string;               // Firebase Auth UID
+  email: string;
+  nickname: string;
+  profile_image: string | null;
+  provider: 'email' | 'google';
+  email_verified: boolean;
+  notification_enabled: boolean;
+  created_at: string;
+  updated_at: string;
 }
 ```
 
-### Firestore 보안 규칙
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
+### RLS 정책
+```sql
+CREATE POLICY "Users can access own data"
+  ON users FOR ALL
+  USING (id = auth.uid());
 ```
 
-> **참고**: Firebase Auth가 토큰(ID Token, Refresh Token) 관리를 자동으로 처리하므로 별도 토큰 테이블이 필요 없음
+> **참고**: Firebase Auth가 토큰(ID Token, Refresh Token) 관리를 자동으로 처리하므로 별도 토큰 테이블이 필요 없음. Supabase `users` 테이블은 Firebase UID를 PK로 사용하여 동기화.
 
 ## 예외 처리
 
@@ -292,7 +302,8 @@ service cloud.firestore {
 - Firebase JS SDK를 사용하므로 Expo Go에서 바로 테스트 가능 (커스텀 빌드 불필요)
 - React Native 환경에서 세션 유지를 위해 `@react-native-async-storage/async-storage` + `getReactNativePersistence` 사용
 - Google Cloud Console에서 iOS(Bundle ID)와 Android(SHA-1) 각각 OAuth 클라이언트 ID 등록 필요
-- Firebase 무료 티어(Spark Plan): 인증 무제한, Firestore 일 5만 읽기/2만 쓰기
+- Firebase 무료 티어(Spark Plan): 인증 무제한
+- Supabase 무료 티어: 500MB DB, 1GB Storage, 50만 Edge Function 호출
 - HTTPS는 Firebase SDK가 자동 처리
 
 ## 구현 순서
@@ -307,7 +318,7 @@ service cloud.firestore {
 1. AuthContext 구현 (`onAuthStateChanged` 기반)
 2. 루트 레이아웃에서 인증 상태에 따른 라우팅 분기
 3. 회원가입 화면 UI + Firebase Auth 연동
-4. Firestore 사용자 프로필 생성 로직
+4. Supabase 사용자 프로필 생성 로직
 5. 로그인 화면 UI + Firebase Auth 연동
 6. 이메일 인증 플로우
 7. 비밀번호 찾기 화면 + Firebase Auth 연동
