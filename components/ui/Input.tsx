@@ -25,11 +25,11 @@ export function Input({
   return (
     <View className="gap-1.5">
       {label ? (
-        <Text className=" font-medium text-gray-700">{label}</Text>
+        <Text className="font-medium text-foreground">{label}</Text>
       ) : null}
       <TextInput
-        className={`border rounded-xl px-4 py-3 text-base ${
-          error ? 'border-red-400 bg-red-50' : 'border-gray-300 bg-white'
+        className={`border rounded-xl px-4 py-3 text-base text-foreground ${
+          error ? 'border-error bg-red-50' : 'border-border bg-surface-elevated'
         }`}
         placeholder={placeholder}
         placeholderClassName="text-base!"
@@ -41,7 +41,7 @@ export function Input({
         autoCapitalize="none"
       />
       {error && errorMessage ? (
-        <Text className="text-sm text-red-500 ml-1">{errorMessage}</Text>
+        <Text className="text-sm text-error ml-1">{errorMessage}</Text>
       ) : null}
     </View>
   );

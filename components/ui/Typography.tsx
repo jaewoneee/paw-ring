@@ -15,5 +15,5 @@ export function Typography({ children, variant, className = "" }: TypographyProp
 
   const baseStyle = variant ? variantStyles[variant] : "text-base";
 
-  return <Text className={`${baseStyle} ${className}`}>{children}</Text>;
+  return <Text className={`text-foreground ${baseStyle} ${className}`}>{children}</Text>;
 }

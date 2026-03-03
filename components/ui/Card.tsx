@@ -8,7 +8,7 @@ interface CardProps {
 
 export function Card({ children, className = "" }: CardProps) {
   return (
-    <View className={`bg-white rounded-2xl border border-gray-200 overflow-hidden ${className}`}>
+    <View className={`bg-surface-elevated rounded-2xl border border-border overflow-hidden ${className}`}>
       {children}
     </View>
   );
@@ -19,7 +19,7 @@ export function CardHeader({ children }: { children: ReactNode }) {
 }
 
 export function CardTitle({ children }: { children: ReactNode }) {
-  return <Text className="text-base font-semibold">{children}</Text>;
+  return <Text className="text-base font-semibold text-foreground">{children}</Text>;
 }
 
 export function CardContent({ children, className = "" }: CardProps) {

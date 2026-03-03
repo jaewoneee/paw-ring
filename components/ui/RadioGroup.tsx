@@ -25,7 +25,7 @@ export function RadioGroup<T extends string>({
   return (
     <View className="gap-1.5">
       {label ? (
-        <Text className="font-medium text-gray-700">{label}</Text>
+        <Text className="font-medium text-foreground">{label}</Text>
       ) : null}
       <View className="flex-row gap-3">
         {options.map(option => {
@@ -36,15 +36,15 @@ export function RadioGroup<T extends string>({
               onPress={() => onChange?.(option.value)}
               className={`flex-1 flex-row items-center justify-center rounded-xl border py-3 px-4 ${
                 selected
-                  ? 'border-black bg-black'
+                  ? 'border-primary bg-primary'
                   : error
-                    ? 'border-red-400 bg-red-50'
-                    : 'border-gray-300 bg-white'
+                    ? 'border-error bg-red-50'
+                    : 'border-border bg-surface-elevated'
               }`}
             >
               <Text
                 className={`text-base font-medium ${
-                  selected ? 'text-white' : 'text-gray-700'
+                  selected ? 'text-primary-foreground' : 'text-foreground'
                 }`}
               >
                 {option.label}
@@ -54,7 +54,7 @@ export function RadioGroup<T extends string>({
         })}
       </View>
       {error && errorMessage ? (
-        <Text className="text-sm text-red-500 ml-1">{errorMessage}</Text>
+        <Text className="text-sm text-error ml-1">{errorMessage}</Text>
       ) : null}
     </View>
   );

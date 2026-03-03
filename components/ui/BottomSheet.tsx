@@ -73,9 +73,9 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
           left: 0,
           right: 0,
         }}
-        className="bg-white rounded-t-2xl pb-8 px-4 pt-3 min-h-[30vh]"
+        className="bg-surface-elevated rounded-t-2xl pb-8 px-4 pt-3 min-h-[30vh]"
       >
-        <View className="w-10 h-1 bg-gray-300 rounded-full self-center mb-4" />
+        <View className="w-10 h-1 bg-border-strong rounded-full self-center mb-4" />
         {children}
       </Animated.View>
     </Modal>

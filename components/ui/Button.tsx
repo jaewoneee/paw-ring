@@ -25,22 +25,22 @@ export function Button({
   const baseStyle = 'rounded-xl py-3 px-5 flex-row items-center justify-center';
 
   const variantStyles = {
-    default: isDisabled ? 'bg-gray-300' : 'bg-black',
+    default: isDisabled ? 'bg-primary-300' : 'bg-primary',
     outline: isDisabled
-      ? 'border border-gray-200 bg-white'
-      : 'border border-gray-300 bg-white',
+      ? 'border border-border bg-background'
+      : 'border border-border-strong bg-background',
     ghost: 'bg-transparent',
   };
 
   const textStyles = {
-    default: isDisabled ? 'text-white' : 'text-white',
-    outline: isDisabled ? 'text-gray-400' : 'text-gray-900',
-    ghost: isDisabled ? 'text-gray-400' : 'text-gray-600',
+    default: 'text-primary-foreground',
+    outline: isDisabled ? 'text-muted-foreground' : 'text-foreground',
+    ghost: isDisabled ? 'text-muted-foreground' : 'text-muted-foreground',
   };
 
   const sizeStyles = {
-    heading: 'text-xl',
-    body: 'text-base',
+    heading: 'text-2xl',
+    body: 'text-xl',
     small: 'text-sm',
   };
 
@@ -53,7 +53,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'default' ? '#fff' : '#6b7280'}
+          color={variant === 'default' ? '#fff' : '#737373'}
         />
       ) : (
         <Text

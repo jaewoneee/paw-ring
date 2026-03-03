@@ -14,7 +14,7 @@ function TabBarIcon(props: {
 }
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -30,7 +30,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme === "dark" ? "dark" : "light"].tint,
+        tabBarActiveTintColor: Colors[colorScheme === "dark" ? "dark" : "light"].primary,
       }}
     >
       <Tabs.Screen

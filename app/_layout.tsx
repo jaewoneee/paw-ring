@@ -5,6 +5,7 @@ import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
+  type Theme,
 } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -13,10 +14,37 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { PetProvider } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
 import { Keyboard, Pressable } from 'react-native';
+
+const LightTheme: Theme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: Colors.light.primary,
+    background: Colors.light.background,
+    card: Colors.light.surfaceElevated,
+    text: Colors.light.foreground,
+    border: Colors.light.border,
+    notification: Colors.light.error,
+  },
+};
+
+const DarkNavTheme: Theme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    primary: Colors.dark.primary,
+    background: Colors.dark.background,
+    card: Colors.dark.surfaceElevated,
+    text: Colors.dark.foreground,
+    border: Colors.dark.border,
+    notification: Colors.dark.error,
+  },
+};
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -50,7 +78,7 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const colorScheme = useColorScheme();
+  const { colorScheme } = useColorScheme();
   const { user, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
@@ -78,14 +106,17 @@ function RootLayoutNav() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkNavTheme : LightTheme}>
       <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
         <Stack>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="add-pet"
-            options={{ title: '새 반려동물 등록' }}
+            options={{
+              title: '새 반려동물 등록',
+              headerBackButtonDisplayMode: 'minimal',
+            }}
           />
         </Stack>
       </Pressable>
