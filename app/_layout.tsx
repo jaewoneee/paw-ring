@@ -124,6 +124,13 @@ function RootLayoutNav() {
             }}
           />
           <Stack.Screen
+            name="edit-pet"
+            options={{
+              title: '반려동물 수정',
+              headerBackButtonDisplayMode: 'minimal',
+            }}
+          />
+          <Stack.Screen
             name="settings/profile"
             options={{
               title: '프로필 수정',

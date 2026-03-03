@@ -10,9 +10,47 @@ import { useAuth } from '@/hooks/useAuth';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import React, { createRef, useRef, useState } from 'react';
+import {
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
+import ReanimatedSwipeable, {
+  type SwipeableMethods,
+} from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const ACTION_WIDTH = 72;
+
+function SwipeAction({
+  label,
+  color,
+  onPress,
+}: {
+  label: string;
+  color: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        width: ACTION_WIDTH,
+        backgroundColor: color,
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14 }}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -25,6 +63,22 @@ export default function HomeScreen() {
   const colors = Colors[isDark ? 'dark' : 'light'];
 
   const [sheetVisible, setSheetVisible] = useState(false);
+  const swipeableRefsMap = useRef<
+    Map<string, React.RefObject<SwipeableMethods | null>>
+  >(new Map());
+
+  const getSwipeableRef = (id: string) => {
+    if (!swipeableRefsMap.current.has(id)) {
+      swipeableRefsMap.current.set(id, createRef<SwipeableMethods | null>());
+    }
+    return swipeableRefsMap.current.get(id)!;
+  };
+
+  const closeOtherSwipeables = (currentId: string) => {
+    swipeableRefsMap.current.forEach((ref, id) => {
+      if (id !== currentId) ref.current?.close();
+    });
+  };
 
   const greeting = userProfile?.nickname
     ? `${userProfile.nickname}님, 안녕하세요!`
@@ -210,38 +264,63 @@ export default function HomeScreen() {
         onClose={() => setSheetVisible(false)}
       >
         <View className="gap-2">
-          <Typography className="font-semibold mb-1">반려동물 선택</Typography>
+          <Typography className="font-semibold mb-1" variant="body-lg">
+            반려동물 선택
+          </Typography>
 
           {pets.map(pet => (
-            <Pressable
+            <ReanimatedSwipeable
               key={pet.id}
-              className={`flex-row items-center gap-3 p-3 rounded-xl ${
-                selectedPet?.id === pet.id ? 'bg-surface' : ''
-              }`}
-              onPress={() => {
-                selectPet(pet);
-                setSheetVisible(false);
-              }}
-            >
-              {pet.profile_image ? (
-                <Image
-                  source={{ uri: pet.profile_image }}
-                  className="w-10 h-10 rounded-full bg-surface"
+              ref={getSwipeableRef(pet.id)}
+              friction={2}
+              rightThreshold={40}
+              overshootRight={false}
+              onSwipeableWillOpen={() => closeOtherSwipeables(pet.id)}
+              renderRightActions={() => (
+                <SwipeAction
+                  label="수정"
+                  color={colors.primary}
+                  onPress={() => {
+                    getSwipeableRef(pet.id).current?.close();
+                    setSheetVisible(false);
+                    router.push({
+                      pathname: '/edit-pet',
+                      params: { petId: pet.id },
+                    });
+                  }}
                 />
-              ) : (
-                <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
-                  <FontAwesome
-                    name="paw"
-                    size={18}
-                    color={colors.mutedForeground}
+              )}
+            >
+              <Pressable
+                className={`flex-row items-center gap-3 p-3 rounded-xl ${
+                  selectedPet?.id === pet.id ? 'bg-surface' : ''
+                }`}
+                style={{ backgroundColor: colors.surfaceElevated }}
+                onPress={() => {
+                  selectPet(pet);
+                  setSheetVisible(false);
+                }}
+              >
+                {pet.profile_image ? (
+                  <Image
+                    source={{ uri: pet.profile_image }}
+                    className="w-10 h-10 rounded-full bg-surface"
                   />
-                </View>
-              )}
-              <Typography className="flex-1">{pet.name}</Typography>
-              {selectedPet?.id === pet.id && (
-                <FontAwesome name="check" size={16} color={colors.primary} />
-              )}
-            </Pressable>
+                ) : (
+                  <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
+                    <FontAwesome
+                      name="paw"
+                      size={18}
+                      color={colors.mutedForeground}
+                    />
+                  </View>
+                )}
+                <Typography className="flex-1">{pet.name}</Typography>
+                {selectedPet?.id === pet.id && (
+                  <FontAwesome name="check" size={16} color={colors.primary} />
+                )}
+              </Pressable>
+            </ReanimatedSwipeable>
           ))}
 
           <Pressable

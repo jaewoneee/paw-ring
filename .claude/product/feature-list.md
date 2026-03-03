@@ -42,9 +42,9 @@
 
 | # | 기능 | 상태 | 상세 문서 |
 |---|------|------|-----------|
-| 2.1 | 반려동물 등록 (이름, 종류, 나이, 사진 등) | ⬜ | [pet.md](./feature/pet.md) |
-| 2.2 | 반려동물 프로필 수정 | ⬜ | [pet.md](./feature/pet.md) |
-| 2.3 | 반려동물 삭제 | ⬜ | [pet.md](./feature/pet.md) |
+| 2.1 | 반려동물 등록 (이름, 종류, 나이, 사진 등) | ✅ | [pet.md](./feature/pet.md) |
+| 2.2 | 반려동물 프로필 수정 | ✅ | [pet.md](./feature/pet.md) |
+| 2.3 | 반려동물 삭제 | ✅ | [pet.md](./feature/pet.md) |
 | 2.4 | 반려동물 목록 조회 | ⬜ | [pet.md](./feature/pet.md) |
 
 ---

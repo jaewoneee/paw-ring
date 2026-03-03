@@ -1,5 +1,31 @@
 import { supabase } from "@/lib/supabase";
 import type { Pet, PetSpecies } from "@/types/pet";
+import { File } from "expo-file-system/next";
+import { decode } from "base64-arraybuffer";
+
+/** 반려동물 프로필 이미지 업로드 */
+export async function uploadPetImage(
+  ownerId: string,
+  localUri: string
+): Promise<string> {
+  const ext = localUri.split(".").pop() ?? "jpg";
+  const fileName = `${ownerId}/${Date.now()}.${ext}`;
+
+  const file = new File(localUri);
+  const base64 = await file.base64();
+
+  const { error } = await supabase.storage
+    .from("pet-profiles")
+    .upload(fileName, decode(base64), { contentType: `image/${ext}`, upsert: true });
+
+  if (error) throw error;
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("pet-profiles").getPublicUrl(fileName);
+
+  return publicUrl;
+}
 
 /** 반려동물 등록 */
 export async function createPet(data: {

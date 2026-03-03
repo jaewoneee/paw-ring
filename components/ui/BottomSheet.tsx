@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useEffect, useRef } from "react";
 import { Animated, Modal, Pressable, StyleSheet, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 interface BottomSheetProps {
   visible: boolean;
@@ -75,8 +76,10 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
         }}
         className="bg-surface-elevated rounded-t-2xl pb-8 px-4 pt-3 min-h-[30vh]"
       >
-        <View className="w-10 h-1 bg-border-strong rounded-full self-center mb-4" />
-        {children}
+        <GestureHandlerRootView>
+          <View className="w-10 h-1 bg-border-strong rounded-full self-center mb-4" />
+          {children}
+        </GestureHandlerRootView>
       </Animated.View>
     </Modal>
   );

@@ -26,7 +26,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { usePets } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
-import { createPet } from '@/services/pet';
+import { createPet, uploadPetImage } from '@/services/pet';
 import type { PetSpecies } from '@/types/pet';
 import { formatDate } from '@/utils/date';
 
@@ -38,7 +38,7 @@ const SPECIES_OPTIONS: { label: string; value: PetSpecies }[] = [
 export default function AddPetScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { refreshPets } = usePets();
+  const { refreshPets, selectPet } = usePets();
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
@@ -110,14 +110,21 @@ export default function AddPetScreen() {
     setSubmitting(true);
     try {
       const dateStr = birthDate.toISOString().split('T')[0]; // YYYY-MM-DD
-      await createPet({
+
+      let uploadedImageUrl: string | undefined;
+      if (profileImage) {
+        uploadedImageUrl = await uploadPetImage(user.uid, profileImage);
+      }
+
+      const newPet = await createPet({
         owner_id: user.uid,
         name: name.trim(),
         species,
         birth_date: dateStr,
-        // TODO: profile_image — Supabase Storage 연동 후 추가
+        profile_image: uploadedImageUrl,
       });
       await refreshPets();
+      selectPet(newPet);
       router.back();
     } catch (err) {
       console.error('[AddPet] 등록 실패:', err);

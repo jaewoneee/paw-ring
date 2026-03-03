@@ -1,0 +1,365 @@
+import { FontAwesome } from '@expo/vector-icons';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
+
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { RadioGroup } from '@/components/ui/RadioGroup';
+import { Screen } from '@/components/ui/Screen';
+import { Typography } from '@/components/ui/Typography';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
+import { usePets } from '@/contexts/PetContext';
+import { useAuth } from '@/hooks/useAuth';
+import { deletePet, updatePet, uploadPetImage } from '@/services/pet';
+import type { PetSpecies } from '@/types/pet';
+import { formatDate } from '@/utils/date';
+
+const SPECIES_OPTIONS: { label: string; value: PetSpecies }[] = [
+  { label: '강아지', value: 'dog' },
+  { label: '고양이', value: 'cat' },
+];
+
+export default function EditPetScreen() {
+  const router = useRouter();
+  const { petId } = useLocalSearchParams<{ petId: string }>();
+  const { user } = useAuth();
+  const { pets, refreshPets } = usePets();
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+
+  const pet = pets.find(p => p.id === petId);
+
+  const [name, setName] = useState('');
+  const [species, setSpecies] = useState<PetSpecies | undefined>();
+  const [birthDate, setBirthDate] = useState<Date | undefined>();
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [profileImage, setProfileImage] = useState<string | undefined>();
+  const [imageChanged, setImageChanged] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const [tempDate, setTempDate] = useState<Date>(new Date());
+
+  // Initialize form with existing pet data
+  useEffect(() => {
+    if (pet) {
+      setName(pet.name);
+      setSpecies(pet.species);
+      setBirthDate(new Date(pet.birth_date));
+      setProfileImage(pet.profile_image ?? undefined);
+    }
+  }, [pet?.id]);
+
+  const handleDateChange = (_: DateTimePickerEvent, date?: Date) => {
+    if (Platform.OS === 'android') {
+      if (date) {
+        setBirthDate(date);
+        if (errors.birthDate) {
+          setErrors(prev => ({ ...prev, birthDate: '' }));
+        }
+      }
+      setShowDatePicker(false);
+    } else if (date) {
+      setTempDate(date);
+    }
+  };
+
+  const handleDateConfirm = () => {
+    setBirthDate(tempDate);
+    if (errors.birthDate) {
+      setErrors(prev => ({ ...prev, birthDate: '' }));
+    }
+    setShowDatePicker(false);
+  };
+
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setProfileImage(result.assets[0].uri);
+      setImageChanged(true);
+    }
+  };
+
+  const validate = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!name.trim()) {
+      newErrors.name = '이름을 입력해주세요';
+    }
+    if (!species) {
+      newErrors.species = '반려동물 종류를 선택해주세요';
+    }
+    if (!birthDate) {
+      newErrors.birthDate = '생년월일을 선택해주세요';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validate() || !user || !species || !birthDate || !petId) return;
+
+    setSubmitting(true);
+    try {
+      const dateStr = birthDate.toISOString().split('T')[0];
+
+      let uploadedImageUrl: string | undefined;
+      if (imageChanged && profileImage) {
+        uploadedImageUrl = await uploadPetImage(user.uid, profileImage);
+      }
+
+      await updatePet(petId, {
+        name: name.trim(),
+        species,
+        birth_date: dateStr,
+        ...(imageChanged ? { profile_image: uploadedImageUrl ?? null } : {}),
+      });
+
+      await refreshPets();
+      router.back();
+    } catch (err) {
+      console.error('[EditPet] 수정 실패:', err);
+      Alert.alert('오류', '반려동물 정보 수정에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDelete = () => {
+    if (!pet) return;
+
+    Alert.alert(
+      '반려동물 삭제',
+      `${pet.name}의 모든 데이터가 삭제됩니다.\n이 작업은 되돌릴 수 없습니다. 정말 삭제하시겠습니까?`,
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '삭제하기',
+          style: 'destructive',
+          onPress: performDelete,
+        },
+      ],
+    );
+  };
+
+  const performDelete = async () => {
+    if (!petId) return;
+    setDeleting(true);
+    try {
+      await deletePet(petId);
+      await refreshPets();
+      router.back();
+    } catch (err) {
+      console.error('[EditPet] 삭제 실패:', err);
+      Alert.alert('오류', '반려동물 삭제에 실패했습니다. 다시 시도해주세요.');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  if (!pet) {
+    return (
+      <Screen>
+        <View className="flex-1 items-center justify-center">
+          <Typography>반려동물을 찾을 수 없습니다.</Typography>
+        </View>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ padding: 16, gap: 16 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Card>
+          <CardContent>
+            <View className="gap-5">
+              <Typography variant="body-lg" className="font-semibold">
+                반려동물 정보 수정
+              </Typography>
+
+              {/* 프로필 사진 */}
+              <View className="items-center">
+                <Pressable
+                  onPress={handlePickImage}
+                  className="w-24 h-24 rounded-full bg-surface border border-border items-center justify-center overflow-hidden"
+                >
+                  {profileImage ? (
+                    <Image
+                      source={{ uri: profileImage }}
+                      className="w-full h-full"
+                    />
+                  ) : (
+                    <View className="items-center gap-1">
+                      <FontAwesome name="camera" size={24} color={colors.mutedForeground} />
+                    </View>
+                  )}
+                </Pressable>
+              </View>
+
+              {/* 반려동물 종류 */}
+              <RadioGroup
+                label="종류"
+                options={SPECIES_OPTIONS}
+                value={species}
+                onChange={v => {
+                  setSpecies(v);
+                  if (errors.species) {
+                    setErrors(prev => ({ ...prev, species: '' }));
+                  }
+                }}
+                error={!!errors.species}
+                errorMessage={errors.species}
+              />
+
+              {/* 이름 */}
+              <Input
+                label="이름"
+                placeholder="반려동물 이름"
+                value={name}
+                onChangeText={text => {
+                  setName(text);
+                  if (errors.name) {
+                    setErrors(prev => ({ ...prev, name: '' }));
+                  }
+                }}
+                error={!!errors.name}
+                errorMessage={errors.name}
+              />
+
+              {/* 생년월일 */}
+              <View style={{ gap: 6 }}>
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: '500',
+                    color: colors.foreground,
+                  }}
+                >
+                  생년월일
+                </Text>
+                <Pressable
+                  onPress={() => {
+                    setTempDate(birthDate ?? new Date());
+                    setShowDatePicker(true);
+                  }}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: errors.birthDate ? colors.error : colors.border,
+                    backgroundColor: errors.birthDate ? (colorScheme === 'dark' ? '#450a0a' : '#fef2f2') : colors.surfaceElevated,
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      color: birthDate ? colors.foreground : colors.mutedForeground,
+                    }}
+                  >
+                    {birthDate
+                      ? formatDate(birthDate)
+                      : '생년월일을 선택해주세요'}
+                  </Text>
+                </Pressable>
+                {errors.birthDate ? (
+                  <Text style={{ fontSize: 12, color: colors.error, marginLeft: 4 }}>
+                    {errors.birthDate}
+                  </Text>
+                ) : null}
+              </View>
+
+              <Button onPress={handleSubmit} loading={submitting}>저장하기</Button>
+            </View>
+          </CardContent>
+        </Card>
+
+        {/* 삭제 섹션 */}
+        <Card>
+          <CardContent>
+            <Pressable
+              onPress={handleDelete}
+              disabled={deleting}
+              style={{
+                borderWidth: 1,
+                borderColor: colors.error,
+                borderRadius: 12,
+                paddingVertical: 12,
+                paddingHorizontal: 20,
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: deleting ? 0.5 : 1,
+              }}
+            >
+              {deleting ? (
+                <ActivityIndicator size="small" color={colors.error} />
+              ) : (
+                <Text style={{ color: colors.error, fontWeight: '600', fontSize: 16 }}>
+                  삭제하기
+                </Text>
+              )}
+            </Pressable>
+          </CardContent>
+        </Card>
+
+        <BottomSheet
+          visible={showDatePicker}
+          onClose={() => setShowDatePicker(false)}
+        >
+          <View style={{ gap: 12 }}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: '600',
+                color: colors.foreground,
+                textAlign: 'center',
+              }}
+            >
+              생년월일 선택
+            </Text>
+            <DateTimePicker
+              value={tempDate}
+              mode="date"
+              display="spinner"
+              maximumDate={new Date()}
+              onChange={handleDateChange}
+              themeVariant={colorScheme === 'dark' ? 'dark' : 'light'}
+              locale="ko-KR"
+              style={{ alignSelf: 'center', width: '100%' }}
+            />
+            <Button onPress={handleDateConfirm}>확인</Button>
+          </View>
+        </BottomSheet>
+      </ScrollView>
+    </Screen>
+  );
+}
