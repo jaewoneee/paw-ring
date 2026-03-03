@@ -4,6 +4,7 @@ import { auth } from "@/lib/firebase";
 import {
   registerWithEmail,
   loginWithEmail,
+  signInWithGoogle,
   signOut,
   resetPassword,
 } from "@/services/auth";
@@ -16,6 +17,7 @@ interface AuthContextType {
   isLoading: boolean;
   register: (email: string, password: string, nickname: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -63,6 +65,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await loginWithEmail(email, password);
   }, []);
 
+  const handleLoginWithGoogle = useCallback(async (idToken: string) => {
+    const { credential, isNewUser } = await signInWithGoogle(idToken);
+    const firebaseUser = credential.user;
+
+    if (isNewUser) {
+      await createUserProfile(firebaseUser.uid, {
+        email: firebaseUser.email ?? "",
+        nickname: firebaseUser.displayName ?? "사용자",
+        provider: "google",
+        profileImage: firebaseUser.photoURL ?? "",
+      });
+    }
+
+    const profile = await getUserProfile(firebaseUser.uid);
+    setUserProfile(profile);
+  }, []);
+
   const logout = useCallback(async () => {
     await signOut();
   }, []);
@@ -87,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         register,
         login,
+        loginWithGoogle: handleLoginWithGoogle,
         logout,
         forgotPassword,
         refreshUser,

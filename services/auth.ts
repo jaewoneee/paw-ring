@@ -1,10 +1,13 @@
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithCredential,
+  GoogleAuthProvider,
   signOut as firebaseSignOut,
   sendPasswordResetEmail,
   sendEmailVerification,
   reload,
+  getAdditionalUserInfo,
   type UserCredential,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
@@ -42,6 +45,19 @@ export async function resendVerificationEmail(): Promise<void> {
   if (auth.currentUser) {
     await sendEmailVerification(auth.currentUser);
   }
+}
+
+/** 구글 ID Token으로 Firebase 로그인 */
+export async function signInWithGoogle(
+  idToken: string
+): Promise<{ credential: UserCredential; isNewUser: boolean }> {
+  const googleCredential = GoogleAuthProvider.credential(idToken);
+  const credential = await signInWithCredential(auth, googleCredential);
+  const additionalInfo = getAdditionalUserInfo(credential);
+  return {
+    credential,
+    isNewUser: additionalInfo?.isNewUser ?? false,
+  };
 }
 
 /** 현재 사용자 정보 새로고침 (이메일 인증 상태 갱신) */

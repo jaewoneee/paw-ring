@@ -66,9 +66,9 @@
 - [ ] 비밀번호 재설정 이메일 발송 (`sendPasswordResetEmail`)
 
 ### 구글 로그인
-- [ ] Google OAuth 2.0 연동 (expo-auth-session)
-- [ ] Firebase Auth에 구글 credential 연동 (`signInWithCredential`)
-- [ ] 구글 계정 정보(이메일, 이름, 프로필 사진)로 자동 프로필 생성
+- [x] Google OAuth 2.0 연동 (expo-auth-session)
+- [x] Firebase Auth에 구글 credential 연동 (`signInWithCredential`)
+- [x] 구글 계정 정보(이메일, 이름, 프로필 사진)로 자동 프로필 생성
 - [ ] 기존 이메일 계정과 동일 이메일의 구글 계정 연동 처리
 
 ### 공통

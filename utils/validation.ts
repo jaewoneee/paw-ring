@@ -72,6 +72,8 @@ export function getFirebaseErrorMessage(errorCode: string): string {
     "auth/too-many-requests": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요",
     "auth/account-exists-with-different-credential":
       "이미 이메일로 가입된 계정입니다. 이메일로 로그인 후 구글 계정을 연동해주세요",
+    "auth/popup-closed-by-user": "구글 로그인이 취소되었습니다",
+    "auth/cancelled-popup-request": "구글 로그인이 취소되었습니다",
   };
 
   return errorMessages[errorCode] ?? "알 수 없는 오류가 발생했습니다";

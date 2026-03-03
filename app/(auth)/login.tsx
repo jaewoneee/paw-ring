@@ -6,6 +6,7 @@ import { Typography } from "@/components/ui/Typography";
 import { Input } from "@/components/ui/Input";
 import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/hooks/useAuth";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import {
   validateEmail,
   validatePassword,
@@ -15,11 +16,14 @@ import {
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
+  const google = useGoogleAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const displayError = error || google.error;
 
   const handleLogin = async () => {
     setError("");
@@ -61,10 +65,10 @@ export default function LoginScreen() {
           </Typography>
         </View>
 
-        {error ? (
+        {displayError ? (
           <View className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
             <Typography variant="body-sm" className="text-error text-center">
-              {error}
+              {displayError}
             </Typography>
           </View>
         ) : null}
@@ -110,8 +114,13 @@ export default function LoginScreen() {
           <View className="flex-1 h-px bg-border" />
         </View>
 
-        <Button variant="outline" disabled>
-          구글로 시작하기 (준비중)
+        <Button
+          variant="outline"
+          onPress={google.signIn}
+          loading={google.loading}
+          disabled={google.disabled || google.loading}
+        >
+          구글로 시작하기
         </Button>
         </View>
       </ScrollView>
