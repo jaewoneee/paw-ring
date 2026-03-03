@@ -94,7 +94,9 @@ function RootLayoutNav() {
 
     const inAuthGroup = segments[0] === '(auth)';
 
-    if (user && !user.emailVerified && segments[1] !== 'verify-email') {
+    if (!user && !inAuthGroup) {
+      router.replace('/(tabs)');
+    } else if (user && !user.emailVerified && segments[1] !== 'verify-email') {
       router.replace('/(auth)/verify-email');
     } else if (user && user.emailVerified && inAuthGroup) {
       router.replace('/(tabs)');
@@ -110,11 +112,28 @@ function RootLayoutNav() {
       <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
         <Stack>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="(tabs)"
+            options={{ headerShown: false }}
+          />
           <Stack.Screen
             name="add-pet"
             options={{
               title: '새 반려동물 등록',
+              headerBackButtonDisplayMode: 'minimal',
+            }}
+          />
+          <Stack.Screen
+            name="settings/profile"
+            options={{
+              title: '프로필 수정',
+              headerBackButtonDisplayMode: 'minimal',
+            }}
+          />
+          <Stack.Screen
+            name="settings/change-password"
+            options={{
+              title: '비밀번호 변경',
               headerBackButtonDisplayMode: 'minimal',
             }}
           />

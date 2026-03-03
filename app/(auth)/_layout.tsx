@@ -1,10 +1,10 @@
-import { Stack } from "expo-router";
-import { useColorScheme } from "@/components/useColorScheme";
-import Colors from "@/constants/Colors";
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
+import { Stack } from 'expo-router';
 
 export default function AuthLayout() {
   const { colorScheme } = useColorScheme();
-  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   return (
     <Stack
@@ -20,16 +20,16 @@ export default function AuthLayout() {
         name="register"
         options={{
           headerShown: true,
-          headerTitle: "회원가입",
-          headerBackTitle: "뒤로",
+          headerTitle: '회원가입',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen
         name="forgot-password"
         options={{
           headerShown: true,
-          headerTitle: "비밀번호 찾기",
-          headerBackTitle: "뒤로",
+          headerTitle: '비밀번호 찾기',
+          headerBackButtonDisplayMode: 'minimal',
         }}
       />
       <Stack.Screen name="verify-email" />

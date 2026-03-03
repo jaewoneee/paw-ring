@@ -31,7 +31,7 @@
 | 1.4 | 비밀번호 찾기 (재설정) | ⬜ | [login.md](./feature/login.md) |
 | 1.5 | 자동 로그인 (세션 유지) | 🔧 | [login.md](./feature/login.md) |
 | 1.6 | 로그아웃 | ✅ | [login.md](./feature/login.md) |
-| 1.7 | 회원 탈퇴 | ⬜ | [login.md](./feature/login.md) |
+| 1.7 | 회원 탈퇴 | ✅ | [login.md](./feature/login.md) |
 
 ---
 
@@ -90,9 +90,9 @@
 
 | # | 기능 | 상태 | 상세 문서 |
 |---|------|------|-----------|
-| 6.1 | 프로필 수정 (닉네임, 프로필 이미지) | ⬜ | [settings.md](./feature/settings.md) |
-| 6.2 | 알림 설정 (전체 ON/OFF) | ⬜ | [settings.md](./feature/settings.md) |
-| 6.3 | 앱 정보 / 이용약관 / 개인정보 처리방침 | ⬜ | [settings.md](./feature/settings.md) |
+| 6.1 | 프로필 수정 (닉네임, 프로필 이미지) | 🔧 | [settings.md](./feature/settings.md) |
+| 6.2 | 알림 설정 (전체 ON/OFF) | ✅ | [settings.md](./feature/settings.md) |
+| 6.3 | 앱 정보 / 이용약관 / 개인정보 처리방침 | 🔧 | [settings.md](./feature/settings.md) |
 
 ---
 
