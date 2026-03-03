@@ -1,7 +1,15 @@
-import { Text } from "react-native";
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
+import { Text } from 'react-native';
 
-type Variant = "h1" | "h2" | "h3" | "body-lg" | "body-md" | "body-sm" | "small";
+type Variant =
+  | 'h1'
+  | 'h2'
+  | 'h3'
+  | 'body-xl'
+  | 'body-lg'
+  | 'body-md'
+  | 'body-sm'
+  | 'small';
 
 interface TypographyProps {
   children: ReactNode;
@@ -10,19 +18,20 @@ interface TypographyProps {
 }
 
 const variantStyles: Record<Variant, string> = {
-  h1: "text-3xl font-bold",
-  h2: "text-2xl font-bold",
-  h3: "text-xl font-semibold",
-  "body-lg": "text-lg",
-  "body-md": "text-base",
-  "body-sm": "text-sm",
-  small: "text-xs",
+  h1: 'text-4xl font-bold',
+  h2: 'text-3xl font-bold',
+  h3: 'text-2xl font-semibold',
+  'body-xl': 'text-2xl',
+  'body-lg': 'text-xl',
+  'body-md': 'text-base',
+  'body-sm': 'text-sm',
+  small: 'text-xs',
 };
 
 export function Typography({
   children,
-  variant = "body-md",
-  className = "",
+  variant = 'body-md',
+  className = '',
 }: TypographyProps) {
   return (
     <Text className={`text-foreground ${variantStyles[variant]} ${className}`}>

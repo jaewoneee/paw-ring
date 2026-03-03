@@ -88,7 +88,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }}>
         <View className="p-4 gap-5">
           {/* 인사말 */}
           <View className="gap-1">
@@ -127,7 +127,7 @@ export default function HomeScreen() {
 
           {/* 다가오는 일정 */}
           <View className="gap-2">
-            <Typography variant="body-lg" className="font-semibold">
+            <Typography variant="body-xl" className="font-semibold">
               다가오는 일정
             </Typography>
             <Card>
@@ -138,7 +138,10 @@ export default function HomeScreen() {
                     size={24}
                     color={colors.mutedForeground}
                   />
-                  <Typography variant="body-sm" className="text-muted-foreground text-center">
+                  <Typography
+                    variant="body-sm"
+                    className="text-muted-foreground text-center"
+                  >
                     {isLoggedIn
                       ? '등록된 일정이 없어요\n일정을 추가해보세요'
                       : '로그인 후 일정을 확인할 수 있어요'}
@@ -183,9 +186,7 @@ export default function HomeScreen() {
         onClose={() => setSheetVisible(false)}
       >
         <View className="gap-2">
-          <Typography className="font-semibold mb-1">
-            반려동물 선택
-          </Typography>
+          <Typography className="font-semibold mb-1">반려동물 선택</Typography>
 
           {pets.map(pet => (
             <Pressable

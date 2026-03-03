@@ -12,7 +12,7 @@ export default function CalendarScreen() {
 
   return (
     <Screen>
-      <ScrollView className="flex-1">
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }}>
         <View className="p-4 gap-4">
           <Typography variant="h2">캘린더</Typography>
 
