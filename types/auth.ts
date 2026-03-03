@@ -8,6 +8,7 @@ export interface UserProfile {
   profileImage: string;
   provider: "email" | "google";
   emailVerified: boolean;
+  notificationEnabled: boolean;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

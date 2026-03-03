@@ -8,7 +8,16 @@ import {
   signOut,
   resetPassword,
 } from "@/services/auth";
-import { createUserProfile, getUserProfile } from "@/services/firestore";
+import {
+  createUserProfile,
+  getUserProfile,
+  updateUserProfile,
+  deleteUserData,
+} from "@/services/firestore";
+import {
+  reauthenticateWithEmail,
+  deleteAccount as deleteAccountService,
+} from "@/services/account";
 import type { UserProfile } from "@/types/auth";
 
 interface AuthContextType {
@@ -21,6 +30,12 @@ interface AuthContextType {
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
   refreshUser: () => Promise<void>;
+  updateProfile: (
+    data: Partial<
+      Pick<UserProfile, "nickname" | "profileImage" | "notificationEnabled">
+    >
+  ) => Promise<void>;
+  deleteAccount: (password?: string) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -90,6 +105,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await resetPassword(email);
   }, []);
 
+  const updateProfile = useCallback(
+    async (
+      data: Partial<
+        Pick<UserProfile, "nickname" | "profileImage" | "notificationEnabled">
+      >
+    ) => {
+      if (!user) throw new Error("Not authenticated");
+      await updateUserProfile(user.uid, data);
+      const profile = await getUserProfile(user.uid);
+      setUserProfile(profile);
+    },
+    [user]
+  );
+
+  const handleDeleteAccount = useCallback(
+    async (password?: string) => {
+      if (!user) throw new Error("Not authenticated");
+      if (password) {
+        await reauthenticateWithEmail(password);
+      }
+      await deleteUserData(user.uid);
+      await deleteAccountService();
+    },
+    [user]
+  );
+
   const refreshUser = useCallback(async () => {
     if (auth.currentUser) {
       await reload(auth.currentUser);
@@ -110,6 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         forgotPassword,
         refreshUser,
+        updateProfile,
+        deleteAccount: handleDeleteAccount,
       }}
     >
       {children}

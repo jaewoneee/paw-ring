@@ -34,6 +34,7 @@ export async function createUserProfile(
     profileImage: data.profileImage ?? "",
     provider: data.provider,
     emailVerified: false,
+    notificationEnabled: true,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -52,7 +53,7 @@ export async function getUserProfile(
 /** 사용자 프로필 업데이트 */
 export async function updateUserProfile(
   uid: string,
-  data: Partial<Pick<UserProfile, "nickname" | "profileImage" | "emailVerified">>
+  data: Partial<Pick<UserProfile, "nickname" | "profileImage" | "emailVerified" | "notificationEnabled">>
 ): Promise<void> {
   const userRef = doc(db, USERS_COLLECTION, uid);
   await updateDoc(userRef, {
@@ -65,6 +66,17 @@ export async function updateUserProfile(
 export async function deleteUserProfile(uid: string): Promise<void> {
   const userRef = doc(db, USERS_COLLECTION, uid);
   await deleteDoc(userRef);
+}
+
+/** 사용자 관련 모든 데이터 삭제 (회원 탈퇴 시) */
+export async function deleteUserData(uid: string): Promise<void> {
+  // 서브컬렉션(반려동물) 삭제
+  const petsRef = collection(db, USERS_COLLECTION, uid, "pets");
+  const petsSnapshot = await getDocs(petsRef);
+  await Promise.all(petsSnapshot.docs.map((d) => deleteDoc(d.ref)));
+
+  // 유저 프로필 문서 삭제
+  await deleteUserProfile(uid);
 }
 
 // ─── 반려동물 ───
