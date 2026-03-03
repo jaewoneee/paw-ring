@@ -1,11 +1,11 @@
-import React from "react";
-import { View, Pressable, StyleSheet, Platform } from "react-native";
-import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import { BlurView } from "expo-blur";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { BlurView } from 'expo-blur';
+import React from 'react';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import Colors from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 
 export default function TabBar({
   state,
@@ -14,16 +14,16 @@ export default function TabBar({
 }: BottomTabBarProps) {
   const { colorScheme } = useColorScheme();
   const insets = useSafeAreaInsets();
-  const isDark = colorScheme === "dark";
-  const theme = Colors[isDark ? "dark" : "light"];
+  const isDark = colorScheme === 'dark';
+  const theme = Colors[isDark ? 'dark' : 'light'];
 
   const bottomOffset = Math.max(insets.bottom, 12);
 
   return (
     <View style={[styles.wrapper, { bottom: bottomOffset }]}>
       <BlurView
-        intensity={60}
-        tint={isDark ? "dark" : "light"}
+        intensity={80}
+        tint={isDark ? 'dark' : 'light'}
         style={styles.blur}
       >
         <View
@@ -31,11 +31,11 @@ export default function TabBar({
             styles.container,
             {
               backgroundColor: isDark
-                ? "rgba(30, 30, 30, 0.65)"
-                : "rgba(255, 255, 255, 0.65)",
+                ? 'rgba(255, 255, 255, 0.1)'
+                : 'rgba(255, 255, 255, 0.1)',
               borderColor: isDark
-                ? "rgba(255, 255, 255, 0.12)"
-                : "rgba(0, 0, 0, 0.08)",
+                ? 'rgba(255, 255, 255, 0.15)'
+                : 'rgba(255, 255, 255, 0.3)',
             },
           ]}
         >
@@ -47,7 +47,7 @@ export default function TabBar({
 
             const onPress = () => {
               const event = navigation.emit({
-                type: "tabPress",
+                type: 'tabPress',
                 target: route.key,
                 canPreventDefault: true,
               });
@@ -58,7 +58,7 @@ export default function TabBar({
 
             const onLongPress = () => {
               navigation.emit({
-                type: "tabLongPress",
+                type: 'tabLongPress',
                 target: route.key,
               });
             };
@@ -89,12 +89,12 @@ export default function TabBar({
 
 const styles = StyleSheet.create({
   wrapper: {
-    position: "absolute",
+    position: 'absolute',
     left: 20,
     right: 20,
     ...Platform.select({
       ios: {
-        shadowColor: "#000",
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.12,
         shadowRadius: 24,
@@ -106,20 +106,20 @@ const styles = StyleSheet.create({
   },
   blur: {
     borderRadius: 28,
-    overflow: "hidden",
+    overflow: 'hidden',
   },
   container: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-around",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
     paddingVertical: 14,
     borderWidth: 1,
     borderRadius: 28,
   },
   tab: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 4,
   },
 });

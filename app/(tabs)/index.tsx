@@ -8,9 +8,10 @@ import Colors from '@/constants/Colors';
 import { usePets } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
@@ -29,13 +30,34 @@ export default function HomeScreen() {
     ? `${userProfile.nickname}님, 안녕하세요!`
     : '안녕하세요!';
 
+  const gradientColors = isDark
+    ? (['#0f2847', '#4a3a08', '#123848', '#0f2847'] as const)
+    : (['#FDE8D8', '#E8D5F0', '#C5D8F5', '#F5D5C8'] as const);
+
   return (
     <Screen>
+      {/* 그라데이션 배경 */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <LinearGradient
+          colors={gradientColors}
+          start={{ x: 0, y: 1 }}
+          end={{ x: 1, y: 0 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <LinearGradient
+          colors={
+            isDark
+              ? ['transparent', 'rgba(10,10,10,0.6)']
+              : ['transparent', 'rgba(255,255,255,0.4)']
+          }
+          start={{ x: 0.5, y: 0 }}
+          end={{ x: 0.5, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
+
       {/* 상단 헤더: 반려동물 선택 + 알림/다크모드 */}
-      <View
-        className="bg-background border-b border-border px-4 pb-3"
-        style={{ paddingTop: insets.top + 8 }}
-      >
+      <View className="px-4 pb-3" style={{ paddingTop: insets.top + 8 }}>
         <View className="flex-row items-center justify-between">
           <Pressable
             className="flex-row items-center gap-3 flex-1 mr-3"
@@ -88,13 +110,16 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: 100 }}
+      >
         <View className="p-4 gap-5">
           {/* 인사말 */}
           <View className="gap-1">
             <Typography variant="h2">{greeting}</Typography>
-            <Typography className="text-muted-foreground">
-              오늘도 반려동물과 함께하세요
+            <Typography className="text-muted-foreground" variant="body-lg">
+              오늘도 반려동물과 행복한 하루 되세요!
             </Typography>
           </View>
 
@@ -102,8 +127,7 @@ export default function HomeScreen() {
           {!isLoggedIn && (
             <Card className="bg-amber-50 border-amber-200">
               <CardContent className="items-center gap-3 py-5">
-                <FontAwesome name="paw" size={32} color={colors.warning} />
-                <Typography className="font-semibold text-center">
+                <Typography className="text-center" variant="body-lg">
                   로그인하고{'\n'}내 반려동물을 등록해보세요!
                 </Typography>
                 <View className="flex-row gap-3 mt-1">
