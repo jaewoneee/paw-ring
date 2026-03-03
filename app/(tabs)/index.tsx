@@ -1,17 +1,17 @@
-import { useState } from "react";
-import { View, ScrollView, Pressable, Image } from "react-native";
-import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { Button } from "@/components/ui/Button";
-import { Card, CardContent } from "@/components/ui/Card";
-import { Typography } from "@/components/ui/Typography";
-import { BottomSheet } from "@/components/ui/BottomSheet";
-import { Screen } from "@/components/ui/Screen";
-import { useColorScheme } from "@/components/useColorScheme";
-import { useAuth } from "@/hooks/useAuth";
-import { usePets } from "@/contexts/PetContext";
-import Colors from "@/constants/Colors";
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Screen } from '@/components/ui/Screen';
+import { Typography } from '@/components/ui/Typography';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
+import { usePets } from '@/contexts/PetContext';
+import { useAuth } from '@/hooks/useAuth';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
+import { Image, Pressable, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -20,14 +20,14 @@ export default function HomeScreen() {
   const { pets, selectedPet, selectPet } = usePets();
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isLoggedIn = !!user;
-  const isDark = colorScheme === "dark";
-  const colors = Colors[isDark ? "dark" : "light"];
+  const isDark = colorScheme === 'dark';
+  const colors = Colors[isDark ? 'dark' : 'light'];
 
   const [sheetVisible, setSheetVisible] = useState(false);
 
   const greeting = userProfile?.nickname
     ? `${userProfile.nickname}님, 안녕하세요!`
-    : "안녕하세요!";
+    : '안녕하세요!';
 
   return (
     <Screen>
@@ -55,8 +55,8 @@ export default function HomeScreen() {
                 />
               </View>
             )}
-            <Typography className="text-base font-semibold">
-              {selectedPet?.name ?? "반려동물을 등록해주세요"}
+            <Typography className="font-semibold">
+              {selectedPet?.name ?? '반려동물을 등록해주세요'}
             </Typography>
             <FontAwesome
               name="chevron-down"
@@ -68,20 +68,18 @@ export default function HomeScreen() {
           <View className="flex-row items-center gap-1">
             <Pressable
               className="w-9 h-9 rounded-full items-center justify-center"
-              onPress={() => {/* TODO: 알림 화면 이동 */}}
+              onPress={() => {
+                /* TODO: 알림 화면 이동 */
+              }}
             >
-              <FontAwesome
-                name="bell-o"
-                size={20}
-                color={colors.foreground}
-              />
+              <FontAwesome name="bell-o" size={20} color={colors.foreground} />
             </Pressable>
             <Pressable
               className="w-9 h-9 rounded-full items-center justify-center"
               onPress={toggleColorScheme}
             >
               <FontAwesome
-                name={isDark ? "sun-o" : "moon-o"}
+                name={isDark ? 'sun-o' : 'moon-o'}
                 size={20}
                 color={colors.foreground}
               />
@@ -94,7 +92,7 @@ export default function HomeScreen() {
         <View className="p-4 gap-5">
           {/* 인사말 */}
           <View className="gap-1">
-            <Typography className="text-2xl font-bold">{greeting}</Typography>
+            <Typography variant="h2">{greeting}</Typography>
             <Typography className="text-muted-foreground">
               오늘도 반려동물과 함께하세요
             </Typography>
@@ -105,19 +103,19 @@ export default function HomeScreen() {
             <Card className="bg-amber-50 border-amber-200">
               <CardContent className="items-center gap-3 py-5">
                 <FontAwesome name="paw" size={32} color={colors.warning} />
-                <Typography className="text-base font-semibold text-center">
-                  로그인하고{"\n"}내 반려동물을 등록해보세요!
+                <Typography className="font-semibold text-center">
+                  로그인하고{'\n'}내 반려동물을 등록해보세요!
                 </Typography>
                 <View className="flex-row gap-3 mt-1">
                   <Button
-                    onPress={() => router.push("/(auth)/login")}
+                    onPress={() => router.push('/(auth)/login')}
                     className="flex-1"
                   >
                     로그인
                   </Button>
                   <Button
                     variant="outline"
-                    onPress={() => router.push("/(auth)/register")}
+                    onPress={() => router.push('/(auth)/register')}
                     className="flex-1"
                   >
                     회원가입
@@ -129,17 +127,21 @@ export default function HomeScreen() {
 
           {/* 다가오는 일정 */}
           <View className="gap-2">
-            <Typography className="text-lg font-semibold">
+            <Typography variant="body-lg" className="font-semibold">
               다가오는 일정
             </Typography>
             <Card>
               <CardContent>
                 <View className="items-center py-4 gap-2">
-                  <FontAwesome name="calendar" size={24} color={colors.mutedForeground} />
-                  <Typography className="text-muted-foreground text-sm text-center">
+                  <FontAwesome
+                    name="calendar"
+                    size={24}
+                    color={colors.mutedForeground}
+                  />
+                  <Typography variant="body-sm" className="text-muted-foreground text-center">
                     {isLoggedIn
-                      ? "등록된 일정이 없어요\n일정을 추가해보세요"
-                      : "로그인 후 일정을 확인할 수 있어요"}
+                      ? '등록된 일정이 없어요\n일정을 추가해보세요'
+                      : '로그인 후 일정을 확인할 수 있어요'}
                   </Typography>
                 </View>
               </CardContent>
@@ -147,15 +149,15 @@ export default function HomeScreen() {
           </View>
 
           {/* 내 반려동물 */}
-          <View className="gap-2">
-            <Typography className="text-lg font-semibold">
+          {/* <View className="gap-2">
+            <Typography variant="body-lg" className="font-semibold">
               내 반려동물
             </Typography>
             <Card>
               <CardContent>
                 <View className="items-center py-4 gap-3">
                   <FontAwesome name="paw" size={24} color={colors.mutedForeground} />
-                  <Typography className="text-muted-foreground text-sm text-center">
+                  <Typography variant="body-sm" className="text-muted-foreground text-center">
                     {isLoggedIn
                       ? "아직 등록된 반려동물이 없어요"
                       : "로그인 후 반려동물을 등록할 수 있어요"}
@@ -171,7 +173,7 @@ export default function HomeScreen() {
                 </View>
               </CardContent>
             </Card>
-          </View>
+          </View> */}
         </View>
       </ScrollView>
 
@@ -181,15 +183,15 @@ export default function HomeScreen() {
         onClose={() => setSheetVisible(false)}
       >
         <View className="gap-2">
-          <Typography className="text-base font-semibold mb-1">
+          <Typography className="font-semibold mb-1">
             반려동물 선택
           </Typography>
 
-          {pets.map((pet) => (
+          {pets.map(pet => (
             <Pressable
               key={pet.id}
               className={`flex-row items-center gap-3 p-3 rounded-xl ${
-                selectedPet?.id === pet.id ? "bg-surface" : ""
+                selectedPet?.id === pet.id ? 'bg-surface' : ''
               }`}
               onPress={() => {
                 selectPet(pet);
@@ -203,10 +205,14 @@ export default function HomeScreen() {
                 />
               ) : (
                 <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
-                  <FontAwesome name="paw" size={18} color={colors.mutedForeground} />
+                  <FontAwesome
+                    name="paw"
+                    size={18}
+                    color={colors.mutedForeground}
+                  />
                 </View>
               )}
-              <Typography className="text-base flex-1">{pet.name}</Typography>
+              <Typography className="flex-1">{pet.name}</Typography>
               {selectedPet?.id === pet.id && (
                 <FontAwesome name="check" size={16} color={colors.primary} />
               )}
@@ -217,11 +223,15 @@ export default function HomeScreen() {
             className="flex-row items-center gap-3 p-3 rounded-xl"
             onPress={() => {
               setSheetVisible(false);
-              router.push("/add-pet");
+              router.push('/add-pet');
             }}
           >
             <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
-              <FontAwesome name="plus" size={16} color={colors.mutedForeground} />
+              <FontAwesome
+                name="plus"
+                size={16}
+                color={colors.mutedForeground}
+              />
             </View>
             <Typography className="text-muted-foreground">
               반려동물 추가하기

@@ -1,9 +1,9 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, Platform, ScrollView, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Typography } from "@/components/ui/Typography";
+import { Screen } from "@/components/ui/Screen";
 
 export default function MyScreen() {
   const { user, userProfile, logout } = useAuth();
@@ -33,17 +33,17 @@ export default function MyScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+    <Screen>
       <ScrollView className="flex-1">
         <View className="p-4 gap-4">
-        <Typography className="text-2xl font-bold">마이</Typography>
+        <Typography variant="h2">마이</Typography>
 
         <Card>
           <CardHeader>
             <CardTitle>{userProfile?.nickname ?? "사용자"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Typography className="text-gray-500">
+            <Typography className="text-muted-foreground">
               {user?.email ?? ""}
             </Typography>
           </CardContent>
@@ -65,6 +65,6 @@ export default function MyScreen() {
         </Card>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }

@@ -41,7 +41,7 @@ const Colors = {
   },
   dark: {
     primary: palette.blue[400],
-    primaryForeground: palette.blue[950],
+    primaryForeground: '#FFFFFF',
     background: '#0A0A0A',
     foreground: '#FAFAFA',
     surface: '#171717',

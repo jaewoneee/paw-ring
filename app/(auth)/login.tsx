@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { View, ScrollView, Pressable } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
 import { Input } from "@/components/ui/Input";
+import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/hooks/useAuth";
 import {
   validateEmail,
@@ -48,7 +48,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
+    <Screen edges={['top', 'bottom']}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
@@ -56,14 +56,14 @@ export default function LoginScreen() {
       >
       <View className="px-6 gap-6">
         <View className="items-center mb-8">
-          <Typography variant="h1" className="text-3xl font-bold">
+          <Typography variant="h1">
             PAW RING
           </Typography>
         </View>
 
         {error ? (
-          <View className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <Typography className="text-red-600 text-sm text-center">
+          <View className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
+            <Typography variant="body-sm" className="text-error text-center">
               {error}
             </Typography>
           </View>
@@ -92,22 +92,22 @@ export default function LoginScreen() {
 
         <View className="flex-row justify-center gap-4">
           <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
-            <Typography className="text-gray-500 text-sm">
+            <Typography variant="body-sm" className="text-muted-foreground">
               비밀번호 찾기
             </Typography>
           </Pressable>
-          <Typography className="text-gray-300">|</Typography>
+          <Typography className="text-muted-foreground">|</Typography>
           <Pressable onPress={() => router.push("/(auth)/register")}>
-            <Typography className="text-blue-500 text-sm font-medium">
+            <Typography variant="body-sm" className="text-primary font-medium">
               회원가입
             </Typography>
           </Pressable>
         </View>
 
         <View className="flex-row items-center gap-3">
-          <View className="flex-1 h-px bg-gray-200" />
-          <Typography className="text-gray-400 text-sm">또는</Typography>
-          <View className="flex-1 h-px bg-gray-200" />
+          <View className="flex-1 h-px bg-border" />
+          <Typography variant="body-sm" className="text-muted-foreground">또는</Typography>
+          <View className="flex-1 h-px bg-border" />
         </View>
 
         <Button variant="outline" disabled>
@@ -115,6 +115,6 @@ export default function LoginScreen() {
         </Button>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }

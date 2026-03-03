@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { View, ScrollView, Alert } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
 import { Input } from "@/components/ui/Input";
+import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/hooks/useAuth";
 import { validateEmail, getFirebaseErrorMessage } from "@/utils/validation";
 
@@ -46,19 +46,19 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+    <Screen>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 24, gap: 16 }}
         keyboardShouldPersistTaps="handled"
       >
-      <Typography className="text-gray-500">
+      <Typography className="text-muted-foreground">
         가입한 이메일을 입력하면 재설정 링크를 보내드려요.
       </Typography>
 
       {error ? (
-        <View className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <Typography className="text-red-600 text-sm text-center">
+        <View className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
+          <Typography variant="body-sm" className="text-error text-center">
             {error}
           </Typography>
         </View>
@@ -80,6 +80,6 @@ export default function ForgotPasswordScreen() {
         재설정 링크 전송
         </Button>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }

@@ -15,7 +15,7 @@ PawRing의 컬러 시스템은 **블루** 를 포인트 컬러로 사용하며, 
 | Token | Light | Dark | 용도 |
 |-------|-------|------|------|
 | `primary` | #0084D1 (500) | #25A1EC (400) | 주요 버튼, 강조 요소 |
-| `primary-foreground` | #FFFFFF | #001C3C (950) | primary 위의 텍스트 |
+| `primary-foreground` | #FFFFFF | #FFFFFF | primary 위의 텍스트 (항상 흰색) |
 
 **풀 스케일 (직접 참조용):**
 
@@ -107,3 +107,13 @@ const colors = Colors[colorScheme ?? 'light'];
   - [x] RadioGroup
   - [x] BottomSheet
   - [x] Screen (신규 - 화면 배경 래퍼)
+- [x] 전체 화면 다크모드 적용
+  - [x] 홈 (index.tsx)
+  - [x] 캘린더 (calendar.tsx)
+  - [x] 마이 (my.tsx)
+  - [x] 로그인 (login.tsx)
+  - [x] 회원가입 (register.tsx)
+  - [x] 이메일 인증 (verify-email.tsx)
+  - [x] 비밀번호 찾기 (forgot-password.tsx)
+  - [x] 반려동물 등록 (add-pet.tsx)
+  - [x] Auth 레이아웃 (_layout.tsx)

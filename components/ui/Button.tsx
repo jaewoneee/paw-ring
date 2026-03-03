@@ -53,7 +53,7 @@ export function Button({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'default' ? '#fff' : '#737373'}
+          color="#fff"
         />
       ) : (
         <Text

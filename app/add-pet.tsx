@@ -12,14 +12,16 @@ import {
   Text,
   View,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { RadioGroup } from '@/components/ui/RadioGroup';
+import { Screen } from '@/components/ui/Screen';
 import { Typography } from '@/components/ui/Typography';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 import type { PetSpecies } from '@/types/pet';
 import { formatDate } from '@/utils/date';
 
@@ -29,6 +31,9 @@ const SPECIES_OPTIONS: { label: string; value: PetSpecies }[] = [
 ];
 
 export default function AddPetScreen() {
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+
   const [name, setName] = useState('');
   const [species, setSpecies] = useState<PetSpecies | undefined>();
   const [birthDate, setBirthDate] = useState<Date | undefined>();
@@ -96,7 +101,7 @@ export default function AddPetScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+    <Screen>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 16, gap: 16 }}
@@ -105,7 +110,7 @@ export default function AddPetScreen() {
       <Card>
         <CardContent>
           <View className="gap-5">
-            <Typography className="text-lg font-semibold">
+            <Typography variant="body-lg" className="font-semibold">
               반려동물 정보를 입력하세요
             </Typography>
 
@@ -113,7 +118,7 @@ export default function AddPetScreen() {
             <View className="items-center">
               <Pressable
                 onPress={handlePickImage}
-                className="w-24 h-24 rounded-full bg-gray-100 border border-gray-300 items-center justify-center overflow-hidden"
+                className="w-24 h-24 rounded-full bg-surface border border-border items-center justify-center overflow-hidden"
               >
                 {profileImage ? (
                   <Image
@@ -122,7 +127,7 @@ export default function AddPetScreen() {
                   />
                 ) : (
                   <View className="items-center gap-1">
-                    <FontAwesome name="camera" size={24} color="#9ca3af" />
+                    <FontAwesome name="camera" size={24} color={colors.mutedForeground} />
                   </View>
                 )}
               </Pressable>
@@ -164,7 +169,7 @@ export default function AddPetScreen() {
                 style={{
                   fontSize: 14,
                   fontWeight: '500',
-                  color: '#374151',
+                  color: colors.foreground,
                 }}
               >
                 생년월일
@@ -176,8 +181,8 @@ export default function AddPetScreen() {
                 }}
                 style={{
                   borderWidth: 1,
-                  borderColor: errors.birthDate ? '#f87171' : '#d1d5db',
-                  backgroundColor: errors.birthDate ? '#fef2f2' : '#fff',
+                  borderColor: errors.birthDate ? colors.error : colors.border,
+                  backgroundColor: errors.birthDate ? (colorScheme === 'dark' ? '#450a0a' : '#fef2f2') : colors.surfaceElevated,
                   borderRadius: 12,
                   paddingHorizontal: 16,
                   paddingVertical: 12,
@@ -186,7 +191,7 @@ export default function AddPetScreen() {
                 <Text
                   style={{
                     fontSize: 16,
-                    color: birthDate ? '#000' : '#9ca3af',
+                    color: birthDate ? colors.foreground : colors.mutedForeground,
                   }}
                 >
                   {birthDate
@@ -195,7 +200,7 @@ export default function AddPetScreen() {
                 </Text>
               </Pressable>
               {errors.birthDate ? (
-                <Text style={{ fontSize: 12, color: '#ef4444', marginLeft: 4 }}>
+                <Text style={{ fontSize: 12, color: colors.error, marginLeft: 4 }}>
                   {errors.birthDate}
                 </Text>
               ) : null}
@@ -215,7 +220,7 @@ export default function AddPetScreen() {
             style={{
               fontSize: 18,
               fontWeight: '600',
-              color: '#111',
+              color: colors.foreground,
               textAlign: 'center',
             }}
           >
@@ -227,7 +232,7 @@ export default function AddPetScreen() {
             display="spinner"
             maximumDate={new Date()}
             onChange={handleDateChange}
-            themeVariant="light"
+            themeVariant={colorScheme === 'dark' ? 'dark' : 'light'}
             locale="ko-KR"
             style={{ alignSelf: 'center', width: '100%' }}
           />
@@ -235,6 +240,6 @@ export default function AddPetScreen() {
         </View>
       </BottomSheet>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }

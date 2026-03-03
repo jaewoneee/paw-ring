@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { View, ScrollView, Alert, AppState } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
+import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/hooks/useAuth";
 import { resendVerificationEmail } from "@/services/auth";
 import { auth } from "@/lib/firebase";
@@ -55,17 +55,17 @@ export default function VerifyEmailScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
+    <Screen edges={['top', 'bottom']}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
       >
       <View className="px-6 gap-6 items-center">
-        <Typography variant="h2" className="text-xl font-bold text-center">
+        <Typography variant="h3" className="text-center">
           이메일 인증이 필요합니다
         </Typography>
 
-        <Typography className="text-gray-500 text-center">
+        <Typography className="text-muted-foreground text-center">
           {user?.email}으로 인증 링크를 보냈습니다.{"\n"}
           이메일의 링크를 클릭한 후 아래 버튼을 눌러주세요.
         </Typography>
@@ -91,6 +91,6 @@ export default function VerifyEmailScreen() {
         </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }

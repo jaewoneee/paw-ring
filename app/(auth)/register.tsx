@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { View, ScrollView } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
 import { Input } from "@/components/ui/Input";
+import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/hooks/useAuth";
 import {
   validateEmail,
@@ -60,15 +60,15 @@ export default function RegisterScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+    <Screen>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ padding: 24, gap: 16 }}
         keyboardShouldPersistTaps="handled"
       >
       {error ? (
-        <View className="bg-red-50 border border-red-200 rounded-lg p-3">
-          <Typography className="text-red-600 text-sm text-center">
+        <View className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
+          <Typography variant="body-sm" className="text-error text-center">
             {error}
           </Typography>
         </View>
@@ -117,15 +117,15 @@ export default function RegisterScreen() {
       </Button>
 
       <View className="flex-row items-center gap-3 mt-2">
-        <View className="flex-1 h-px bg-gray-200" />
-        <Typography className="text-gray-400 text-sm">또는</Typography>
-        <View className="flex-1 h-px bg-gray-200" />
+        <View className="flex-1 h-px bg-border" />
+        <Typography variant="body-sm" className="text-muted-foreground">또는</Typography>
+        <View className="flex-1 h-px bg-border" />
       </View>
 
         <Button variant="outline" disabled>
           구글로 시작하기 (준비중)
         </Button>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
