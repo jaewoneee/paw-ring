@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, ScrollView, Pressable, Image } from "react-native";
 import { useRouter } from "expo-router";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -24,7 +24,7 @@ export default function HomeScreen() {
     : "안녕하세요!";
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
       {/* 상단 반려동물 선택 버튼 */}
       <View
         className="bg-white border-b border-gray-100 px-4 pb-3"
@@ -206,6 +206,6 @@ export default function HomeScreen() {
           </Pressable>
         </View>
       </BottomSheet>
-    </View>
+    </SafeAreaView>
   );
 }

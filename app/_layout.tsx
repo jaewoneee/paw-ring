@@ -1,34 +1,34 @@
-import "../global.css";
+import '../global.css';
 
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
-} from "@react-navigation/native";
-import { useFonts } from "expo-font";
-import { Stack, useRouter, useSegments } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
-import "react-native-reanimated";
+} from '@react-navigation/native';
+import { useFonts } from 'expo-font';
+import { Stack, useRouter, useSegments } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useEffect } from 'react';
+import 'react-native-reanimated';
 
-import { Keyboard, Pressable } from "react-native";
-import { useColorScheme } from "@/components/useColorScheme";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { PetProvider } from "@/contexts/PetContext";
-import { useAuth } from "@/hooks/useAuth";
+import { useColorScheme } from '@/components/useColorScheme';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { PetProvider } from '@/contexts/PetContext';
+import { useAuth } from '@/hooks/useAuth';
+import { Keyboard, Pressable } from 'react-native';
 
-export { ErrorBoundary } from "expo-router";
+export { ErrorBoundary } from 'expo-router';
 
 export const unstable_settings = {
-  initialRouteName: "(tabs)",
+  initialRouteName: '(tabs)',
 };
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
     ...FontAwesome.font,
   });
 
@@ -64,12 +64,12 @@ function RootLayoutNav() {
   useEffect(() => {
     if (isLoading) return;
 
-    const inAuthGroup = segments[0] === "(auth)";
+    const inAuthGroup = segments[0] === '(auth)';
 
-    if (user && !user.emailVerified && segments[1] !== "verify-email") {
-      router.replace("/(auth)/verify-email");
+    if (user && !user.emailVerified && segments[1] !== 'verify-email') {
+      router.replace('/(auth)/verify-email');
     } else if (user && user.emailVerified && inAuthGroup) {
-      router.replace("/(tabs)");
+      router.replace('/(tabs)');
     }
   }, [user, isLoading, segments]);
 
@@ -78,14 +78,14 @@ function RootLayoutNav() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
         <Stack>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen
             name="add-pet"
-            options={{ title: "새 반려동물 등록" }}
+            options={{ title: '새 반려동물 등록' }}
           />
         </Stack>
       </Pressable>

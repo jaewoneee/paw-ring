@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, ScrollView, Pressable } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
@@ -47,11 +48,12 @@ export default function LoginScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-white"
-      contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
-      keyboardShouldPersistTaps="handled"
-    >
+    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+        keyboardShouldPersistTaps="handled"
+      >
       <View className="px-6 gap-6">
         <View className="items-center mb-8">
           <Typography variant="h1" className="text-3xl font-bold">
@@ -111,7 +113,8 @@ export default function LoginScreen() {
         <Button variant="outline" disabled>
           구글로 시작하기 (준비중)
         </Button>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { View, ScrollView, Alert, AppState } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
 import { useAuth } from "@/hooks/useAuth";
@@ -54,10 +55,11 @@ export default function VerifyEmailScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-white"
-      contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
-    >
+    <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+      >
       <View className="px-6 gap-6 items-center">
         <Typography variant="h2" className="text-xl font-bold text-center">
           이메일 인증이 필요합니다
@@ -87,7 +89,8 @@ export default function VerifyEmailScreen() {
             다른 계정으로 로그인
           </Button>
         </View>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

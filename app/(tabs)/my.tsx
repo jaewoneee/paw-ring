@@ -1,5 +1,6 @@
 import { useAuth } from "@/hooks/useAuth";
 import { Alert, Platform, ScrollView, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Typography } from "@/components/ui/Typography";
@@ -32,8 +33,9 @@ export default function MyScreen() {
   };
 
   return (
-    <ScrollView className="flex-1 bg-gray-50">
-      <View className="p-4 gap-4">
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['bottom']}>
+      <ScrollView className="flex-1">
+        <View className="p-4 gap-4">
         <Typography className="text-2xl font-bold">마이</Typography>
 
         <Card>
@@ -61,7 +63,8 @@ export default function MyScreen() {
             </View>
           </CardContent>
         </Card>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

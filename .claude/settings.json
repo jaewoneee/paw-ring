@@ -9,7 +9,9 @@
       "Bash(ls -la /c/Users/User/Desktop/project/paw-ring/app/\\\\\\(tabs\\\\\\)/)",
       "Bash(wc -l \"c:\\\\Users\\\\User\\\\Desktop\\\\project\\\\paw-ring\\\\app\\\\\\(auth\\)\\\\forgot-password.tsx\")",
       "Bash(npx expo install expo@~54.0.0 --fix)",
-      "Bash(ls -la /c/Users/User/Desktop/project/paw-ring/app/\\\\\\(auth\\\\\\)/)"
+      "Bash(ls -la /c/Users/User/Desktop/project/paw-ring/app/\\\\\\(auth\\\\\\)/)",
+      "Bash(git commit:*)",
+      "Bash(npx expo install expo-image-picker @react-native-community/datetimepicker)"
     ],
     "additionalDirectories": [
       "c:\\Users\\User\\Desktop\\project\\paw-ring",

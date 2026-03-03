@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
 import { Input } from "@/components/ui/Input";
@@ -59,11 +60,12 @@ export default function RegisterScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-white"
-      contentContainerStyle={{ padding: 24, gap: 16 }}
-      keyboardShouldPersistTaps="handled"
-    >
+    <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ padding: 24, gap: 16 }}
+        keyboardShouldPersistTaps="handled"
+      >
       {error ? (
         <View className="bg-red-50 border border-red-200 rounded-lg p-3">
           <Typography className="text-red-600 text-sm text-center">
@@ -120,9 +122,10 @@ export default function RegisterScreen() {
         <View className="flex-1 h-px bg-gray-200" />
       </View>
 
-      <Button variant="outline" disabled>
-        구글로 시작하기 (준비중)
-      </Button>
-    </ScrollView>
+        <Button variant="outline" disabled>
+          구글로 시작하기 (준비중)
+        </Button>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

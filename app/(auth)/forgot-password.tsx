@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, ScrollView, Alert } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Button } from "@/components/ui/Button";
 import { Typography } from "@/components/ui/Typography";
@@ -45,11 +46,12 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <ScrollView
-      className="flex-1 bg-white"
-      contentContainerStyle={{ padding: 24, gap: 16 }}
-      keyboardShouldPersistTaps="handled"
-    >
+    <SafeAreaView className="flex-1 bg-white" edges={['bottom']}>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ padding: 24, gap: 16 }}
+        keyboardShouldPersistTaps="handled"
+      >
       <Typography className="text-gray-500">
         가입한 이메일을 입력하면 재설정 링크를 보내드려요.
       </Typography>
@@ -76,7 +78,8 @@ export default function ForgotPasswordScreen() {
         disabled={loading}
       >
         재설정 링크 전송
-      </Button>
-    </ScrollView>
+        </Button>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
