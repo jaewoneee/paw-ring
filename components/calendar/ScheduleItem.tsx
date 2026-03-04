@@ -13,43 +13,77 @@ import { formatTime } from "@/utils/date";
 interface ScheduleItemProps {
   schedule: Schedule;
   onPress: (schedule: Schedule) => void;
+  variant?: 'default' | 'stacked';
+  cardColor?: string;
+  textColor?: string;
 }
 
-export function ScheduleItem({ schedule, onPress }: ScheduleItemProps) {
+export function ScheduleItem({ schedule, onPress, variant = 'default', cardColor, textColor }: ScheduleItemProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
   const meta = CATEGORY_META[schedule.category];
+  const isStacked = variant === 'stacked';
 
   return (
     <Pressable
       onPress={() => onPress(schedule)}
       className="flex-row items-center rounded-xl overflow-hidden"
-      style={{ backgroundColor: colors.surfaceElevated }}
+      style={[
+        { backgroundColor: isStacked ? cardColor : colors.surfaceElevated },
+        isStacked && {
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.08,
+          shadowRadius: 4,
+          elevation: 2,
+        },
+      ]}
     >
-      {/* 카테고리 색상 바 */}
-      <View style={{ width: 4, alignSelf: "stretch", backgroundColor: meta.color }} />
+      {/* 카테고리 색상 바 (default variant만) */}
+      {!isStacked && (
+        <View style={{ width: 4, alignSelf: "stretch", backgroundColor: meta.color }} />
+      )}
 
       <View className="flex-1 flex-row items-center gap-3 px-3 py-3">
         {/* 카테고리 아이콘 */}
         <View
           className="w-8 h-8 rounded-full items-center justify-center"
-          style={{ backgroundColor: meta.color + "20" }}
+          style={{
+            backgroundColor: isStacked ? 'rgba(255,255,255,0.4)' : meta.color + "20",
+          }}
         >
-          <FontAwesome name={meta.icon as any} size={14} color={meta.color} />
+          <FontAwesome
+            name={meta.icon as any}
+            size={14}
+            color={isStacked ? (textColor ?? meta.color) : meta.color}
+          />
         </View>
 
         {/* 내용 */}
         <View className="flex-1">
-          <Typography variant="body-md" className="font-medium">
+          <Typography
+            variant="body-md"
+            className="font-medium"
+            style={isStacked ? { color: textColor } : undefined}
+            numberOfLines={isStacked ? 1 : undefined}
+          >
             {schedule.title}
           </Typography>
-          <Text className="text-xs" style={{ color: colors.mutedForeground }}>
+          <Text
+            className="text-xs"
+            style={{ color: isStacked ? (textColor ? textColor + 'B3' : colors.mutedForeground) : colors.mutedForeground }}
+            numberOfLines={isStacked ? 1 : undefined}
+          >
             {schedule.is_all_day ? "종일" : formatTime(schedule.start_date)}
             {schedule.memo ? ` · ${schedule.memo}` : ""}
           </Text>
         </View>
 
-        <FontAwesome name="chevron-right" size={12} color={colors.mutedForeground} />
+        {isStacked ? (
+          <FontAwesome name="check-circle" size={16} color={textColor ? textColor + '80' : colors.mutedForeground} />
+        ) : (
+          <FontAwesome name="chevron-right" size={12} color={colors.mutedForeground} />
+        )}
       </View>
     </Pressable>
   );

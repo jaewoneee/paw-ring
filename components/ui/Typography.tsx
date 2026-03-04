@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { StyleProp, TextStyle } from 'react-native';
 import { Text } from './Text';
 
 type Variant =
@@ -15,6 +16,8 @@ interface TypographyProps {
   children: ReactNode;
   variant?: Variant;
   className?: string;
+  style?: StyleProp<TextStyle>;
+  numberOfLines?: number;
 }
 
 const variantStyles: Record<Variant, string> = {
@@ -32,9 +35,15 @@ export function Typography({
   children,
   variant = 'body-md',
   className = '',
+  style,
+  numberOfLines,
 }: TypographyProps) {
   return (
-    <Text className={`text-foreground ${variantStyles[variant]} ${className}`}>
+    <Text
+      className={`text-foreground ${variantStyles[variant]} ${className}`}
+      style={style}
+      numberOfLines={numberOfLines}
+    >
       {children}
     </Text>
   );

@@ -2,6 +2,7 @@ import { supabase } from "@/lib/supabase";
 import type {
   CreateScheduleInput,
   Schedule,
+  ScheduleCompletion,
   UpdateScheduleInput,
 } from "@/types/schedule";
 
@@ -18,6 +19,7 @@ export async function createSchedule(
     start_date: data.start_date,
     is_all_day: data.is_all_day ?? false,
     reminder: data.reminder ?? "none",
+    is_completable: data.is_completable ?? false,
   };
   if (data.end_date) row.end_date = data.end_date;
   if (data.is_recurring) {
@@ -60,33 +62,118 @@ export async function getSchedulesByRange(
     .lt("start_date", `${startDate}T00:00:00`)
     .or(`recurrence_end_date.gte.${startDate}T00:00:00,recurrence_end_date.is.null`);
 
+  // 3) 범위 이전에 시작되어 범위까지 이어지는 다일(multi-day) 스케줄
+  const { data: multiDayBefore, error: err3 } = await supabase
+    .from("schedules")
+    .select("*")
+    .eq("pet_id", petId)
+    .eq("is_recurring", false)
+    .lt("start_date", `${startDate}T00:00:00`)
+    .gte("end_date", `${startDate}T00:00:00`);
+
   if (err1) throw err1;
   if (err2) throw err2;
+  if (err3) throw err3;
 
   // id 기준 중복 제거 후 병합
   const map = new Map<string, Schedule>();
-  for (const s of [...(inRange ?? []), ...(recurringBefore ?? [])]) {
+  for (const s of [...(inRange ?? []), ...(recurringBefore ?? []), ...(multiDayBefore ?? [])]) {
     map.set(s.id, s as Schedule);
   }
   return Array.from(map.values());
 }
 
-/** 다가오는 스케줄 조회 (홈 화면용) */
+/** 다가오는 스케줄 조회 (홈 화면용, 일주일 이내, 오늘 완료된 것 제외) */
 export async function getUpcomingSchedules(
-  petId: string,
-  limit: number = 5
+  petId: string
 ): Promise<Schedule[]> {
-  const now = new Date().toISOString();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const startOfToday = today.toISOString();
+  const todayDateStr = today.toISOString().split("T")[0];
+  const oneWeekLater = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [schedulesRes, completionsRes] = await Promise.all([
+    supabase
+      .from("schedules")
+      .select("*")
+      .eq("pet_id", petId)
+      .gte("start_date", startOfToday)
+      .lte("start_date", oneWeekLater)
+      .order("start_date", { ascending: true }),
+    supabase
+      .from("schedule_completions")
+      .select("schedule_id")
+      .eq("completion_date", todayDateStr),
+  ]);
+
+  if (schedulesRes.error) throw schedulesRes.error;
+  if (completionsRes.error) throw completionsRes.error;
+
+  const completedIds = new Set(
+    (completionsRes.data ?? []).map((c) => c.schedule_id)
+  );
+
+  return ((schedulesRes.data ?? []) as Schedule[]).filter((s) => {
+    const scheduleDate = s.start_date.split("T")[0];
+    if (scheduleDate === todayDateStr) {
+      return !completedIds.has(s.id);
+    }
+    return true;
+  });
+}
+
+/** 특정 스케줄의 특정 날짜 완료 여부 조회 */
+export async function getScheduleCompletion(
+  scheduleId: string,
+  completionDate: string
+): Promise<ScheduleCompletion | null> {
   const { data, error } = await supabase
-    .from("schedules")
+    .from("schedule_completions")
     .select("*")
-    .eq("pet_id", petId)
-    .gte("start_date", now)
-    .order("start_date", { ascending: true })
-    .limit(limit);
+    .eq("schedule_id", scheduleId)
+    .eq("completion_date", completionDate)
+    .maybeSingle();
 
   if (error) throw error;
-  return (data ?? []) as Schedule[];
+  return data as ScheduleCompletion | null;
+}
+
+/** 스케줄 완료 처리 */
+export async function completeSchedule(
+  scheduleId: string,
+  completionDate: string,
+  userId: string
+): Promise<ScheduleCompletion> {
+  const { data, error } = await supabase
+    .from("schedule_completions")
+    .upsert(
+      {
+        schedule_id: scheduleId,
+        completion_date: completionDate,
+        completed_by: userId,
+      },
+      { onConflict: "schedule_id,completion_date" }
+    )
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data as ScheduleCompletion;
+}
+
+/** 스케줄 완료 취소 */
+export async function uncompleteSchedule(
+  scheduleId: string,
+  completionDate: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("schedule_completions")
+    .delete()
+    .eq("schedule_id", scheduleId)
+    .eq("completion_date", completionDate);
+
+  if (error) throw error;
 }
 
 /** 단건 스케줄 조회 */

@@ -40,11 +40,33 @@ export function useMonthSchedules(
             instances.push({ schedule, occurrenceDate, isRecurringInstance: true });
           }
         } else {
-          instances.push({
-            schedule,
-            occurrenceDate: dayjs(schedule.start_date).format("YYYY-MM-DD"),
-            isRecurringInstance: false,
-          });
+          const sDate = dayjs(schedule.start_date).format("YYYY-MM-DD");
+          const eDate = schedule.end_date
+            ? dayjs(schedule.end_date).format("YYYY-MM-DD")
+            : null;
+
+          if (eDate && eDate !== sDate) {
+            // Multi-day: create instances for each day in range
+            let d = dayjs(sDate);
+            const last = dayjs(eDate);
+            while (!d.isAfter(last, "day")) {
+              const occDate = d.format("YYYY-MM-DD");
+              if (occDate >= start && occDate <= end) {
+                instances.push({
+                  schedule,
+                  occurrenceDate: occDate,
+                  isRecurringInstance: false,
+                });
+              }
+              d = d.add(1, "day");
+            }
+          } else {
+            instances.push({
+              schedule,
+              occurrenceDate: sDate,
+              isRecurringInstance: false,
+            });
+          }
         }
       }
 

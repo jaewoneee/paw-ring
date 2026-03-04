@@ -25,12 +25,13 @@ import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import {
+  ALL_DAY_REMINDER_OPTIONS,
   CATEGORIES,
   CATEGORY_META,
   DAY_OF_WEEK_OPTIONS,
   RECURRENCE_END_OPTIONS,
   RECURRENCE_FREQUENCY_OPTIONS,
-  REMINDER_OPTIONS,
+  TIMED_REMINDER_OPTIONS,
 } from "@/constants/Schedule";
 import { usePets } from "@/contexts/PetContext";
 import { useAuth } from "@/hooks/useAuth";
@@ -61,6 +62,7 @@ export default function AddScheduleScreen() {
   const [reminder, setReminder] = useState<ReminderType>("none");
   const [memo, setMemo] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isCompletable, setIsCompletable] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // End date
@@ -199,6 +201,7 @@ export default function AddScheduleScreen() {
         start_date: startDate,
         end_date: computedEndDate,
         is_all_day: isAllDay,
+        is_completable: isCompletable,
         reminder,
         is_recurring: isRecurring || undefined,
         rrule,
@@ -376,7 +379,16 @@ export default function AddScheduleScreen() {
               {/* 종일 토글 */}
               <View className="flex-row items-center justify-between">
                 <Typography variant="body-md">종일</Typography>
-                <Switch value={isAllDay} onValueChange={setIsAllDay} />
+                <Switch value={isAllDay} onValueChange={(v) => {
+                  setIsAllDay(v);
+                  setReminder("none");
+                }} />
+              </View>
+
+              {/* 완료 체크 토글 */}
+              <View className="flex-row items-center justify-between">
+                <Typography variant="body-md">완료 체크</Typography>
+                <Switch value={isCompletable} onValueChange={setIsCompletable} />
               </View>
 
               {/* 시간 (종일이 아닐 때) */}
@@ -612,7 +624,7 @@ export default function AddScheduleScreen() {
                   알림
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
-                  {REMINDER_OPTIONS.map((opt) => {
+                  {(isAllDay ? ALL_DAY_REMINDER_OPTIONS : TIMED_REMINDER_OPTIONS).map((opt) => {
                     const isActive = reminder === opt.value;
                     return (
                       <Pressable

@@ -1,5 +1,5 @@
 export type ScheduleCategory = 'walk' | 'meal' | 'hospital' | 'medicine' | 'bath' | 'other';
-export type ReminderType = 'none' | 'on_time' | '10min' | '30min' | '1hour';
+export type ReminderType = 'none' | 'on_time' | '5min' | '10min' | '15min' | '30min' | '1hour' | '1day' | 'same_day_9am' | '1day_before_9am';
 export type CompletionStatus = 'completed' | 'dismissed';
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly';
 export type RecurrenceEndType = 'never' | 'date';
@@ -19,6 +19,7 @@ export interface Schedule {
   rrule: string | null;
   recurrence_end_date: string | null;
   reminder: ReminderType;
+  is_completable: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -47,6 +48,7 @@ export interface CreateScheduleInput {
   is_recurring?: boolean;
   rrule?: string;
   recurrence_end_date?: string;
+  is_completable?: boolean;
 }
 
 /** 캘린더 렌더링용 가상 인스턴스 */
@@ -58,5 +60,5 @@ export interface ScheduleInstance {
 
 /** 스케줄 수정 입력 */
 export type UpdateScheduleInput = Partial<
-  Pick<Schedule, 'title' | 'category' | 'memo' | 'start_date' | 'end_date' | 'is_all_day' | 'reminder' | 'is_recurring' | 'rrule' | 'recurrence_end_date'>
+  Pick<Schedule, 'title' | 'category' | 'memo' | 'start_date' | 'end_date' | 'is_all_day' | 'reminder' | 'is_recurring' | 'rrule' | 'recurrence_end_date' | 'is_completable'>
 >;

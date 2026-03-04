@@ -25,12 +25,13 @@ import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import {
+  ALL_DAY_REMINDER_OPTIONS,
   CATEGORIES,
   CATEGORY_META,
   DAY_OF_WEEK_OPTIONS,
   RECURRENCE_END_OPTIONS,
   RECURRENCE_FREQUENCY_OPTIONS,
-  REMINDER_OPTIONS,
+  TIMED_REMINDER_OPTIONS,
 } from "@/constants/Schedule";
 import { getScheduleById, updateSchedule } from "@/services/schedule";
 import type {
@@ -57,6 +58,7 @@ export default function EditScheduleScreen() {
   const [reminder, setReminder] = useState<ReminderType>("none");
   const [memo, setMemo] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isCompletable, setIsCompletable] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -98,6 +100,7 @@ export default function EditScheduleScreen() {
       setTime(dayjs(data.start_date).toDate());
       setIsAllDay(data.is_all_day);
       setReminder(data.reminder);
+      setIsCompletable(data.is_completable ?? false);
       setMemo(data.memo ?? "");
 
       // Restore end date
@@ -237,6 +240,7 @@ export default function EditScheduleScreen() {
         start_date: startDate,
         end_date: computedEndDate,
         is_all_day: isAllDay,
+        is_completable: isCompletable,
         reminder,
         is_recurring: isRecurring,
         rrule,
@@ -424,7 +428,16 @@ export default function EditScheduleScreen() {
               {/* 종일 토글 */}
               <View className="flex-row items-center justify-between">
                 <Typography variant="body-md">종일</Typography>
-                <Switch value={isAllDay} onValueChange={setIsAllDay} />
+                <Switch value={isAllDay} onValueChange={(v) => {
+                  setIsAllDay(v);
+                  setReminder("none");
+                }} />
+              </View>
+
+              {/* 완료 체크 토글 */}
+              <View className="flex-row items-center justify-between">
+                <Typography variant="body-md">완료 체크</Typography>
+                <Switch value={isCompletable} onValueChange={setIsCompletable} />
               </View>
 
               {/* 시간 */}
@@ -660,7 +673,7 @@ export default function EditScheduleScreen() {
                   알림
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
-                  {REMINDER_OPTIONS.map((opt) => {
+                  {(isAllDay ? ALL_DAY_REMINDER_OPTIONS : TIMED_REMINDER_OPTIONS).map((opt) => {
                     const isActive = reminder === opt.value;
                     return (
                       <Pressable

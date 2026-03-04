@@ -1,17 +1,17 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import dayjs from "dayjs";
-import React, { useMemo } from "react";
-import { Pressable, View } from "react-native";
-import { Text } from "@/components/ui/Text";
+import { Text } from '@/components/ui/Text';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import dayjs from 'dayjs';
+import React, { useMemo } from 'react';
+import { Pressable, View } from 'react-native';
 
-import { Typography } from "@/components/ui/Typography";
-import { useColorScheme } from "@/components/useColorScheme";
-import Colors from "@/constants/Colors";
-import { CATEGORY_META } from "@/constants/Schedule";
-import type { ScheduleInstance } from "@/types/schedule";
-import { getMonthGrid } from "@/utils/date";
+import { Typography } from '@/components/ui/Typography';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
+import { CATEGORY_META } from '@/constants/Schedule';
+import type { ScheduleInstance } from '@/types/schedule';
+import { getMonthGrid } from '@/utils/date';
 
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const MAX_DOTS = 3;
 
 interface MonthCalendarProps {
@@ -36,11 +36,11 @@ export function MonthCalendar({
   onGoToday,
 }: MonthCalendarProps) {
   const { colorScheme } = useColorScheme();
-  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const grid = useMemo(() => getMonthGrid(year, month), [year, month]);
-  const today = dayjs().format("YYYY-MM-DD");
-  const monthLabel = dayjs().year(year).month(month).format("YYYY년 M월");
+  const today = dayjs().format('YYYY-MM-DD');
+  const monthLabel = dayjs().year(year).month(month).format('YYYY년 M월');
   const isCurrentMonth = year === dayjs().year() && month === dayjs().month();
 
   // 날짜별 스케줄 그룹핑
@@ -63,18 +63,28 @@ export function MonthCalendar({
           onPress={onPrevMonth}
           className="w-9 h-9 items-center justify-center"
         >
-          <FontAwesome name="chevron-left" size={14} color={colors.foreground} />
+          <FontAwesome
+            name="chevron-left"
+            size={14}
+            color={colors.foreground}
+          />
         </Pressable>
-        <Pressable onPress={onGoToday} className="flex-row items-center gap-1.5">
+        <Pressable
+          onPress={onGoToday}
+          className="flex-row items-center gap-1.5"
+        >
           <Typography variant="body-xl" className="font-semibold">
             {monthLabel}
           </Typography>
           {!isCurrentMonth && (
             <View
               className="px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: colors.primary + "18" }}
+              style={{ backgroundColor: colors.primary + '18' }}
             >
-              <Text className="text-xs font-medium" style={{ color: colors.primary }}>
+              <Text
+                className="text-xs font-medium"
+                style={{ color: colors.primary }}
+              >
                 오늘
               </Text>
             </View>
@@ -84,18 +94,31 @@ export function MonthCalendar({
           onPress={onNextMonth}
           className="w-9 h-9 items-center justify-center"
         >
-          <FontAwesome name="chevron-right" size={14} color={colors.foreground} />
+          <FontAwesome
+            name="chevron-right"
+            size={14}
+            color={colors.foreground}
+          />
         </Pressable>
       </View>
 
       {/* 요일 헤더 */}
       <View className="flex-row mb-1">
         {WEEKDAYS.map((day, i) => (
-          <View key={day} style={{ width: "14.28%" }} className="items-center py-1">
+          <View
+            key={day}
+            style={{ width: '14.28%' }}
+            className="items-center py-1"
+          >
             <Text
               className="text-xs font-medium"
               style={{
-                color: i === 0 ? colors.error : i === 6 ? colors.primary : colors.mutedForeground,
+                color:
+                  i === 0
+                    ? colors.error
+                    : i === 6
+                      ? colors.primary
+                      : colors.mutedForeground,
               }}
             >
               {day}
@@ -106,8 +129,8 @@ export function MonthCalendar({
 
       {/* 날짜 그리드 */}
       <View className="flex-row flex-wrap">
-        {grid.map((day) => {
-          const dateStr = day.format("YYYY-MM-DD");
+        {grid.map(day => {
+          const dateStr = day.format('YYYY-MM-DD');
           const isCurrentMonth = day.month() === month;
           const isToday = dateStr === today;
           const isSelected = dateStr === selectedDate;
@@ -116,29 +139,36 @@ export function MonthCalendar({
 
           // 카테고리별 고유 dot 색상 (최대 3개)
           const dotColors = daySchedules
-            ? [...new Set(daySchedules.map((s) => CATEGORY_META[s.schedule.category].color))].slice(
-                0,
-                MAX_DOTS
-              )
+            ? [
+                ...new Set(
+                  daySchedules.map(
+                    s => CATEGORY_META[s.schedule.category].color,
+                  ),
+                ),
+              ].slice(0, MAX_DOTS)
             : [];
 
           return (
             <Pressable
               key={dateStr}
               onPress={() => onSelectDate(dateStr)}
-              style={{ width: "14.28%", aspectRatio: 1 }}
+              style={{ width: '14.28%', aspectRatio: 1 }}
               className="items-center justify-center"
             >
               <View
                 className="items-center justify-center rounded-full"
                 style={[
-                  { width: 36, height: 36 },
+                  { width: 24, height: 24 },
                   isSelected && { backgroundColor: colors.primary },
-                  isToday && !isSelected && { borderWidth: 1.5, borderColor: colors.primary },
+                  isToday &&
+                    !isSelected && {
+                      borderWidth: 1.5,
+                      borderColor: colors.primary,
+                    },
                 ]}
               >
                 <Text
-                  className="text-sm"
+                  className="text-xl"
                   style={{
                     color: isSelected
                       ? colors.primaryForeground
@@ -157,7 +187,7 @@ export function MonthCalendar({
 
               {/* Dot 마커 */}
               <View className="flex-row gap-0.5 mt-0.5" style={{ height: 5 }}>
-                {dotColors.map((c) => (
+                {dotColors.map(c => (
                   <View
                     key={c}
                     style={{

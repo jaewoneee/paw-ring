@@ -12,7 +12,14 @@ import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { CATEGORY_META, REMINDER_OPTIONS } from "@/constants/Schedule";
-import { deleteSchedule, getScheduleById } from "@/services/schedule";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  completeSchedule,
+  deleteSchedule,
+  getScheduleById,
+  getScheduleCompletion,
+  uncompleteSchedule,
+} from "@/services/schedule";
 import type { Schedule } from "@/types/schedule";
 import { formatTime } from "@/utils/date";
 import { formatRRuleLabel } from "@/utils/rrule";
@@ -23,14 +30,23 @@ export default function ScheduleDetailScreen() {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
+  const { user } = useAuth();
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+
+  const todayDateStr = dayjs().format("YYYY-MM-DD");
 
   const fetchSchedule = useCallback(async () => {
     if (!id) return;
     try {
       const data = await getScheduleById(id);
       setSchedule(data);
+      if (data.is_completable) {
+        const completion = await getScheduleCompletion(id, todayDateStr);
+        setIsCompleted(!!completion);
+      }
     } catch (err) {
       console.error("[ScheduleDetail] fetch failed:", err);
       Alert.alert("오류", "일정을 불러올 수 없습니다.");
@@ -38,11 +54,30 @@ export default function ScheduleDetailScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [id]);
+  }, [id, todayDateStr]);
 
   useEffect(() => {
     fetchSchedule();
   }, [fetchSchedule]);
+
+  const handleToggleComplete = async () => {
+    if (!schedule || !user || isToggling) return;
+    setIsToggling(true);
+    try {
+      if (isCompleted) {
+        await uncompleteSchedule(schedule.id, todayDateStr);
+        setIsCompleted(false);
+      } else {
+        await completeSchedule(schedule.id, todayDateStr, user.uid);
+        setIsCompleted(true);
+      }
+    } catch (err) {
+      console.error("[ScheduleDetail] toggle complete failed:", err);
+      Alert.alert("오류", "완료 상태 변경에 실패했습니다.");
+    } finally {
+      setIsToggling(false);
+    }
+  };
 
   const handleDelete = () => {
     Alert.alert("일정 삭제", "이 일정을 삭제할까요?", [
@@ -195,9 +230,21 @@ export default function ScheduleDetailScreen() {
           </CardContent>
         </Card>
 
+        {/* 완료 처리 */}
+        {schedule.is_completable && (
+          <Button
+            onPress={handleToggleComplete}
+            variant={isCompleted ? "outline" : "default"}
+            disabled={isToggling}
+          >
+            {isCompleted ? "완료 취소" : "오늘 일정 완료"}
+          </Button>
+        )}
+
         {/* 액션 버튼 */}
         <View className="gap-3">
           <Button
+            variant="outline"
             onPress={() =>
               router.push({
                 pathname: "/edit-schedule",

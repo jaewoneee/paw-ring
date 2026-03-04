@@ -19,7 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useFocusEffect } from '@react-navigation/native';
 
-import { ScheduleItem } from '@/components/calendar/ScheduleItem';
+import { StackedScheduleList } from '@/components/calendar/StackedScheduleList';
 import { getUpcomingSchedules } from '@/services/schedule';
 import type { Schedule } from '@/types/schedule';
 
@@ -69,7 +69,7 @@ export default function HomeScreen() {
         setUpcomingSchedules([]);
         return;
       }
-      getUpcomingSchedules(selectedPet.id, 5)
+      getUpcomingSchedules(selectedPet.id)
         .then(setUpcomingSchedules)
         .catch(() => setUpcomingSchedules([]));
     }, [selectedPet?.id])
@@ -218,20 +218,15 @@ export default function HomeScreen() {
                 </CardContent>
               </Card>
             ) : (
-              <View className="gap-2">
-                {upcomingSchedules.map((s) => (
-                  <ScheduleItem
-                    key={s.id}
-                    schedule={s}
-                    onPress={() =>
-                      router.push({
-                        pathname: '/schedule-detail',
-                        params: { id: s.id },
-                      })
-                    }
-                  />
-                ))}
-              </View>
+              <StackedScheduleList
+                schedules={upcomingSchedules}
+                onPressSchedule={(s) =>
+                  router.push({
+                    pathname: '/schedule-detail',
+                    params: { id: s.id },
+                  })
+                }
+              />
             )}
           </View>
 
