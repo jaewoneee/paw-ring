@@ -12,9 +12,9 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Text,
   View,
 } from 'react-native';
+import { Text } from '@/components/ui/Text';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';

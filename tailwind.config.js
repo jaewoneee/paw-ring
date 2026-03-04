@@ -9,6 +9,9 @@ module.exports = {
   darkMode: "class",
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Pretendard"],
+      },
       colors: {
         primary: {
           DEFAULT: "var(--color-primary)",
@@ -35,6 +38,13 @@ module.exports = {
         border: {
           DEFAULT: "var(--color-border)",
           strong: "var(--color-border-strong)",
+        },
+        card: {
+          rose: "#E8A8B8",
+          peach: "#F9BEB0",
+          cream: "#FCE7AE",
+          teal: "#78C3C9",
+          lavender: "#C09BBC",
         },
         success: "var(--color-success)",
         error: "var(--color-error)",

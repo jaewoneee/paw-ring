@@ -13,6 +13,7 @@ export default function AuthLayout() {
         contentStyle: { backgroundColor: colors.background },
         headerStyle: { backgroundColor: colors.surfaceElevated },
         headerTintColor: colors.foreground,
+        headerTitleStyle: { fontFamily: 'Pretendard-SemiBold' },
       }}
     >
       <Stack.Screen name="login" />

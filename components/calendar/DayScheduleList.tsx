@@ -2,7 +2,8 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import dayjs from "dayjs";
 import "dayjs/locale/ko";
 import React from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { Text } from "@/components/ui/Text";
 
 import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";

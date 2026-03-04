@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Text } from 'react-native';
+import { Text } from './Text';
 
 type Variant =
   | 'h1'

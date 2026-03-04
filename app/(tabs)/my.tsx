@@ -339,7 +339,7 @@ export default function MyScreen() {
               보안을 위해 비밀번호를 입력해주세요.
             </Typography>
             <TextInput
-              className="border border-border rounded-xl px-4 py-3 text-base text-foreground bg-surface-elevated"
+              className="font-sans border border-border rounded-xl px-4 py-3 text-base text-foreground bg-surface-elevated"
               placeholder="비밀번호"
               placeholderTextColor={colors.mutedForeground}
               secureTextEntry

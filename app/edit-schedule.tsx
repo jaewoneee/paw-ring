@@ -10,10 +10,10 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  Text,
   TextInput,
   View,
 } from "react-native";
+import { Text } from "@/components/ui/Text";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
@@ -719,6 +719,7 @@ export default function EditScheduleScreen() {
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     fontSize: 16,
+                    fontFamily: "Pretendard",
                     color: colors.foreground,
                     minHeight: 80,
                     textAlignVertical: "top",

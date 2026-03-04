@@ -1,6 +1,7 @@
 import { BlurView } from 'expo-blur';
 import type { ReactNode } from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
+import { Text } from './Text';
 
 import { useColorScheme } from '@/components/useColorScheme';
 

@@ -34,7 +34,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   plugins: [
     "expo-router",
-    "expo-font",
+    [
+      "expo-font",
+      {
+        fonts: [
+          "./assets/fonts/Pretendard-Regular.otf",
+          "./assets/fonts/Pretendard-Medium.otf",
+          "./assets/fonts/Pretendard-SemiBold.otf",
+          "./assets/fonts/Pretendard-Bold.otf",
+        ],
+      },
+    ],
     "expo-web-browser",
     "expo-image-picker",
     "@react-native-community/datetimepicker",

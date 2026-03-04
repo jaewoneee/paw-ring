@@ -1,5 +1,6 @@
 import type { KeyboardTypeOptions } from 'react-native';
-import { Text, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
+import { Text } from './Text';
 
 interface InputProps {
   label?: string;
@@ -28,7 +29,7 @@ export function Input({
         <Text className="font-medium text-foreground">{label}</Text>
       ) : null}
       <TextInput
-        className={`border rounded-xl px-4 py-3 text-base text-foreground ${
+        className={`font-sans border rounded-xl px-4 py-3 text-base text-foreground ${
           error ? 'border-error bg-red-50 dark:bg-red-950' : 'border-border bg-surface-elevated'
         }`}
         placeholder={placeholder}

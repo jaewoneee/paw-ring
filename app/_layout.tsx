@@ -56,7 +56,11 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+    Pretendard: require('../assets/fonts/Pretendard-Regular.otf'),
+    'Pretendard-Regular': require('../assets/fonts/Pretendard-Regular.otf'),
+    'Pretendard-Medium': require('../assets/fonts/Pretendard-Medium.otf'),
+    'Pretendard-SemiBold': require('../assets/fonts/Pretendard-SemiBold.otf'),
+    'Pretendard-Bold': require('../assets/fonts/Pretendard-Bold.otf'),
     ...FontAwesome.font,
   });
 
@@ -110,7 +114,7 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkNavTheme : LightTheme}>
       <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
-        <Stack>
+        <Stack screenOptions={{ headerTitleStyle: { fontFamily: 'Pretendard-SemiBold' } }}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen
             name="(tabs)"
