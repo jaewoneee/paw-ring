@@ -1,6 +1,8 @@
 export type ScheduleCategory = 'walk' | 'meal' | 'hospital' | 'medicine' | 'bath' | 'other';
 export type ReminderType = 'none' | 'on_time' | '10min' | '30min' | '1hour';
 export type CompletionStatus = 'completed' | 'dismissed';
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly';
+export type RecurrenceEndType = 'never' | 'date';
 
 /** Supabase schedules 테이블 스키마 */
 export interface Schedule {
@@ -42,9 +44,19 @@ export interface CreateScheduleInput {
   end_date?: string;
   is_all_day?: boolean;
   reminder?: ReminderType;
+  is_recurring?: boolean;
+  rrule?: string;
+  recurrence_end_date?: string;
+}
+
+/** 캘린더 렌더링용 가상 인스턴스 */
+export interface ScheduleInstance {
+  schedule: Schedule;
+  occurrenceDate: string; // "YYYY-MM-DD"
+  isRecurringInstance: boolean;
 }
 
 /** 스케줄 수정 입력 */
 export type UpdateScheduleInput = Partial<
-  Pick<Schedule, 'title' | 'category' | 'memo' | 'start_date' | 'end_date' | 'is_all_day' | 'reminder'>
+  Pick<Schedule, 'title' | 'category' | 'memo' | 'start_date' | 'end_date' | 'is_all_day' | 'reminder' | 'is_recurring' | 'rrule' | 'recurrence_end_date'>
 >;

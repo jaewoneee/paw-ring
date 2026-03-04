@@ -7,14 +7,14 @@ import { Pressable, Text, View } from "react-native";
 import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import type { Schedule } from "@/types/schedule";
+import type { ScheduleInstance } from "@/types/schedule";
 
 import { ScheduleItem } from "./ScheduleItem";
 
 interface DayScheduleListProps {
   date: string;
-  schedules: Schedule[];
-  onPressSchedule: (schedule: Schedule) => void;
+  schedules: ScheduleInstance[];
+  onPressSchedule: (instance: ScheduleInstance) => void;
   onPressAdd: () => void;
 }
 
@@ -61,7 +61,11 @@ export function DayScheduleList({
       ) : (
         <View className="gap-2">
           {schedules.map((s) => (
-            <ScheduleItem key={s.id} schedule={s} onPress={onPressSchedule} />
+            <ScheduleItem
+              key={`${s.schedule.id}-${s.occurrenceDate}`}
+              schedule={s.schedule}
+              onPress={() => onPressSchedule(s)}
+            />
           ))}
         </View>
       )}

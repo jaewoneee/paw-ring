@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/ko";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -15,6 +15,7 @@ import { CATEGORY_META, REMINDER_OPTIONS } from "@/constants/Schedule";
 import { deleteSchedule, getScheduleById } from "@/services/schedule";
 import type { Schedule } from "@/types/schedule";
 import { formatTime } from "@/utils/date";
+import { formatRRuleLabel } from "@/utils/rrule";
 
 export default function ScheduleDetailScreen() {
   const router = useRouter();
@@ -82,6 +83,20 @@ export default function ScheduleDetailScreen() {
   const reminderLabel =
     REMINDER_OPTIONS.find((r) => r.value === schedule.reminder)?.label ?? "없음";
 
+  const endDateLabel = schedule.end_date
+    ? dayjs(schedule.end_date).locale("ko").format("YYYY년 M월 D일 (dd)")
+    : null;
+
+  const recurrenceLabel =
+    schedule.is_recurring && schedule.rrule
+      ? formatRRuleLabel(schedule.rrule)
+      : null;
+
+  const recurrenceEndLabel =
+    schedule.is_recurring && schedule.recurrence_end_date
+      ? dayjs(schedule.recurrence_end_date).locale("ko").format("YYYY년 M월 D일")
+      : null;
+
   return (
     <Screen>
       <ScrollView
@@ -138,6 +153,28 @@ export default function ScheduleDetailScreen() {
                 value={reminderLabel}
                 colors={colors}
               />
+
+              {endDateLabel && (
+                <DetailRow
+                  icon="calendar"
+                  label="종료"
+                  value={endDateLabel}
+                  colors={colors}
+                />
+              )}
+
+              {recurrenceLabel && (
+                <DetailRow
+                  icon="refresh"
+                  label="반복"
+                  value={
+                    recurrenceEndLabel
+                      ? `${recurrenceLabel} (${recurrenceEndLabel}까지)`
+                      : recurrenceLabel
+                  }
+                  colors={colors}
+                />
+              )}
 
               {/* 메모 */}
               {schedule.memo && (

@@ -24,10 +24,23 @@ import { Switch } from "@/components/ui/Switch";
 import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import { CATEGORIES, CATEGORY_META, REMINDER_OPTIONS } from "@/constants/Schedule";
+import {
+  CATEGORIES,
+  CATEGORY_META,
+  DAY_OF_WEEK_OPTIONS,
+  RECURRENCE_END_OPTIONS,
+  RECURRENCE_FREQUENCY_OPTIONS,
+  REMINDER_OPTIONS,
+} from "@/constants/Schedule";
 import { getScheduleById, updateSchedule } from "@/services/schedule";
-import type { ReminderType, Schedule, ScheduleCategory } from "@/types/schedule";
+import type {
+  RecurrenceFrequency,
+  ReminderType,
+  Schedule,
+  ScheduleCategory,
+} from "@/types/schedule";
 import { formatDate } from "@/utils/date";
+import { buildRRule, parseRRule } from "@/utils/rrule";
 
 export default function EditScheduleScreen() {
   const router = useRouter();
@@ -47,6 +60,28 @@ export default function EditScheduleScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // End date
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+  const [tempEndDate, setTempEndDate] = useState<Date>(new Date());
+
+  // Recurrence
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceFrequency, setRecurrenceFrequency] =
+    useState<RecurrenceFrequency>("daily");
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [recurrenceEndType, setRecurrenceEndType] = useState<"never" | "date">(
+    "never"
+  );
+  const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date>(
+    dayjs().add(1, "month").toDate()
+  );
+  const [showRecurrenceEndDatePicker, setShowRecurrenceEndDatePicker] =
+    useState(false);
+  const [tempRecurrenceEndDate, setTempRecurrenceEndDate] = useState<Date>(
+    dayjs().add(1, "month").toDate()
+  );
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
@@ -64,6 +99,26 @@ export default function EditScheduleScreen() {
       setIsAllDay(data.is_all_day);
       setReminder(data.reminder);
       setMemo(data.memo ?? "");
+
+      // Restore end date
+      if (data.end_date) {
+        setEndDate(dayjs(data.end_date).toDate());
+      }
+
+      // Restore recurrence
+      if (data.is_recurring && data.rrule) {
+        setIsRecurring(true);
+        const parsed = parseRRule(data.rrule);
+        setRecurrenceFrequency(parsed.frequency);
+        setSelectedDays(parsed.selectedDays);
+
+        if (data.recurrence_end_date) {
+          setRecurrenceEndType("date");
+          setRecurrenceEndDate(dayjs(data.recurrence_end_date).toDate());
+        } else {
+          setRecurrenceEndType("never");
+        }
+      }
     } catch (err) {
       console.error("[EditSchedule] fetch failed:", err);
       Alert.alert("오류", "일정을 불러올 수 없습니다.");
@@ -95,9 +150,47 @@ export default function EditScheduleScreen() {
     }
   };
 
+  const handleEndDateChange = (_: DateTimePickerEvent, d?: Date) => {
+    if (Platform.OS === "android") {
+      if (d) setEndDate(d);
+      setShowEndDatePicker(false);
+    } else if (d) {
+      setTempEndDate(d);
+    }
+  };
+
+  const handleRecurrenceEndDateChange = (
+    _: DateTimePickerEvent,
+    d?: Date
+  ) => {
+    if (Platform.OS === "android") {
+      if (d) setRecurrenceEndDate(d);
+      setShowRecurrenceEndDatePicker(false);
+    } else if (d) {
+      setTempRecurrenceEndDate(d);
+    }
+  };
+
+  const toggleDayOfWeek = (day: string) => {
+    setSelectedDays((prev) =>
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    );
+  };
+
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!title.trim()) newErrors.title = "제목을 입력해주세요";
+    if (endDate && dayjs(endDate).isBefore(dayjs(date), "day")) {
+      newErrors.endDate = "종료 날짜는 시작 날짜 이후여야 합니다";
+    }
+    if (
+      isRecurring &&
+      recurrenceEndType === "date" &&
+      dayjs(recurrenceEndDate).isBefore(dayjs(date), "day")
+    ) {
+      newErrors.recurrenceEndDate =
+        "반복 종료일은 시작 날짜 이후여야 합니다";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -115,13 +208,42 @@ export default function EditScheduleScreen() {
             .second(0)
             .toISOString();
 
+      const computedEndDate = endDate
+        ? isAllDay
+          ? dayjs(endDate).endOf("day").toISOString()
+          : dayjs(endDate)
+              .hour(time.getHours())
+              .minute(time.getMinutes())
+              .second(0)
+              .toISOString()
+        : null;
+
+      const rrule = isRecurring
+        ? buildRRule({
+            frequency: recurrenceFrequency,
+            selectedDays:
+              recurrenceFrequency === "weekly" ? selectedDays : undefined,
+            endDate:
+              recurrenceEndType === "date"
+                ? dayjs(recurrenceEndDate).endOf("day").toISOString()
+                : undefined,
+          })
+        : null;
+
       await updateSchedule(id, {
         title: title.trim(),
         category,
         memo: memo.trim() || null,
         start_date: startDate,
+        end_date: computedEndDate,
         is_all_day: isAllDay,
         reminder,
+        is_recurring: isRecurring,
+        rrule,
+        recurrence_end_date:
+          isRecurring && recurrenceEndType === "date"
+            ? dayjs(recurrenceEndDate).endOf("day").toISOString()
+            : null,
       });
 
       router.back();
@@ -201,7 +323,9 @@ export default function EditScheduleScreen() {
                         <Text
                           style={{
                             fontSize: 13,
-                            color: isActive ? meta.color : colors.mutedForeground,
+                            color: isActive
+                              ? meta.color
+                              : colors.mutedForeground,
                             fontWeight: isActive ? "600" : "400",
                           }}
                         >
@@ -213,7 +337,7 @@ export default function EditScheduleScreen() {
                 </View>
               </View>
 
-              {/* 날짜 */}
+              {/* 시작 날짜 */}
               <View style={{ gap: 6 }}>
                 <Text
                   style={{
@@ -222,7 +346,7 @@ export default function EditScheduleScreen() {
                     color: colors.foreground,
                   }}
                 >
-                  날짜
+                  시작 날짜
                 </Text>
                 <Pressable
                   onPress={() => {
@@ -242,6 +366,59 @@ export default function EditScheduleScreen() {
                     {formatDate(date)}
                   </Text>
                 </Pressable>
+              </View>
+
+              {/* 종료 날짜 */}
+              <View style={{ gap: 6 }}>
+                <View className="flex-row items-center justify-between">
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "500",
+                      color: colors.foreground,
+                    }}
+                  >
+                    종료 날짜
+                  </Text>
+                  <Pressable
+                    onPress={() =>
+                      setEndDate(
+                        endDate
+                          ? null
+                          : dayjs(date).add(1, "day").toDate()
+                      )
+                    }
+                  >
+                    <Text style={{ fontSize: 13, color: colors.primary }}>
+                      {endDate ? "제거" : "추가"}
+                    </Text>
+                  </Pressable>
+                </View>
+                {endDate && (
+                  <Pressable
+                    onPress={() => {
+                      setTempEndDate(endDate);
+                      setShowEndDatePicker(true);
+                    }}
+                    style={{
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                      backgroundColor: colors.surfaceElevated,
+                      borderRadius: 12,
+                      paddingHorizontal: 16,
+                      paddingVertical: 12,
+                    }}
+                  >
+                    <Text style={{ fontSize: 16, color: colors.foreground }}>
+                      {formatDate(endDate)}
+                    </Text>
+                  </Pressable>
+                )}
+                {errors.endDate && (
+                  <Text style={{ fontSize: 12, color: "#EF4444" }}>
+                    {errors.endDate}
+                  </Text>
+                )}
               </View>
 
               {/* 종일 토글 */}
@@ -283,6 +460,194 @@ export default function EditScheduleScreen() {
                 </View>
               )}
 
+              {/* 반복 토글 */}
+              <View className="flex-row items-center justify-between">
+                <Typography variant="body-md">반복</Typography>
+                <Switch
+                  value={isRecurring}
+                  onValueChange={(v) => {
+                    setIsRecurring(v);
+                    if (!v) {
+                      setRecurrenceFrequency("daily");
+                      setSelectedDays([]);
+                      setRecurrenceEndType("never");
+                    }
+                  }}
+                />
+              </View>
+
+              {/* 반복 주기 */}
+              {isRecurring && (
+                <View style={{ gap: 6 }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "500",
+                      color: colors.foreground,
+                    }}
+                  >
+                    반복 주기
+                  </Text>
+                  <View className="flex-row flex-wrap gap-2">
+                    {RECURRENCE_FREQUENCY_OPTIONS.map((opt) => {
+                      const isActive = recurrenceFrequency === opt.value;
+                      return (
+                        <Pressable
+                          key={opt.value}
+                          onPress={() => {
+                            setRecurrenceFrequency(opt.value);
+                            if (opt.value !== "weekly") setSelectedDays([]);
+                          }}
+                          className="px-3 py-2 rounded-full border"
+                          style={{
+                            borderColor: isActive
+                              ? colors.primary
+                              : colors.border,
+                            backgroundColor: isActive
+                              ? colors.primary + "15"
+                              : "transparent",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              color: isActive
+                                ? colors.primary
+                                : colors.mutedForeground,
+                              fontWeight: isActive ? "600" : "400",
+                            }}
+                          >
+                            {opt.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
+
+              {/* 요일 선택 (매주일 때) */}
+              {isRecurring && recurrenceFrequency === "weekly" && (
+                <View style={{ gap: 6 }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "500",
+                      color: colors.foreground,
+                    }}
+                  >
+                    요일 선택
+                  </Text>
+                  <View className="flex-row gap-2">
+                    {DAY_OF_WEEK_OPTIONS.map((day) => {
+                      const isActive = selectedDays.includes(day.value);
+                      return (
+                        <Pressable
+                          key={day.value}
+                          onPress={() => toggleDayOfWeek(day.value)}
+                          className="w-9 h-9 rounded-full items-center justify-center border"
+                          style={{
+                            borderColor: isActive
+                              ? colors.primary
+                              : colors.border,
+                            backgroundColor: isActive
+                              ? colors.primary + "15"
+                              : "transparent",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              color: isActive
+                                ? colors.primary
+                                : colors.mutedForeground,
+                              fontWeight: isActive ? "600" : "400",
+                            }}
+                          >
+                            {day.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              )}
+
+              {/* 반복 종료 */}
+              {isRecurring && (
+                <View style={{ gap: 6 }}>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      fontWeight: "500",
+                      color: colors.foreground,
+                    }}
+                  >
+                    반복 종료
+                  </Text>
+                  <View className="flex-row flex-wrap gap-2">
+                    {RECURRENCE_END_OPTIONS.map((opt) => {
+                      const isActive = recurrenceEndType === opt.value;
+                      return (
+                        <Pressable
+                          key={opt.value}
+                          onPress={() => setRecurrenceEndType(opt.value)}
+                          className="px-3 py-2 rounded-full border"
+                          style={{
+                            borderColor: isActive
+                              ? colors.primary
+                              : colors.border,
+                            backgroundColor: isActive
+                              ? colors.primary + "15"
+                              : "transparent",
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              color: isActive
+                                ? colors.primary
+                                : colors.mutedForeground,
+                              fontWeight: isActive ? "600" : "400",
+                            }}
+                          >
+                            {opt.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                  {recurrenceEndType === "date" && (
+                    <Pressable
+                      onPress={() => {
+                        setTempRecurrenceEndDate(recurrenceEndDate);
+                        setShowRecurrenceEndDatePicker(true);
+                      }}
+                      style={{
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        backgroundColor: colors.surfaceElevated,
+                        borderRadius: 12,
+                        paddingHorizontal: 16,
+                        paddingVertical: 12,
+                        marginTop: 4,
+                      }}
+                    >
+                      <Text
+                        style={{ fontSize: 16, color: colors.foreground }}
+                      >
+                        {formatDate(recurrenceEndDate)}
+                      </Text>
+                    </Pressable>
+                  )}
+                  {errors.recurrenceEndDate && (
+                    <Text style={{ fontSize: 12, color: "#EF4444" }}>
+                      {errors.recurrenceEndDate}
+                    </Text>
+                  )}
+                </View>
+              )}
+
               {/* 알림 */}
               <View style={{ gap: 6 }}>
                 <Text
@@ -303,7 +668,9 @@ export default function EditScheduleScreen() {
                         onPress={() => setReminder(opt.value)}
                         className="px-3 py-2 rounded-full border"
                         style={{
-                          borderColor: isActive ? colors.primary : colors.border,
+                          borderColor: isActive
+                            ? colors.primary
+                            : colors.border,
                           backgroundColor: isActive
                             ? colors.primary + "15"
                             : "transparent",
@@ -366,7 +733,7 @@ export default function EditScheduleScreen() {
           </CardContent>
         </Card>
 
-        {/* 날짜 피커 */}
+        {/* 시작 날짜 피커 */}
         <BottomSheet
           visible={showDatePicker}
           onClose={() => setShowDatePicker(false)}
@@ -380,7 +747,7 @@ export default function EditScheduleScreen() {
                 textAlign: "center",
               }}
             >
-              날짜 선택
+              시작 날짜 선택
             </Text>
             <DateTimePicker
               value={tempDate}
@@ -395,6 +762,43 @@ export default function EditScheduleScreen() {
               onPress={() => {
                 setDate(tempDate);
                 setShowDatePicker(false);
+              }}
+            >
+              확인
+            </Button>
+          </View>
+        </BottomSheet>
+
+        {/* 종료 날짜 피커 */}
+        <BottomSheet
+          visible={showEndDatePicker}
+          onClose={() => setShowEndDatePicker(false)}
+        >
+          <View style={{ gap: 12 }}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "600",
+                color: colors.foreground,
+                textAlign: "center",
+              }}
+            >
+              종료 날짜 선택
+            </Text>
+            <DateTimePicker
+              value={tempEndDate}
+              mode="date"
+              display="spinner"
+              onChange={handleEndDateChange}
+              minimumDate={date}
+              themeVariant={colorScheme === "dark" ? "dark" : "light"}
+              locale="ko-KR"
+              style={{ alignSelf: "center", width: "100%" }}
+            />
+            <Button
+              onPress={() => {
+                setEndDate(tempEndDate);
+                setShowEndDatePicker(false);
               }}
             >
               확인
@@ -431,6 +835,43 @@ export default function EditScheduleScreen() {
               onPress={() => {
                 setTime(tempTime);
                 setShowTimePicker(false);
+              }}
+            >
+              확인
+            </Button>
+          </View>
+        </BottomSheet>
+
+        {/* 반복 종료 날짜 피커 */}
+        <BottomSheet
+          visible={showRecurrenceEndDatePicker}
+          onClose={() => setShowRecurrenceEndDatePicker(false)}
+        >
+          <View style={{ gap: 12 }}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "600",
+                color: colors.foreground,
+                textAlign: "center",
+              }}
+            >
+              반복 종료 날짜 선택
+            </Text>
+            <DateTimePicker
+              value={tempRecurrenceEndDate}
+              mode="date"
+              display="spinner"
+              onChange={handleRecurrenceEndDateChange}
+              minimumDate={date}
+              themeVariant={colorScheme === "dark" ? "dark" : "light"}
+              locale="ko-KR"
+              style={{ alignSelf: "center", width: "100%" }}
+            />
+            <Button
+              onPress={() => {
+                setRecurrenceEndDate(tempRecurrenceEndDate);
+                setShowRecurrenceEndDatePicker(false);
               }}
             >
               확인

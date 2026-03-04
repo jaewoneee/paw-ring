@@ -7,7 +7,7 @@ import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { CATEGORY_META } from "@/constants/Schedule";
-import type { Schedule } from "@/types/schedule";
+import type { ScheduleInstance } from "@/types/schedule";
 import { getMonthGrid } from "@/utils/date";
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
@@ -17,10 +17,11 @@ interface MonthCalendarProps {
   year: number;
   month: number;
   selectedDate: string;
-  schedules: Schedule[];
+  schedules: ScheduleInstance[];
   onSelectDate: (date: string) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
+  onGoToday: () => void;
 }
 
 export function MonthCalendar({
@@ -31,6 +32,7 @@ export function MonthCalendar({
   onSelectDate,
   onPrevMonth,
   onNextMonth,
+  onGoToday,
 }: MonthCalendarProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
@@ -38,12 +40,13 @@ export function MonthCalendar({
   const grid = useMemo(() => getMonthGrid(year, month), [year, month]);
   const today = dayjs().format("YYYY-MM-DD");
   const monthLabel = dayjs().year(year).month(month).format("YYYY년 M월");
+  const isCurrentMonth = year === dayjs().year() && month === dayjs().month();
 
   // 날짜별 스케줄 그룹핑
   const schedulesByDate = useMemo(() => {
-    const map = new Map<string, Schedule[]>();
+    const map = new Map<string, ScheduleInstance[]>();
     for (const s of schedules) {
-      const key = dayjs(s.start_date).format("YYYY-MM-DD");
+      const key = s.occurrenceDate;
       const arr = map.get(key) ?? [];
       arr.push(s);
       map.set(key, arr);
@@ -61,9 +64,21 @@ export function MonthCalendar({
         >
           <FontAwesome name="chevron-left" size={14} color={colors.foreground} />
         </Pressable>
-        <Typography variant="body-xl" className="font-semibold">
-          {monthLabel}
-        </Typography>
+        <Pressable onPress={onGoToday} className="flex-row items-center gap-1.5">
+          <Typography variant="body-xl" className="font-semibold">
+            {monthLabel}
+          </Typography>
+          {!isCurrentMonth && (
+            <View
+              className="px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: colors.primary + "18" }}
+            >
+              <Text className="text-xs font-medium" style={{ color: colors.primary }}>
+                오늘
+              </Text>
+            </View>
+          )}
+        </Pressable>
         <Pressable
           onPress={onNextMonth}
           className="w-9 h-9 items-center justify-center"
@@ -100,7 +115,7 @@ export function MonthCalendar({
 
           // 카테고리별 고유 dot 색상 (최대 3개)
           const dotColors = daySchedules
-            ? [...new Set(daySchedules.map((s) => CATEGORY_META[s.category].color))].slice(
+            ? [...new Set(daySchedules.map((s) => CATEGORY_META[s.schedule.category].color))].slice(
                 0,
                 MAX_DOTS
               )

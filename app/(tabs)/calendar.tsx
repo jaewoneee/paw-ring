@@ -14,7 +14,6 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { usePets } from '@/contexts/PetContext';
 import { useMonthSchedules } from '@/hooks/useSchedules';
-import { isSameDay } from '@/utils/date';
 
 export default function CalendarScreen() {
   const router = useRouter();
@@ -43,7 +42,7 @@ export default function CalendarScreen() {
 
   // 선택 날짜의 스케줄 (월간 데이터에서 필터링)
   const daySchedules = useMemo(
-    () => schedules.filter(s => isSameDay(s.start_date, selectedDate)),
+    () => schedules.filter(s => s.occurrenceDate === selectedDate),
     [schedules, selectedDate]
   );
 
@@ -63,6 +62,13 @@ export default function CalendarScreen() {
     } else {
       setMonth(m => m + 1);
     }
+  };
+
+  const handleGoToday = () => {
+    const now = dayjs();
+    setYear(now.year());
+    setMonth(now.month());
+    setSelectedDate(now.format('YYYY-MM-DD'));
   };
 
   const handleAddSchedule = () => {
@@ -116,6 +122,7 @@ export default function CalendarScreen() {
           onSelectDate={setSelectedDate}
           onPrevMonth={handlePrevMonth}
           onNextMonth={handleNextMonth}
+          onGoToday={handleGoToday}
         />
 
         {/* 구분선 */}
@@ -127,7 +134,7 @@ export default function CalendarScreen() {
           onPressSchedule={s =>
             router.push({
               pathname: '/schedule-detail',
-              params: { id: s.id },
+              params: { id: s.schedule.id },
             })
           }
           onPressAdd={handleAddSchedule}

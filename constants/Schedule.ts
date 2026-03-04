@@ -1,4 +1,4 @@
-import type { ReminderType, ScheduleCategory } from '@/types/schedule';
+import type { RecurrenceFrequency, ReminderType, ScheduleCategory } from '@/types/schedule';
 
 interface CategoryMeta {
   label: string;
@@ -25,4 +25,26 @@ export const REMINDER_OPTIONS: { label: string; value: ReminderType }[] = [
   { label: '10분 전',  value: '10min' },
   { label: '30분 전',  value: '30min' },
   { label: '1시간 전', value: '1hour' },
+];
+
+export const RECURRENCE_FREQUENCY_OPTIONS: { label: string; value: RecurrenceFrequency }[] = [
+  { label: '매일', value: 'daily' },
+  { label: '매주', value: 'weekly' },
+  { label: '격주', value: 'biweekly' },
+  { label: '매월', value: 'monthly' },
+];
+
+export const DAY_OF_WEEK_OPTIONS: { label: string; value: string }[] = [
+  { label: '월', value: 'MO' },
+  { label: '화', value: 'TU' },
+  { label: '수', value: 'WE' },
+  { label: '목', value: 'TH' },
+  { label: '금', value: 'FR' },
+  { label: '토', value: 'SA' },
+  { label: '일', value: 'SU' },
+];
+
+export const RECURRENCE_END_OPTIONS: { label: string; value: 'never' | 'date' }[] = [
+  { label: '종료 없음', value: 'never' },
+  { label: '날짜 지정', value: 'date' },
 ];
