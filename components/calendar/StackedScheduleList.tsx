@@ -10,10 +10,7 @@ import {
 
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
-import {
-  CATEGORY_CARD_COLORS,
-  CATEGORY_TEXT_COLORS,
-} from '@/constants/Schedule';
+import { CARD_COLORS } from '@/constants/Schedule';
 import type { Schedule } from '@/types/schedule';
 
 import { ScheduleItem } from './ScheduleItem';
@@ -22,9 +19,9 @@ if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
 }
 
-const CARD_HEIGHT = 56;
-const COLLAPSED_VISIBLE = 28;
-const EXPANDED_GAP = 12;
+const CARD_HEIGHT = 75;
+const COLLAPSED_VISIBLE = 45;
+const EXPANDED_GAP = 6;
 
 interface StackedScheduleListProps {
   schedules: Schedule[];
@@ -79,21 +76,23 @@ export function StackedScheduleList({
     setExpanded(!expanded);
   }, [expanded]);
 
+  const getColors = (index: number) => {
+    const c = CARD_COLORS[index % CARD_COLORS.length];
+    const mode = isDark ? 'dark' : 'light';
+    return { cardColor: c[mode].bg, textColor: c[mode].text };
+  };
+
   // Single schedule: no stacking needed
   if (schedules.length === 1) {
-    const schedule = schedules[0];
-    const cardColor =
-      CATEGORY_CARD_COLORS[schedule.category][isDark ? 'dark' : 'light'];
-    const textColor =
-      CATEGORY_TEXT_COLORS[schedule.category][isDark ? 'dark' : 'light'];
+    const { cardColor, textColor } = getColors(0);
 
     return (
       <ScheduleItem
-        schedule={schedule}
+        schedule={schedules[0]}
         variant="stacked"
         cardColor={cardColor}
         textColor={textColor}
-        onPress={() => onPressSchedule(schedule)}
+        onPress={() => onPressSchedule(schedules[0])}
       />
     );
   }
@@ -111,13 +110,12 @@ export function StackedScheduleList({
         }}
       >
         {schedules.map((schedule, index) => {
-          const cardColor =
-            CATEGORY_CARD_COLORS[schedule.category][isDark ? 'dark' : 'light'];
-          const textColor =
-            CATEGORY_TEXT_COLORS[schedule.category][isDark ? 'dark' : 'light'];
+          const { cardColor, textColor } = getColors(index);
 
-          const collapsedOffset = index * COLLAPSED_VISIBLE;
-          const expandedOffset = index * (CARD_HEIGHT + EXPANDED_GAP);
+          const collapsedOffset =
+            (schedules.length - 1 - index) * COLLAPSED_VISIBLE;
+          const expandedOffset =
+            (schedules.length - 1 - index) * (CARD_HEIGHT + EXPANDED_GAP);
 
           const translateY =
             animValues.current[index]?.interpolate({

@@ -55,6 +55,16 @@ PawRing의 컬러 시스템은 **블루** 를 포인트 컬러로 사용하며, 
 | `border` | #E5E5E5 (neutral-200) | #404040 (neutral-700) | 기본 구분선, 입력 필드 |
 | `border-strong` | #D4D4D4 (neutral-300) | #525252 (neutral-600) | 강조 구분선 |
 
+### Card
+
+| Token | Value | 용도 |
+|-------|-------|------|
+| `card-blue` | #4F7FFF | 카드 배경 (블루) |
+| `card-amber` | #FFA41B | 카드 배경 (앰버) |
+| `card-orange` | #F86F03 | 카드 배경 (오렌지) |
+| `card-blush` | #FFF6F4 | 카드 배경 (블러시) |
+| `card-green` | #13BC43 | 카드 배경 (그린) |
+
 ### Status (Semantic)
 
 | Token | Light | Dark | 용도 |

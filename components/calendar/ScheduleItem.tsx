@@ -1,14 +1,15 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import React from "react";
-import { Pressable, View } from "react-native";
-import { Text } from "@/components/ui/Text";
+import { Text } from '@/components/ui/Text';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import React from 'react';
+import { Pressable, View } from 'react-native';
 
-import { Typography } from "@/components/ui/Typography";
-import { useColorScheme } from "@/components/useColorScheme";
-import Colors from "@/constants/Colors";
-import { CATEGORY_META } from "@/constants/Schedule";
-import type { Schedule } from "@/types/schedule";
-import { formatTime } from "@/utils/date";
+import { Typography } from '@/components/ui/Typography';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
+import { CATEGORY_META } from '@/constants/Schedule';
+import type { Schedule } from '@/types/schedule';
+import { formatTime } from '@/utils/date';
+import dayjs from 'dayjs';
 
 interface ScheduleItemProps {
   schedule: Schedule;
@@ -18,11 +19,18 @@ interface ScheduleItemProps {
   textColor?: string;
 }
 
-export function ScheduleItem({ schedule, onPress, variant = 'default', cardColor, textColor }: ScheduleItemProps) {
+export function ScheduleItem({
+  schedule,
+  onPress,
+  variant = 'default',
+  cardColor,
+  textColor,
+}: ScheduleItemProps) {
   const { colorScheme } = useColorScheme();
-  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const meta = CATEGORY_META[schedule.category];
   const isStacked = variant === 'stacked';
+  console.log({ schedule });
 
   return (
     <Pressable
@@ -41,7 +49,13 @@ export function ScheduleItem({ schedule, onPress, variant = 'default', cardColor
     >
       {/* 카테고리 색상 바 (default variant만) */}
       {!isStacked && (
-        <View style={{ width: 4, alignSelf: "stretch", backgroundColor: meta.color }} />
+        <View
+          style={{
+            width: 4,
+            alignSelf: 'stretch',
+            backgroundColor: meta.color,
+          }}
+        />
       )}
 
       <View className="flex-1 flex-row items-center gap-3 px-3 py-3">
@@ -49,7 +63,9 @@ export function ScheduleItem({ schedule, onPress, variant = 'default', cardColor
         <View
           className="w-8 h-8 rounded-full items-center justify-center"
           style={{
-            backgroundColor: isStacked ? 'rgba(255,255,255,0.4)' : meta.color + "20",
+            backgroundColor: isStacked
+              ? 'rgba(255,255,255,0.25)'
+              : meta.color + '20',
           }}
         >
           <FontAwesome
@@ -61,8 +77,13 @@ export function ScheduleItem({ schedule, onPress, variant = 'default', cardColor
 
         {/* 내용 */}
         <View className="flex-1">
+          <Typography style={isStacked ? { color: textColor } : undefined}>
+            {dayjs(schedule.start_date).format(
+              schedule.is_all_day ? 'YYYY-MM-DD' : 'YYYY-MM-DD HH시 mm분'
+            )}
+          </Typography>
           <Typography
-            variant="body-md"
+            variant="body-xl"
             className="font-medium"
             style={isStacked ? { color: textColor } : undefined}
             numberOfLines={isStacked ? 1 : undefined}
@@ -71,18 +92,30 @@ export function ScheduleItem({ schedule, onPress, variant = 'default', cardColor
           </Typography>
           <Text
             className="text-xs"
-            style={{ color: isStacked ? (textColor ? textColor + 'B3' : colors.mutedForeground) : colors.mutedForeground }}
+            style={{
+              color: isStacked
+                ? (textColor ?? colors.mutedForeground)
+                : colors.mutedForeground,
+            }}
             numberOfLines={isStacked ? 1 : undefined}
           >
-            {schedule.is_all_day ? "종일" : formatTime(schedule.start_date)}
-            {schedule.memo ? ` · ${schedule.memo}` : ""}
+            {schedule.is_all_day ? '종일' : formatTime(schedule.start_date)}
+            {schedule.memo ? ` · ${schedule.memo}` : ''}
           </Text>
         </View>
 
         {isStacked ? (
-          <FontAwesome name="check-circle" size={16} color={textColor ? textColor + '80' : colors.mutedForeground} />
+          <FontAwesome
+            name="check-circle"
+            size={16}
+            color={textColor ?? colors.mutedForeground}
+          />
         ) : (
-          <FontAwesome name="chevron-right" size={12} color={colors.mutedForeground} />
+          <FontAwesome
+            name="chevron-right"
+            size={12}
+            color={colors.mutedForeground}
+          />
         )}
       </View>
     </Pressable>

@@ -2,6 +2,7 @@ import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
+import { Text } from '@/components/ui/Text';
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
@@ -11,7 +12,6 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import React, { createRef, useCallback, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, View } from 'react-native';
-import { Text } from '@/components/ui/Text';
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -193,7 +193,7 @@ export default function HomeScreen() {
           )}
 
           {/* 다가오는 일정 */}
-          <View className="gap-2">
+          <View className="gap-1">
             <Typography variant="body-xl" className="font-semibold">
               다가오는 일정
             </Typography>
@@ -220,7 +220,7 @@ export default function HomeScreen() {
             ) : (
               <StackedScheduleList
                 schedules={upcomingSchedules}
-                onPressSchedule={(s) =>
+                onPressSchedule={s =>
                   router.push({
                     pathname: '/schedule-detail',
                     params: { id: s.id },

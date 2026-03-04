@@ -22,6 +22,13 @@ const palette = {
     900: '#00315B',
     950: '#001C3C',
   },
+  card: {
+    blue: '#4F7FFF',
+    amber: '#FFA41B',
+    orange: '#F86F03',
+    blush: '#FFF6F4',
+    green: '#13BC43',
+  },
 } as const;
 
 const Colors = {

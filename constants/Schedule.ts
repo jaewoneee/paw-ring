@@ -66,20 +66,11 @@ export const RECURRENCE_END_OPTIONS: { label: string; value: 'never' | 'date' }[
   { label: '날짜 지정', value: 'date' },
 ];
 
-export const CATEGORY_CARD_COLORS: Record<ScheduleCategory, { light: string; dark: string }> = {
-  walk:     { light: '#FCE7AE', dark: '#4A3D1A' },
-  meal:     { light: '#C6F0C6', dark: '#1A3D1A' },
-  hospital: { light: '#E8A8B8', dark: '#4A2A34' },
-  medicine: { light: '#C09BBC', dark: '#3D2A4A' },
-  bath:     { light: '#A8D8EA', dark: '#1A3D4A' },
-  other:    { light: '#F9BEB0', dark: '#4A2E26' },
-};
-
-export const CATEGORY_TEXT_COLORS: Record<ScheduleCategory, { light: string; dark: string }> = {
-  walk:     { light: '#5C4B17', dark: '#FCE7AE' },
-  meal:     { light: '#1A5C1A', dark: '#C6F0C6' },
-  hospital: { light: '#6B2840', dark: '#E8A8B8' },
-  medicine: { light: '#5C2D6B', dark: '#C09BBC' },
-  bath:     { light: '#1A4A5C', dark: '#A8D8EA' },
-  other:    { light: '#6B3528', dark: '#F9BEB0' },
-};
+/** 카드 색상 순환 배열 (인덱스 기반) */
+export const CARD_COLORS: { light: { bg: string; text: string }; dark: { bg: string; text: string } }[] = [
+  { light: { bg: '#4F7FFF', text: '#FFFFFF' }, dark: { bg: '#2B4A8A', text: '#C4D8FF' } },
+  { light: { bg: '#FFA41B', text: '#5C3A00' }, dark: { bg: '#8A6200', text: '#FFD88A' } },
+  { light: { bg: '#F86F03', text: '#FFFFFF' }, dark: { bg: '#8A4200', text: '#FFBC80' } },
+  { light: { bg: '#FFF6F4', text: '#6B3528' }, dark: { bg: '#5C4440', text: '#FFE0D6' } },
+  { light: { bg: '#13BC43', text: '#FFFFFF' }, dark: { bg: '#1A6B30', text: '#A0F0B8' } },
+];

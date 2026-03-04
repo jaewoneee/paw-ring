@@ -1,4 +1,3 @@
-import { BlurView } from 'expo-blur';
 import type { ReactNode } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 import { Text } from './Text';
@@ -16,28 +15,28 @@ export function Card({ children, className = '' }: CardProps) {
 
   return (
     <View style={styles.wrapper}>
-      <BlurView
+      {/* <BlurView
         intensity={80}
         tint={isDark ? 'dark' : 'light'}
         style={styles.blur}
+      > */}
+      <View
+        className={`rounded-2xl overflow-hidden ${className}`}
+        style={[
+          styles.inner,
+          // {
+          //   backgroundColor: isDark
+          //     ? 'rgba(255, 255, 255, 0.1)'
+          //     : 'rgba(255, 255, 255, 0.1)',
+          //   borderColor: isDark
+          //     ? 'rgba(255, 255, 255, 0.15)'
+          //     : 'rgba(255, 255, 255, 0.3)',
+          // },
+        ]}
       >
-        <View
-          className={`rounded-2xl overflow-hidden ${className}`}
-          style={[
-            styles.inner,
-            {
-              backgroundColor: isDark
-                ? 'rgba(255, 255, 255, 0.1)'
-                : 'rgba(255, 255, 255, 0.1)',
-              borderColor: isDark
-                ? 'rgba(255, 255, 255, 0.15)'
-                : 'rgba(255, 255, 255, 0.3)',
-            },
-          ]}
-        >
-          {children}
-        </View>
-      </BlurView>
+        {children}
+      </View>
+      {/* </BlurView> */}
     </View>
   );
 }
