@@ -131,6 +131,27 @@ function RootLayoutNav() {
             }}
           />
           <Stack.Screen
+            name="add-schedule"
+            options={{
+              title: '일정 추가',
+              headerBackButtonDisplayMode: 'minimal',
+            }}
+          />
+          <Stack.Screen
+            name="schedule-detail"
+            options={{
+              title: '일정 상세',
+              headerBackButtonDisplayMode: 'minimal',
+            }}
+          />
+          <Stack.Screen
+            name="edit-schedule"
+            options={{
+              title: '일정 수정',
+              headerBackButtonDisplayMode: 'minimal',
+            }}
+          />
+          <Stack.Screen
             name="settings/profile"
             options={{
               title: '프로필 수정',

@@ -129,6 +129,7 @@ CREATE TABLE schedules (
   category TEXT NOT NULL DEFAULT 'other',  -- 'walk','meal','hospital','medicine','bath','other'
   memo TEXT,
   start_date TIMESTAMPTZ NOT NULL,
+  end_date TIMESTAMPTZ,                    -- 다일(multi-day) 스케줄 종료일 (null이면 단일 날짜)
   is_all_day BOOLEAN DEFAULT FALSE,
   is_recurring BOOLEAN DEFAULT FALSE,
   rrule TEXT,                              -- RFC 5545 반복 규칙
@@ -154,15 +155,20 @@ CREATE TABLE schedule_exceptions (
 
 ### schedule_completions
 ```sql
+-- 날짜별 실행 상태 (완료 또는 무시)
 CREATE TABLE schedule_completions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   schedule_id UUID NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
   completion_date DATE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'completed' CHECK (status IN ('completed', 'dismissed')),
   completed_by TEXT NOT NULL REFERENCES users(id),
   completed_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE (schedule_id, completion_date)
 );
 ```
+> - `completed`: 스케줄 실행 완료
+> - `dismissed`: 유저가 의도적으로 무시
+> - 레코드 없음: 미실행 상태 → 리마인더 알림 대상
 
 ### calendar_shares
 ```sql

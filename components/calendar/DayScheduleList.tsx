@@ -1,0 +1,70 @@
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import dayjs from "dayjs";
+import "dayjs/locale/ko";
+import React from "react";
+import { Pressable, Text, View } from "react-native";
+
+import { Typography } from "@/components/ui/Typography";
+import { useColorScheme } from "@/components/useColorScheme";
+import Colors from "@/constants/Colors";
+import type { Schedule } from "@/types/schedule";
+
+import { ScheduleItem } from "./ScheduleItem";
+
+interface DayScheduleListProps {
+  date: string;
+  schedules: Schedule[];
+  onPressSchedule: (schedule: Schedule) => void;
+  onPressAdd: () => void;
+}
+
+export function DayScheduleList({
+  date,
+  schedules,
+  onPressSchedule,
+  onPressAdd,
+}: DayScheduleListProps) {
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
+  const dateLabel = dayjs(date).locale("ko").format("M월 D일 (dd)");
+
+  return (
+    <View className="px-4 pt-3 pb-4 gap-3">
+      {/* 날짜 헤더 */}
+      <View className="flex-row items-center justify-between">
+        <Typography variant="body-lg" className="font-semibold">
+          {dateLabel}
+        </Typography>
+        <Pressable
+          onPress={onPressAdd}
+          className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full"
+          style={{ backgroundColor: colors.primary }}
+        >
+          <FontAwesome name="plus" size={10} color={colors.primaryForeground} />
+          <Text
+            className="text-xs font-medium"
+            style={{ color: colors.primaryForeground }}
+          >
+            추가
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* 스케줄 리스트 */}
+      {schedules.length === 0 ? (
+        <View className="items-center py-8 gap-2">
+          <FontAwesome name="calendar-o" size={24} color={colors.mutedForeground} />
+          <Typography variant="body-sm" className="text-muted-foreground text-center">
+            이 날의 일정이 없어요
+          </Typography>
+        </View>
+      ) : (
+        <View className="gap-2">
+          {schedules.map((s) => (
+            <ScheduleItem key={s.id} schedule={s} onPress={onPressSchedule} />
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}

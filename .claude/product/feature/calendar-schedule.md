@@ -60,6 +60,22 @@
 2. 해당 날짜의 해당 스케줄이 "완료" 상태로 변경된다
 3. 완료된 스케줄은 시각적으로 구분된다 (취소선, 흐림 등)
 
+### 시나리오 7: 미실행 스케줄 리마인더
+1. 하루가 지나도 완료 체크되지 않은 스케줄이 있으면
+2. 다음날 아침 지정 시간(예: 09:00)에 미실행 리마인더 푸시 알림이 발송된다
+   - "🐾 어제 [스케줄 제목]을(를) 놓쳤어요! 확인해주세요"
+3. 알림을 탭하면 해당 스케줄 상세 화면으로 이동한다
+4. 사용자는 두 가지 선택을 할 수 있다:
+   - **"지금 완료 처리"**: 해당 날짜의 스케줄을 완료로 표시
+   - **"무시"**: 해당 날짜의 스케줄을 무시(dismiss)로 표시하여 더 이상 리마인더 발송 안 함
+
+### 시나리오 8: 스케줄 무시 처리
+1. 일간 뷰에서 미완료 스케줄을 길게 누르거나 스와이프한다
+2. "무시" 옵션이 표시된다
+3. "무시"를 탭하면 해당 날짜의 스케줄이 무시 상태로 변경된다
+4. 무시된 스케줄은 시각적으로 구분된다 (흐림 + "무시됨" 라벨)
+5. 무시된 스케줄에 대해서는 미실행 리마인더 알림이 발송되지 않는다
+
 ## 주요 기능 요구사항
 
 ### 캘린더
@@ -93,6 +109,14 @@
 ### 스케줄 완료
 - [ ] 날짜별 완료 체크/해제
 - [ ] 완료 상태 시각적 구분
+
+### 스케줄 실행 추적 (미실행 관리)
+- [ ] 미실행 스케줄 감지 (하루가 지나도 완료/무시되지 않은 스케줄)
+- [ ] 스케줄 무시(dismiss) 처리 (길게 누르기 또는 스와이프)
+- [ ] 무시 상태 시각적 구분 (흐림 + "무시됨" 라벨)
+- [ ] 미실행 리마인더 푸시 알림 발송 (다음날 아침)
+- [ ] 알림에서 "완료 처리" / "무시" 액션 선택
+- [ ] 미실행 스케줄 모아보기 (선택)
 
 ### 스케줄 카테고리
 - [ ] 기본 카테고리: 산책, 식사, 병원, 약 투여, 목욕, 기타
@@ -140,7 +164,7 @@
 │  │    09:00 | 반복: 매일 ││
 │  └─────────────────────┘│
 │  ┌─────────────────────┐│
-│  │ ☐ 🏥 예방접종        ││
+│  │ ── 🏥 예방접종 무시됨 ││
 │  │    14:00 | 단건      ││
 │  └─────────────────────┘│
 │  ┌─────────────────────┐│
@@ -148,9 +172,14 @@
 │  │    18:00 | 반복: 매일 ││
 │  └─────────────────────┘│
 │                         │
+│  ☐ 미완료  ☑ 완료  ── 무시 │
 │              [+]        │
 └─────────────────────────┘
 ```
+
+> **스케줄 상태 3가지**: 미완료(☐) / 완료(☑) / 무시(──)
+> - 완료: 체크박스 탭
+> - 무시: 길게 누르기 또는 왼쪽 스와이프 → "무시" 버튼
 
 ### 3. 스케줄 생성/수정 화면
 ```
@@ -249,6 +278,7 @@ CREATE TABLE schedules (
   category TEXT NOT NULL DEFAULT 'other',  -- 'walk','meal','hospital','medicine','bath','other'
   memo TEXT,
   start_date TIMESTAMPTZ NOT NULL,
+  end_date TIMESTAMPTZ,                    -- 다일(multi-day) 스케줄 종료일 (null이면 단일 날짜)
   is_all_day BOOLEAN DEFAULT FALSE,
   is_recurring BOOLEAN DEFAULT FALSE,
   rrule TEXT,                              -- RFC 5545 반복 규칙 (e.g. "FREQ=DAILY;INTERVAL=1")
@@ -275,16 +305,19 @@ CREATE TABLE schedule_exceptions (
 
 ### Supabase: `schedule_completions` 테이블
 ```sql
--- 날짜별 완료 상태
+-- 날짜별 실행 상태 (완료 또는 무시)
 CREATE TABLE schedule_completions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   schedule_id UUID NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
   completion_date DATE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'completed' CHECK (status IN ('completed', 'dismissed')),
   completed_by TEXT NOT NULL REFERENCES users(id),
   completed_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE (schedule_id, completion_date)
 );
 ```
+> `status` 필드: `completed`(완료) 또는 `dismissed`(무시)
+> - 완료도 무시도 아닌 스케줄 = 미실행 → 리마인더 알림 대상
 
 ### TypeScript 인터페이스
 ```typescript
@@ -296,6 +329,7 @@ interface Schedule {
   category: ScheduleCategory;
   memo: string | null;
   start_date: string;
+  end_date: string | null;
   is_all_day: boolean;
   is_recurring: boolean;
   rrule: string | null;
@@ -307,6 +341,16 @@ interface Schedule {
 
 type ScheduleCategory = 'walk' | 'meal' | 'hospital' | 'medicine' | 'bath' | 'other';
 type ReminderType = 'none' | 'on_time' | '10min' | '30min' | '1hour';
+type CompletionStatus = 'completed' | 'dismissed';
+
+interface ScheduleCompletion {
+  id: string;
+  schedule_id: string;
+  completion_date: string;
+  status: CompletionStatus;
+  completed_by: string;
+  completed_at: string;
+}
 ```
 
 ### RLS 정책
@@ -342,6 +386,9 @@ CREATE POLICY "Schedule delete access"
 | 반복 스케줄 수정 시 | "이 일정만 / 이후 모든 일정" 선택지 표시 |
 | 반복 스케줄 삭제 시 | "이 일정만 / 이후 모든 일정" 선택지 표시 |
 | 네트워크 오류 | "네트워크 연결을 확인해주세요" |
+| 이미 무시한 스케줄을 다시 활성화 | 무시 해제 → 미완료 상태로 복귀 |
+| 과거 날짜 스케줄 무시 | 허용 (과거 스케줄도 무시 가능) |
+| 미실행 리마인더 알림 반복 발송 | 1회만 발송 (무시/완료 처리 전까지) |
 
 ## 구현 순서
 
@@ -359,7 +406,10 @@ CREATE POLICY "Schedule delete access"
 4. 반복 스케줄 수정 (단건/이후 전체)
 5. 반복 스케줄 삭제 (단건/이후 전체)
 
-### Phase 3: 완료 체크 + 주간 뷰
+### Phase 3: 완료 체크 + 실행 추적 + 주간 뷰
 1. 스케줄 완료 체크/해제
-2. 주간 뷰 구현
-3. 카테고리 필터링
+2. 스케줄 무시(dismiss) 처리
+3. 미실행 스케줄 감지 로직
+4. 미실행 리마인더 알림 연동 (push-notification과 연계)
+5. 주간 뷰 구현
+6. 카테고리 필터링

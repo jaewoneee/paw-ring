@@ -8,21 +8,19 @@ import Colors from '@/constants/Colors';
 import { usePets } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import React, { createRef, useRef, useState } from 'react';
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from 'react-native';
+import React, { createRef, useCallback, useRef, useState } from 'react';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { useFocusEffect } from '@react-navigation/native';
+
+import { ScheduleItem } from '@/components/calendar/ScheduleItem';
+import { getUpcomingSchedules } from '@/services/schedule';
+import type { Schedule } from '@/types/schedule';
 
 const ACTION_WIDTH = 72;
 
@@ -62,6 +60,20 @@ export default function HomeScreen() {
   const isDark = colorScheme === 'dark';
   const colors = Colors[isDark ? 'dark' : 'light'];
 
+  const [upcomingSchedules, setUpcomingSchedules] = useState<Schedule[]>([]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!selectedPet?.id) {
+        setUpcomingSchedules([]);
+        return;
+      }
+      getUpcomingSchedules(selectedPet.id, 5)
+        .then(setUpcomingSchedules)
+        .catch(() => setUpcomingSchedules([]));
+    }, [selectedPet?.id])
+  );
+
   const [sheetVisible, setSheetVisible] = useState(false);
   const swipeableRefsMap = useRef<
     Map<string, React.RefObject<SwipeableMethods | null>>
@@ -84,32 +96,8 @@ export default function HomeScreen() {
     ? `${userProfile.nickname}님, 안녕하세요!`
     : '안녕하세요!';
 
-  const gradientColors = isDark
-    ? (['#0f2847', '#4a3a08', '#123848', '#0f2847'] as const)
-    : (['#FDE8D8', '#E8D5F0', '#C5D8F5', '#F5D5C8'] as const);
-
   return (
     <Screen>
-      {/* 그라데이션 배경 */}
-      <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        <LinearGradient
-          colors={gradientColors}
-          start={{ x: 0, y: 1 }}
-          end={{ x: 1, y: 0 }}
-          style={StyleSheet.absoluteFill}
-        />
-        <LinearGradient
-          colors={
-            isDark
-              ? ['transparent', 'rgba(10,10,10,0.6)']
-              : ['transparent', 'rgba(255,255,255,0.4)']
-          }
-          start={{ x: 0.5, y: 0 }}
-          end={{ x: 0.5, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
-      </View>
-
       {/* 상단 헤더: 반려동물 선택 + 알림/다크모드 */}
       <View className="px-4 pb-3" style={{ paddingTop: insets.top + 8 }}>
         <View className="flex-row items-center justify-between">
@@ -208,25 +196,42 @@ export default function HomeScreen() {
             <Typography variant="body-xl" className="font-semibold">
               다가오는 일정
             </Typography>
-            <Card>
-              <CardContent>
-                <View className="items-center py-4 gap-2">
-                  <FontAwesome
-                    name="calendar"
-                    size={24}
-                    color={colors.mutedForeground}
+            {!isLoggedIn || !selectedPet || upcomingSchedules.length === 0 ? (
+              <Card>
+                <CardContent>
+                  <View className="items-center py-4 gap-2">
+                    <FontAwesome
+                      name="calendar"
+                      size={24}
+                      color={colors.mutedForeground}
+                    />
+                    <Typography
+                      variant="body-sm"
+                      className="text-muted-foreground text-center"
+                    >
+                      {isLoggedIn
+                        ? '등록된 일정이 없어요\n일정을 추가해보세요'
+                        : '로그인 후 일정을 확인할 수 있어요'}
+                    </Typography>
+                  </View>
+                </CardContent>
+              </Card>
+            ) : (
+              <View className="gap-2">
+                {upcomingSchedules.map((s) => (
+                  <ScheduleItem
+                    key={s.id}
+                    schedule={s}
+                    onPress={() =>
+                      router.push({
+                        pathname: '/schedule-detail',
+                        params: { id: s.id },
+                      })
+                    }
                   />
-                  <Typography
-                    variant="body-sm"
-                    className="text-muted-foreground text-center"
-                  >
-                    {isLoggedIn
-                      ? '등록된 일정이 없어요\n일정을 추가해보세요'
-                      : '로그인 후 일정을 확인할 수 있어요'}
-                  </Typography>
-                </View>
-              </CardContent>
-            </Card>
+                ))}
+              </View>
+            )}
           </View>
 
           {/* 내 반려동물 */}
