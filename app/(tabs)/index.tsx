@@ -20,7 +20,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { StackedScheduleList } from '@/components/calendar/StackedScheduleList';
-import { getUpcomingSchedules } from '@/services/schedule';
+import { completeSchedule, getUpcomingSchedules } from '@/services/schedule';
 import type { Schedule } from '@/types/schedule';
 
 const ACTION_WIDTH = 72;
@@ -73,6 +73,24 @@ export default function HomeScreen() {
         .then(setUpcomingSchedules)
         .catch(() => setUpcomingSchedules([]));
     }, [selectedPet?.id])
+  );
+
+  const handleCompleteSchedule = useCallback(
+    async (schedule: Schedule) => {
+      if (!user) return;
+      const scheduleDate = schedule.start_date.split('T')[0];
+      // Optimistic: remove from list immediately
+      setUpcomingSchedules(prev => prev.filter(s => s.id !== schedule.id));
+      try {
+        await completeSchedule(schedule.id, scheduleDate, user.uid);
+      } catch {
+        // Rollback on failure
+        setUpcomingSchedules(prev => [...prev, schedule].sort(
+          (a, b) => a.start_date.localeCompare(b.start_date)
+        ));
+      }
+    },
+    [user]
   );
 
   const [sheetVisible, setSheetVisible] = useState(false);
@@ -226,6 +244,7 @@ export default function HomeScreen() {
                     params: { id: s.id },
                   })
                 }
+                onCompleteSchedule={handleCompleteSchedule}
               />
             )}
           </View>

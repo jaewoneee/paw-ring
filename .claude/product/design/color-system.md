@@ -12,66 +12,66 @@ PawRing의 컬러 시스템은 **블루** 를 포인트 컬러로 사용하며, 
 
 ### Primary (Blue)
 
-| Token | Light | Dark | 용도 |
-|-------|-------|------|------|
-| `primary` | #0084D1 (500) | #25A1EC (400) | 주요 버튼, 강조 요소 |
-| `primary-foreground` | #FFFFFF | #FFFFFF | primary 위의 텍스트 (항상 흰색) |
+| Token                | Light         | Dark          | 용도                            |
+| -------------------- | ------------- | ------------- | ------------------------------- |
+| `primary`            | #0084D1 (500) | #25A1EC (400) | 주요 버튼, 강조 요소            |
+| `primary-foreground` | #FFFFFF       | #FFFFFF       | primary 위의 텍스트 (항상 흰색) |
 
 **풀 스케일 (직접 참조용):**
 
-| Token | Value | OKLCH 기반 |
-|-------|-------|------------|
-| `primary-50` | #EAF7FF | L:97% C:0.02 |
-| `primary-100` | #D1ECFF | L:93% C:0.04 |
-| `primary-200` | #A6DBFF | L:87% C:0.08 |
-| `primary-300` | #69BDFA | L:77% C:0.12 |
-| `primary-400` | #25A1EC | L:68% C:0.15 |
+| Token         | Value   | OKLCH 기반      |
+| ------------- | ------- | --------------- |
+| `primary-50`  | #EAF7FF | L:97% C:0.02    |
+| `primary-100` | #D1ECFF | L:93% C:0.04    |
+| `primary-200` | #A6DBFF | L:87% C:0.08    |
+| `primary-300` | #69BDFA | L:77% C:0.12    |
+| `primary-400` | #25A1EC | L:68% C:0.15    |
 | `primary-500` | #0084D1 | L:58.8% C:0.158 |
-| `primary-600` | #006FB9 | L:52% C:0.155 |
-| `primary-700` | #005A9B | L:45% C:0.14 |
-| `primary-800` | #004478 | L:37% C:0.12 |
-| `primary-900` | #00315B | L:30% C:0.10 |
-| `primary-950` | #001C3C | L:22% C:0.08 |
+| `primary-600` | #006FB9 | L:52% C:0.155   |
+| `primary-700` | #005A9B | L:45% C:0.14    |
+| `primary-800` | #004478 | L:37% C:0.12    |
+| `primary-900` | #00315B | L:30% C:0.10    |
+| `primary-950` | #001C3C | L:22% C:0.08    |
 
 ### Background / Surface
 
-| Token | Light | Dark | 용도 |
-|-------|-------|------|------|
-| `background` | #FFFFFF | #0A0A0A (neutral-950) | 전체 배경 |
-| `surface` | #F5F5F5 (neutral-100) | #171717 (neutral-900) | 카드, 섹션 배경 |
-| `surface-elevated` | #FFFFFF | #262626 (neutral-800) | 바텀시트, 모달 배경 |
+| Token              | Light                 | Dark                  | 용도                |
+| ------------------ | --------------------- | --------------------- | ------------------- |
+| `background`       | #FFFFFF               | #0A0A0A (neutral-950) | 전체 배경           |
+| `surface`          | #F5F5F5 (neutral-100) | #171717 (neutral-900) | 카드, 섹션 배경     |
+| `surface-elevated` | #FFFFFF               | #262626 (neutral-800) | 바텀시트, 모달 배경 |
 
 ### Text
 
-| Token | Light | Dark | 용도 |
-|-------|-------|------|------|
-| `foreground` | #171717 (neutral-900) | #FAFAFA (neutral-50) | 주요 텍스트 |
+| Token              | Light                 | Dark                  | 용도                      |
+| ------------------ | --------------------- | --------------------- | ------------------------- |
+| `foreground`       | #171717 (neutral-900) | #FAFAFA (neutral-50)  | 주요 텍스트               |
 | `muted-foreground` | #737373 (neutral-500) | #A3A3A3 (neutral-400) | 보조 텍스트, 플레이스홀더 |
 
 ### Border
 
-| Token | Light | Dark | 용도 |
-|-------|-------|------|------|
-| `border` | #E5E5E5 (neutral-200) | #404040 (neutral-700) | 기본 구분선, 입력 필드 |
-| `border-strong` | #D4D4D4 (neutral-300) | #525252 (neutral-600) | 강조 구분선 |
+| Token           | Light                 | Dark                  | 용도                   |
+| --------------- | --------------------- | --------------------- | ---------------------- |
+| `border`        | #E5E5E5 (neutral-200) | #404040 (neutral-700) | 기본 구분선, 입력 필드 |
+| `border-strong` | #D4D4D4 (neutral-300) | #525252 (neutral-600) | 강조 구분선            |
 
 ### Card
 
-| Token | Value | 용도 |
-|-------|-------|------|
-| `card-blue` | #4F7FFF | 카드 배경 (블루) |
-| `card-amber` | #FFA41B | 카드 배경 (앰버) |
+| Token         | Value   | 용도               |
+| ------------- | ------- | ------------------ |
+| `card-blue`   | #4F7FFF | 카드 배경 (블루)   |
+| `car-yellow`  | #FFC81D | 카드 배경 (앰버)   |
 | `card-orange` | #F86F03 | 카드 배경 (오렌지) |
-| `card-blush` | #FFF6F4 | 카드 배경 (블러시) |
-| `card-green` | #13BC43 | 카드 배경 (그린) |
+| `card-blush`  | #FFF6F4 | 카드 배경 (블러시) |
+| `card-green`  | #13BC43 | 카드 배경 (그린)   |
 
 ### Status (Semantic)
 
-| Token | Light | Dark | 용도 |
-|-------|-------|------|------|
+| Token     | Light               | Dark                | 용도                   |
+| --------- | ------------------- | ------------------- | ---------------------- |
 | `success` | #16A34A (green-600) | #22C55E (green-500) | 성공 메시지, 완료 표시 |
-| `error` | #DC2626 (red-600) | #EF4444 (red-500) | 에러 메시지, 필수 입력 |
-| `warning` | #D97706 (amber-600) | #F59E0B (amber-500) | 경고, 주의 표시 |
+| `error`   | #DC2626 (red-600)   | #EF4444 (red-500)   | 에러 메시지, 필수 입력 |
+| `warning` | #D97706 (amber-600) | #F59E0B (amber-500) | 경고, 주의 표시        |
 
 ## 사용 가이드
 
@@ -126,4 +126,4 @@ const colors = Colors[colorScheme ?? 'light'];
   - [x] 이메일 인증 (verify-email.tsx)
   - [x] 비밀번호 찾기 (forgot-password.tsx)
   - [x] 반려동물 등록 (add-pet.tsx)
-  - [x] Auth 레이아웃 (_layout.tsx)
+  - [x] Auth 레이아웃 (\_layout.tsx)

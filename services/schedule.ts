@@ -83,7 +83,7 @@ export async function getSchedulesByRange(
   return Array.from(map.values());
 }
 
-/** 다가오는 스케줄 조회 (홈 화면용, 일주일 이내, 오늘 완료된 것 제외) */
+/** 다가오는 스케줄 조회 (홈 화면용, 일주일 이내, 완료된 것 제외) */
 export async function getUpcomingSchedules(
   petId: string
 ): Promise<Schedule[]> {
@@ -91,7 +91,9 @@ export async function getUpcomingSchedules(
   today.setHours(0, 0, 0, 0);
   const startOfToday = today.toISOString();
   const todayDateStr = today.toISOString().split("T")[0];
-  const oneWeekLater = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+  const oneWeekLater = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const oneWeekLaterStr = oneWeekLater.toISOString();
+  const oneWeekLaterDateStr = oneWeekLaterStr.split("T")[0];
 
   const [schedulesRes, completionsRes] = await Promise.all([
     supabase
@@ -99,27 +101,27 @@ export async function getUpcomingSchedules(
       .select("*")
       .eq("pet_id", petId)
       .gte("start_date", startOfToday)
-      .lte("start_date", oneWeekLater)
+      .lte("start_date", oneWeekLaterStr)
       .order("start_date", { ascending: true }),
     supabase
       .from("schedule_completions")
-      .select("schedule_id")
-      .eq("completion_date", todayDateStr),
+      .select("schedule_id, completion_date")
+      .gte("completion_date", todayDateStr)
+      .lte("completion_date", oneWeekLaterDateStr),
   ]);
 
   if (schedulesRes.error) throw schedulesRes.error;
   if (completionsRes.error) throw completionsRes.error;
 
-  const completedIds = new Set(
-    (completionsRes.data ?? []).map((c) => c.schedule_id)
+  // schedule_id + completion_date 조합으로 완료 여부 판별
+  const completedSet = new Set(
+    (completionsRes.data ?? []).map((c) => `${c.schedule_id}_${c.completion_date}`)
   );
 
   return ((schedulesRes.data ?? []) as Schedule[]).filter((s) => {
+    if (!s.is_completable) return true;
     const scheduleDate = s.start_date.split("T")[0];
-    if (scheduleDate === todayDateStr) {
-      return !completedIds.has(s.id);
-    }
-    return true;
+    return !completedSet.has(`${s.id}_${scheduleDate}`);
   });
 }
 

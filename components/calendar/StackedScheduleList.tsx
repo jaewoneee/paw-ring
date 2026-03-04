@@ -19,18 +19,20 @@ if (Platform.OS === 'android') {
   UIManager.setLayoutAnimationEnabledExperimental?.(true);
 }
 
-const CARD_HEIGHT = 75;
+const CARD_HEIGHT = 65;
 const COLLAPSED_VISIBLE = 45;
 const EXPANDED_GAP = 6;
 
 interface StackedScheduleListProps {
   schedules: Schedule[];
   onPressSchedule: (schedule: Schedule) => void;
+  onCompleteSchedule?: (schedule: Schedule) => void;
 }
 
 export function StackedScheduleList({
   schedules,
   onPressSchedule,
+  onCompleteSchedule,
 }: StackedScheduleListProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -93,6 +95,7 @@ export function StackedScheduleList({
         cardColor={cardColor}
         textColor={textColor}
         onPress={() => onPressSchedule(schedules[0])}
+        onComplete={onCompleteSchedule}
       />
     );
   }
@@ -147,6 +150,7 @@ export function StackedScheduleList({
                     onPressSchedule(schedule);
                   }
                 }}
+                onComplete={onCompleteSchedule}
               />
             </Animated.View>
           );
@@ -160,14 +164,14 @@ export function StackedScheduleList({
           </Typography>
         </Pressable>
       )}
-
+      {/* 
       {!expanded && schedules.length > 1 && (
         <Pressable onPress={toggleExpand} className="items-center pt-2">
           <Typography variant="small" className="text-muted-foreground">
             {schedules.length}개 일정 보기
           </Typography>
         </Pressable>
-      )}
+      )} */}
     </View>
   );
 }

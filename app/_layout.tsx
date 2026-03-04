@@ -18,7 +18,7 @@ import Colors from '@/constants/Colors';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { PetProvider } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
-import { Keyboard, Pressable } from 'react-native';
+import { View } from 'react-native';
 
 const LightTheme: Theme = {
   ...DefaultTheme,
@@ -113,7 +113,7 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkNavTheme : LightTheme}>
-      <Pressable style={{ flex: 1 }} onPress={Keyboard.dismiss}>
+      <View style={{ flex: 1 }}>
         <Stack screenOptions={{ headerTitleStyle: { fontFamily: 'Pretendard-SemiBold' } }}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen
@@ -170,7 +170,7 @@ function RootLayoutNav() {
             }}
           />
         </Stack>
-      </Pressable>
+      </View>
     </ThemeProvider>
   );
 }

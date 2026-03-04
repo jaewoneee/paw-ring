@@ -24,7 +24,7 @@ const palette = {
   },
   card: {
     blue: '#4F7FFF',
-    amber: '#FFA41B',
+    yellow: '#FFC81D',
     orange: '#F86F03',
     blush: '#FFF6F4',
     green: '#13BC43',
