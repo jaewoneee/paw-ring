@@ -36,6 +36,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme === "dark" ? "dark" : "light"].primary,
         tabBarStyle: { position: "absolute" },
         headerShown: false,
+        animation: "fade",
       }}
     >
       <Tabs.Screen
