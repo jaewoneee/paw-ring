@@ -5,6 +5,7 @@ import type {
   ScheduleCompletion,
   UpdateScheduleInput,
 } from "@/types/schedule";
+import { expandRRule } from "@/utils/rrule";
 
 /** 스케줄 생성 */
 export async function createSchedule(
@@ -95,7 +96,8 @@ export async function getUpcomingSchedules(
   const oneWeekLaterStr = oneWeekLater.toISOString();
   const oneWeekLaterDateStr = oneWeekLaterStr.split("T")[0];
 
-  const [schedulesRes, completionsRes] = await Promise.all([
+  const [schedulesRes, recurringRes, completionsRes] = await Promise.all([
+    // 1) 범위 내 start_date를 가진 일반 스케줄
     supabase
       .from("schedules")
       .select("*")
@@ -103,6 +105,14 @@ export async function getUpcomingSchedules(
       .gte("start_date", startOfToday)
       .lte("start_date", oneWeekLaterStr)
       .order("start_date", { ascending: true }),
+    // 2) 오늘 이전에 시작된 반복 스케줄 (아직 종료되지 않은 것)
+    supabase
+      .from("schedules")
+      .select("*")
+      .eq("pet_id", petId)
+      .eq("is_recurring", true)
+      .lt("start_date", startOfToday)
+      .or(`recurrence_end_date.gte.${todayDateStr},recurrence_end_date.is.null`),
     supabase
       .from("schedule_completions")
       .select("schedule_id, completion_date")
@@ -111,6 +121,7 @@ export async function getUpcomingSchedules(
   ]);
 
   if (schedulesRes.error) throw schedulesRes.error;
+  if (recurringRes.error) throw recurringRes.error;
   if (completionsRes.error) throw completionsRes.error;
 
   // schedule_id + completion_date 조합으로 완료 여부 판별
@@ -118,8 +129,32 @@ export async function getUpcomingSchedules(
     (completionsRes.data ?? []).map((c) => `${c.schedule_id}_${c.completion_date}`)
   );
 
-  return ((schedulesRes.data ?? []) as Schedule[]).filter((s) => {
+  // 반복 스케줄 중 오늘~일주일 내에 발생하는 것만 필터
+  const recurringInRange = ((recurringRes.data ?? []) as Schedule[]).filter((s) => {
+    if (!s.rrule) return false;
+    const occurrences = expandRRule(
+      s.start_date,
+      s.rrule,
+      todayDateStr,
+      oneWeekLaterDateStr,
+      s.recurrence_end_date,
+    );
+    return occurrences.length > 0;
+  });
+
+  // id 기준 중복 제거 후 병합
+  const map = new Map<string, Schedule>();
+  for (const s of [...(schedulesRes.data ?? []), ...recurringInRange]) {
+    map.set(s.id, s as Schedule);
+  }
+  const allSchedules = Array.from(map.values());
+
+  return allSchedules.filter((s) => {
     if (!s.is_completable) return true;
+    // 반복 스케줄: 오늘 날짜의 완료 여부 확인
+    if (s.is_recurring) {
+      return !completedSet.has(`${s.id}_${todayDateStr}`);
+    }
     const scheduleDate = s.start_date.split("T")[0];
     return !completedSet.has(`${s.id}_${scheduleDate}`);
   });

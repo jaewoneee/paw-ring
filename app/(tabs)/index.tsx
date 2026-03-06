@@ -85,9 +85,11 @@ export default function HomeScreen() {
         await completeSchedule(schedule.id, scheduleDate, user.uid);
       } catch {
         // Rollback on failure
-        setUpcomingSchedules(prev => [...prev, schedule].sort(
-          (a, b) => a.start_date.localeCompare(b.start_date)
-        ));
+        setUpcomingSchedules(prev =>
+          [...prev, schedule].sort((a, b) =>
+            a.start_date.localeCompare(b.start_date)
+          )
+        );
       }
     },
     [user]
