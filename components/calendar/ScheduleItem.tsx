@@ -5,7 +5,7 @@ import { Animated, Pressable, View } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { CATEGORY_META } from '@/constants/Schedule';
+import { useCategoryContext } from '@/contexts/CategoryContext';
 import type { Schedule } from '@/types/schedule';
 import { formatISODate, formatTime12 } from '@/utils/dayjs';
 
@@ -28,7 +28,8 @@ export function ScheduleItem({
 }: ScheduleItemProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
-  const meta = CATEGORY_META[schedule.category];
+  const { getCategoryMeta } = useCategoryContext();
+  const meta = getCategoryMeta(schedule.category);
   const isStacked = variant === 'stacked';
 
   const slideAnim = useRef(new Animated.Value(0)).current;

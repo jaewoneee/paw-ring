@@ -1,4 +1,18 @@
-export type ScheduleCategory = 'walk' | 'meal' | 'hospital' | 'medicine' | 'bath' | 'other';
+export type DefaultCategory = 'walk' | 'meal' | 'hospital' | 'medicine' | 'bath' | 'other';
+export type ScheduleCategory = string; // 기본 카테고리 slug 또는 커스텀 카테고리 ID
+
+/** Supabase schedule_categories 테이블 스키마 */
+export interface ScheduleCategoryItem {
+  id: string;
+  owner_id: string;
+  name: string;
+  color: string;
+  icon: string;
+  is_default: boolean;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
 export type ReminderType = 'none' | 'on_time' | '5min' | '10min' | '15min' | '30min' | '1hour' | '1day' | 'same_day_9am' | '1day_before_9am';
 export type CompletionStatus = 'completed' | 'dismissed';
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly';

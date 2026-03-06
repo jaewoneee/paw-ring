@@ -2,7 +2,7 @@ import { Text } from '@/components/ui/Text';
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { CATEGORY_META } from '@/constants/Schedule';
+import { useCategoryContext } from '@/contexts/CategoryContext';
 import type { ScheduleInstance } from '@/types/schedule';
 import dayjs, {
   formatISODate,
@@ -36,6 +36,7 @@ export function DayTimeGrid({
 }: DayTimeGridProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const { getCategoryMeta } = useCategoryContext();
   const scrollRef = useRef<ScrollView>(null);
   const [gridWidth, setGridWidth] = useState(0);
 
@@ -75,7 +76,7 @@ export function DayTimeGrid({
         instance: s,
         top: (startMinutes / 60) * HOUR_HEIGHT,
         height: (duration / 60) * HOUR_HEIGHT,
-        meta: CATEGORY_META[s.schedule.category],
+        meta: getCategoryMeta(s.schedule.category),
         startMinutes,
         endMinutes: startMinutes + duration,
         column: 0,
@@ -326,6 +327,7 @@ function AllDaySection({
   onPressSchedule: (instance: ScheduleInstance) => void;
   colors: (typeof Colors)['light'] | (typeof Colors)['dark'];
 }) {
+  const { getCategoryMeta } = useCategoryContext();
   const [expanded, setExpanded] = useState(false);
   const canExpand = schedules.length > MAX_COLLAPSED;
   const visible = expanded ? schedules : schedules.slice(0, MAX_COLLAPSED);
@@ -334,7 +336,7 @@ function AllDaySection({
     <View className=" pb-2">
       <View className="gap-1.5 px-4">
         {visible.map(s => {
-          const meta = CATEGORY_META[s.schedule.category];
+          const meta = getCategoryMeta(s.schedule.category);
           return (
             <Pressable
               key={`${s.schedule.id}-${s.occurrenceDate}`}

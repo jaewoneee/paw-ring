@@ -7,7 +7,7 @@ import { Pressable, View } from 'react-native';
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { CATEGORY_META } from '@/constants/Schedule';
+import { useCategoryContext } from '@/contexts/CategoryContext';
 import type { ScheduleInstance } from '@/types/schedule';
 import { getMonthGrid } from '@/utils/date';
 
@@ -37,6 +37,7 @@ export function MonthCalendar({
 }: MonthCalendarProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const { getCategoryMeta } = useCategoryContext();
 
   const grid = useMemo(() => getMonthGrid(year, month), [year, month]);
   const today = formatISODate(dayjs());
@@ -142,7 +143,7 @@ export function MonthCalendar({
             ? [
                 ...new Set(
                   daySchedules.map(
-                    s => CATEGORY_META[s.schedule.category].color,
+                    s => getCategoryMeta(s.schedule.category).color,
                   ),
                 ),
               ].slice(0, MAX_DOTS)

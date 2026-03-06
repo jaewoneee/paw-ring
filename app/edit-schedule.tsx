@@ -26,13 +26,12 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import {
   ALL_DAY_REMINDER_OPTIONS,
-  CATEGORIES,
-  CATEGORY_META,
   DAY_OF_WEEK_OPTIONS,
   RECURRENCE_END_OPTIONS,
   RECURRENCE_FREQUENCY_OPTIONS,
   TIMED_REMINDER_OPTIONS,
 } from '@/constants/Schedule';
+import { useCategoryContext } from '@/contexts/CategoryContext';
 import {
   getScheduleById,
   updateSchedule,
@@ -43,7 +42,6 @@ import type {
   RecurrenceFrequency,
   ReminderType,
   Schedule,
-  ScheduleCategory,
 } from '@/types/schedule';
 import { formatDate } from '@/utils/date';
 import { buildRRule, parseRRule } from '@/utils/rrule';
@@ -57,10 +55,11 @@ export default function EditScheduleScreen() {
   }>();
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const { categories } = useCategoryContext();
 
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState<ScheduleCategory>('other');
+  const [category, setCategory] = useState('other');
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState<Date>(new Date());
   const [isAllDay, setIsAllDay] = useState(false);
@@ -361,36 +360,35 @@ export default function EditScheduleScreen() {
                   카테고리
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
-                  {CATEGORIES.map(cat => {
-                    const meta = CATEGORY_META[cat];
-                    const isActive = category === cat;
+                  {categories.map(cat => {
+                    const isActive = category === cat.id;
                     return (
                       <Pressable
-                        key={cat}
-                        onPress={() => setCategory(cat)}
+                        key={cat.id}
+                        onPress={() => setCategory(cat.id)}
                         className="flex-row items-center gap-1.5 px-3 py-2 rounded-full border"
                         style={{
-                          borderColor: isActive ? meta.color : colors.border,
+                          borderColor: isActive ? cat.color : colors.border,
                           backgroundColor: isActive
-                            ? meta.color + '15'
+                            ? cat.color + '15'
                             : 'transparent',
                         }}
                       >
                         <FontAwesome
-                          name={meta.icon as any}
+                          name={cat.icon as any}
                           size={12}
-                          color={isActive ? meta.color : colors.mutedForeground}
+                          color={isActive ? cat.color : colors.mutedForeground}
                         />
                         <Text
                           style={{
                             fontSize: 13,
                             color: isActive
-                              ? meta.color
+                              ? cat.color
                               : colors.mutedForeground,
                             fontWeight: isActive ? '600' : '400',
                           }}
                         >
-                          {meta.label}
+                          {cat.name}
                         </Text>
                       </Pressable>
                     );

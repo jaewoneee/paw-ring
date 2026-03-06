@@ -1,7 +1,6 @@
 import type {
   RecurrenceFrequency,
   ReminderType,
-  ScheduleCategory,
 } from '@/types/schedule';
 
 interface CategoryMeta {
@@ -10,7 +9,8 @@ interface CategoryMeta {
   color: string;
 }
 
-export const CATEGORY_META: Record<ScheduleCategory, CategoryMeta> = {
+/** @deprecated DB 카테고리로 전환 중. useCategoryContext().getCategoryMeta() 사용 권장 */
+export const CATEGORY_META: Record<string, CategoryMeta> = {
   walk: { label: '산책', icon: 'paw', color: '#F59E0B' },
   meal: { label: '식사', icon: 'cutlery', color: '#22C55E' },
   hospital: { label: '병원', icon: 'hospital-o', color: '#EF4444' },
@@ -19,14 +19,11 @@ export const CATEGORY_META: Record<ScheduleCategory, CategoryMeta> = {
   other: { label: '기타', icon: 'tag', color: '#6B7280' },
 };
 
-export const CATEGORIES: ScheduleCategory[] = [
-  'walk',
-  'meal',
-  'hospital',
-  'medicine',
-  'bath',
-  'other',
-];
+export const FALLBACK_CATEGORY_META: CategoryMeta = {
+  label: '기타',
+  icon: 'tag',
+  color: '#6B7280',
+};
 
 /** 시간이 정해진 이벤트용 알림 옵션 */
 export const TIMED_REMINDER_OPTIONS: { label: string; value: ReminderType }[] =
@@ -83,6 +80,14 @@ export const RECURRENCE_END_OPTIONS: {
 }[] = [
   { label: '종료 없음', value: 'never' },
   { label: '날짜 지정', value: 'date' },
+];
+
+/** 카테고리 색상 프리셋 팔레트 (16색) */
+export const CATEGORY_COLOR_PRESETS: string[] = [
+  '#F59E0B', '#22C55E', '#EF4444', '#8B5CF6',
+  '#3B82F6', '#EC4899', '#F97316', '#14B8A6',
+  '#6366F1', '#84CC16', '#06B6D4', '#E11D48',
+  '#A855F7', '#10B981', '#F43F5E', '#6B7280',
 ];
 
 /** 카드 색상 순환 배열 (인덱스 기반) */

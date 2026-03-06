@@ -16,6 +16,7 @@ import 'react-native-reanimated';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { CategoryProvider } from '@/contexts/CategoryContext';
 import { PetProvider } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
 import { View } from 'react-native';
@@ -75,7 +76,9 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <PetProvider>
-        <RootLayoutNav />
+        <CategoryProvider>
+          <RootLayoutNav />
+        </CategoryProvider>
       </PetProvider>
     </AuthProvider>
   );
@@ -152,6 +155,13 @@ function RootLayoutNav() {
             name="edit-schedule"
             options={{
               title: '일정 수정',
+              headerBackButtonDisplayMode: 'minimal',
+            }}
+          />
+          <Stack.Screen
+            name="category-manage"
+            options={{
+              title: '카테고리 관리',
               headerBackButtonDisplayMode: 'minimal',
             }}
           />

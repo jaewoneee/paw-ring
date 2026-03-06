@@ -150,6 +150,7 @@ export default function CalendarScreen() {
           <ViewModeToggle
             viewMode={viewMode}
             onChangeMode={setViewMode}
+            onCategoryManage={() => router.push('/category-manage')}
             colors={colors}
           />
 
@@ -186,6 +187,7 @@ export default function CalendarScreen() {
         <ViewModeToggle
           viewMode={viewMode}
           onChangeMode={setViewMode}
+          onCategoryManage={() => router.push('/category-manage')}
           colors={colors}
         />
 
@@ -220,14 +222,23 @@ export default function CalendarScreen() {
 function ViewModeToggle({
   viewMode,
   onChangeMode,
+  onCategoryManage,
   colors,
 }: {
   viewMode: CalendarViewMode;
   onChangeMode: (mode: CalendarViewMode) => void;
+  onCategoryManage: () => void;
   colors: (typeof Colors)['light'] | (typeof Colors)['dark'];
 }) {
   return (
-    <View className="flex-row justify-end px-4 pt-2">
+    <View className="flex-row justify-between items-center px-4 pt-2">
+      <Pressable
+        onPress={onCategoryManage}
+        className="w-8 h-8 items-center justify-center rounded-full"
+        style={{ backgroundColor: colors.surface }}
+      >
+        <FontAwesome name="tag" size={14} color={colors.mutedForeground} />
+      </Pressable>
       <View
         className="flex-row rounded-lg overflow-hidden"
         style={{ backgroundColor: colors.surface }}

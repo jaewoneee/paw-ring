@@ -10,7 +10,8 @@ import { Screen } from "@/components/ui/Screen";
 import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import { CATEGORY_META, REMINDER_OPTIONS } from "@/constants/Schedule";
+import { REMINDER_OPTIONS } from "@/constants/Schedule";
+import { useCategoryContext } from "@/contexts/CategoryContext";
 import { useAuth } from "@/hooks/useAuth";
 import {
   completeSchedule,
@@ -32,6 +33,7 @@ export default function ScheduleDetailScreen() {
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
   const { user } = useAuth();
+  const { getCategoryMeta } = useCategoryContext();
   const [schedule, setSchedule] = useState<Schedule | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -181,7 +183,7 @@ export default function ScheduleDetailScreen() {
     );
   }
 
-  const meta = CATEGORY_META[schedule.category];
+  const meta = getCategoryMeta(schedule.category);
   const dateLabel = formatKoreanDate(schedule.start_date);
   const timeLabel = schedule.is_all_day
     ? "종일"
@@ -232,7 +234,7 @@ export default function ScheduleDetailScreen() {
                     className="text-xs font-medium"
                     style={{ color: meta.color }}
                   >
-                    {meta.label}
+                    {meta.name}
                   </Text>
                 </View>
               </View>
