@@ -16,6 +16,8 @@ import { useAuth } from "@/hooks/useAuth";
 import {
   completeSchedule,
   deleteSchedule,
+  deleteScheduleThisAndFollowing,
+  deleteScheduleThisOnly,
   getScheduleById,
   getScheduleCompletion,
   uncompleteSchedule,
@@ -26,7 +28,7 @@ import { formatRRuleLabel } from "@/utils/rrule";
 
 export default function ScheduleDetailScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, occurrenceDate } = useLocalSearchParams<{ id: string; occurrenceDate?: string }>();
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
@@ -79,23 +81,84 @@ export default function ScheduleDetailScreen() {
     }
   };
 
-  const handleDelete = () => {
-    Alert.alert("일정 삭제", "이 일정을 삭제할까요?", [
-      { text: "취소", style: "cancel" },
-      {
-        text: "삭제",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            await deleteSchedule(id!);
-            router.back();
-          } catch (err) {
-            console.error("[ScheduleDetail] delete failed:", err);
-            Alert.alert("오류", "일정 삭제에 실패했습니다.");
-          }
+  const handleEdit = () => {
+    if (schedule?.is_recurring) {
+      Alert.alert("반복 일정 수정", "어떻게 수정할까요?", [
+        { text: "취소", style: "cancel" },
+        {
+          text: "이 일정만",
+          onPress: () =>
+            router.push({
+              pathname: "/edit-schedule",
+              params: { id: schedule.id, editMode: "single", occurrenceDate },
+            }),
         },
-      },
-    ]);
+        {
+          text: "이후 모든 일정",
+          onPress: () =>
+            router.push({
+              pathname: "/edit-schedule",
+              params: { id: schedule.id, editMode: "following", occurrenceDate },
+            }),
+        },
+      ]);
+    } else {
+      router.push({
+        pathname: "/edit-schedule",
+        params: { id: schedule!.id },
+      });
+    }
+  };
+
+  const handleDelete = () => {
+    if (schedule?.is_recurring) {
+      Alert.alert("반복 일정 삭제", "어떻게 삭제할까요?", [
+        { text: "취소", style: "cancel" },
+        {
+          text: "이 일정만",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteScheduleThisOnly(id!, occurrenceDate ?? todayDateStr);
+              router.back();
+            } catch (err) {
+              console.error("[ScheduleDetail] delete single failed:", err);
+              Alert.alert("오류", "일정 삭제에 실패했습니다.");
+            }
+          },
+        },
+        {
+          text: "이후 모든 일정",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteScheduleThisAndFollowing(id!, occurrenceDate ?? todayDateStr);
+              router.back();
+            } catch (err) {
+              console.error("[ScheduleDetail] delete following failed:", err);
+              Alert.alert("오류", "일정 삭제에 실패했습니다.");
+            }
+          },
+        },
+      ]);
+    } else {
+      Alert.alert("일정 삭제", "이 일정을 삭제할까요?", [
+        { text: "취소", style: "cancel" },
+        {
+          text: "삭제",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteSchedule(id!);
+              router.back();
+            } catch (err) {
+              console.error("[ScheduleDetail] delete failed:", err);
+              Alert.alert("오류", "일정 삭제에 실패했습니다.");
+            }
+          },
+        },
+      ]);
+    }
   };
 
   if (isLoading || !schedule) {
@@ -243,15 +306,7 @@ export default function ScheduleDetailScreen() {
 
         {/* 액션 버튼 */}
         <View className="gap-3">
-          <Button
-            variant="outline"
-            onPress={() =>
-              router.push({
-                pathname: "/edit-schedule",
-                params: { id: schedule.id },
-              })
-            }
-          >
+          <Button variant="outline" onPress={handleEdit}>
             수정
           </Button>
           <Button variant="outline" onPress={handleDelete}>

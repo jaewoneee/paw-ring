@@ -58,6 +58,16 @@ export interface ScheduleInstance {
   isRecurringInstance: boolean;
 }
 
+/** Supabase schedule_exceptions 테이블 스키마 */
+export interface ScheduleException {
+  id: string;
+  schedule_id: string;
+  exception_date: string; // "YYYY-MM-DD"
+  type: 'modified' | 'deleted';
+  modified_fields: Partial<Pick<Schedule, 'title' | 'category' | 'memo' | 'start_date' | 'end_date' | 'is_all_day' | 'reminder' | 'is_completable'>> | null;
+  created_at: string;
+}
+
 /** 스케줄 수정 입력 */
 export type UpdateScheduleInput = Partial<
   Pick<Schedule, 'title' | 'category' | 'memo' | 'start_date' | 'end_date' | 'is_all_day' | 'reminder' | 'is_recurring' | 'rrule' | 'recurrence_end_date' | 'is_completable'>

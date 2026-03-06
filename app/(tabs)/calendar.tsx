@@ -101,10 +101,10 @@ export default function CalendarScreen() {
     router.push({ pathname: '/add-schedule', params: { date: selectedDate } });
   };
 
-  const handlePressSchedule = (s: { schedule: { id: string } }) => {
+  const handlePressSchedule = (s: { schedule: { id: string }; occurrenceDate: string }) => {
     router.push({
       pathname: '/schedule-detail',
-      params: { id: s.schedule.id },
+      params: { id: s.schedule.id, occurrenceDate: s.occurrenceDate },
     });
   };
 

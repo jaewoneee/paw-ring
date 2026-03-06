@@ -35,7 +35,12 @@ import {
   RECURRENCE_FREQUENCY_OPTIONS,
   TIMED_REMINDER_OPTIONS,
 } from '@/constants/Schedule';
-import { getScheduleById, updateSchedule } from '@/services/schedule';
+import {
+  getScheduleById,
+  updateSchedule,
+  updateScheduleThisAndFollowing,
+  updateScheduleThisOnly,
+} from '@/services/schedule';
 import type {
   RecurrenceFrequency,
   ReminderType,
@@ -47,7 +52,11 @@ import { buildRRule, parseRRule } from '@/utils/rrule';
 
 export default function EditScheduleScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, editMode, occurrenceDate } = useLocalSearchParams<{
+    id: string;
+    editMode?: 'single' | 'following';
+    occurrenceDate?: string;
+  }>();
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
@@ -247,22 +256,57 @@ export default function EditScheduleScreen() {
           })
         : null;
 
-      await updateSchedule(id, {
-        title: title.trim(),
-        category,
-        memo: memo.trim() || null,
-        start_date: startDate,
-        end_date: computedEndDate,
-        is_all_day: isAllDay,
-        is_completable: isCompletable,
-        reminder,
-        is_recurring: isRecurring,
-        rrule,
-        recurrence_end_date:
-          isRecurring && recurrenceEndType === 'date'
-            ? dayjs(recurrenceEndDate).endOf('day').toISOString()
-            : null,
-      });
+      if (editMode === 'single' && occurrenceDate) {
+        // 이 일정만 수정: 예외 레코드 생성
+        await updateScheduleThisOnly(id, occurrenceDate, {
+          title: title.trim(),
+          category,
+          memo: memo.trim() || null,
+          start_date: startDate,
+          end_date: computedEndDate,
+          is_all_day: isAllDay,
+          is_completable: isCompletable,
+          reminder,
+        });
+      } else if (editMode === 'following' && occurrenceDate && schedule) {
+        // 이후 모든 일정 수정: 원본 종료 + 새 스케줄 생성
+        await updateScheduleThisAndFollowing(id, occurrenceDate, {
+          pet_id: schedule.pet_id,
+          owner_id: schedule.owner_id,
+          title: title.trim(),
+          category,
+          memo: memo.trim() || undefined,
+          start_date: startDate,
+          end_date: computedEndDate,
+          is_all_day: isAllDay,
+          is_completable: isCompletable,
+          reminder,
+          is_recurring: isRecurring,
+          rrule: rrule ?? undefined,
+          recurrence_end_date:
+            isRecurring && recurrenceEndType === 'date'
+              ? dayjs(recurrenceEndDate).endOf('day').toISOString()
+              : undefined,
+        });
+      } else {
+        // 일반 수정 (비반복 스케줄)
+        await updateSchedule(id, {
+          title: title.trim(),
+          category,
+          memo: memo.trim() || null,
+          start_date: startDate,
+          end_date: computedEndDate,
+          is_all_day: isAllDay,
+          is_completable: isCompletable,
+          reminder,
+          is_recurring: isRecurring,
+          rrule,
+          recurrence_end_date:
+            isRecurring && recurrenceEndType === 'date'
+              ? dayjs(recurrenceEndDate).endOf('day').toISOString()
+              : null,
+        });
+      }
 
       router.back();
     } catch (err) {

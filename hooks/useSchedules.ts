@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
 import { useCallback, useEffect, useState } from "react";
 
-import { getSchedulesByRange } from "@/services/schedule";
-import type { ScheduleInstance } from "@/types/schedule";
+import { getScheduleExceptions, getSchedulesByRange } from "@/services/schedule";
+import type { ScheduleException, ScheduleInstance } from "@/types/schedule";
 import { getMonthRange } from "@/utils/date";
 import { expandRRule } from "@/utils/rrule";
 
@@ -25,6 +25,18 @@ export function useMonthSchedules(
       const { start, end } = getMonthRange(year, month);
       const rawSchedules = await getSchedulesByRange(petId, start, end);
 
+      // 반복 스케줄의 예외 목록 조회
+      const recurringIds = rawSchedules
+        .filter((s) => s.is_recurring)
+        .map((s) => s.id);
+      const exceptions = await getScheduleExceptions(recurringIds);
+
+      // 예외를 schedule_id + exception_date 기준 Map으로 변환
+      const exceptionMap = new Map<string, ScheduleException>();
+      for (const ex of exceptions) {
+        exceptionMap.set(`${ex.schedule_id}_${ex.exception_date}`, ex);
+      }
+
       const instances: ScheduleInstance[] = [];
 
       for (const schedule of rawSchedules) {
@@ -37,7 +49,23 @@ export function useMonthSchedules(
             schedule.recurrence_end_date,
           );
           for (const occurrenceDate of occurrences) {
-            instances.push({ schedule, occurrenceDate, isRecurringInstance: true });
+            const exKey = `${schedule.id}_${occurrenceDate}`;
+            const exception = exceptionMap.get(exKey);
+
+            // 삭제된 예외는 건너뛰기
+            if (exception?.type === "deleted") continue;
+
+            // 수정된 예외는 modified_fields 반영
+            const effectiveSchedule =
+              exception?.type === "modified" && exception.modified_fields
+                ? { ...schedule, ...exception.modified_fields }
+                : schedule;
+
+            instances.push({
+              schedule: effectiveSchedule,
+              occurrenceDate,
+              isRecurringInstance: true,
+            });
           }
         } else {
           const sDate = dayjs(schedule.start_date).format("YYYY-MM-DD");
