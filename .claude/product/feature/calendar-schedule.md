@@ -24,7 +24,7 @@
 2. 특정 날짜를 탭하거나 "+" 버튼을 누른다
 3. 스케줄 생성 화면이 표시된다
 4. 제목, 카테고리, 날짜/시간을 입력한다
-5. 알림 설정을 선택한다 (없음 / 정시 / 10분 전 / 30분 전 / 1시간 전)
+5. 알림 설정을 선택한다 (스위치 토글로 ON/OFF, ON 시 옵션 선택)
 6. "저장" 버튼을 누르면 스케줄이 생성된다
 7. 캘린더에 해당 스케줄이 표시된다
 
@@ -90,7 +90,9 @@
 - [x] 카테고리 선택 (산책, 식사, 병원, 약 투여, 목욕, 기타)
 - [x] 날짜/시간 선택 (시작 날짜 + 종료 날짜)
 - [x] 메모 (선택)
-- [x] 알림 설정 (없음 / 정시 / 10분 전 / 30분 전 / 1시간 전)
+- [x] 알림 설정 (스위치 토글 ON/OFF, 종일/시간 지정에 따라 옵션 분리)
+  - 시간 지정 스케줄: 시작 시간 / 5분 전 / 10분 전 / 15분 전 / 30분 전 / 1시간 전 / 1일 전
+  - 종일 스케줄: 당일 오전 9시 / 1일 전 오전 9시
 
 ### 반복 스케줄
 - [x] 반복 주기: 매일 / 매주 (요일 선택) / 격주 / 매월 (커스텀 N일마다는 미구현)
@@ -210,9 +212,12 @@
 │  반복 종료               │
 │  (종료없음)(날짜지정)(횟수) │
 │                         │
-│  알림                    │
-│  (없음)(정시)(10분전)     │
-│  (30분전)(1시간전)        │
+│  알림          [Switch]  │
+│  (ON 시 옵션 표시)        │
+│  시간: (시작시간)(5분전)  │
+│  (10분전)(15분전)(30분전) │
+│  (1시간전)(1일전)         │
+│  종일: (당일9시)(1일전9시)│
 │                         │
 │  ┌───────────────────┐  │
 │  │ 메모               │  │
@@ -268,54 +273,14 @@ hooks/
 
 ## 데이터 모델
 
-### Supabase: `schedules` 테이블
-```sql
-CREATE TABLE schedules (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
-  owner_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  category TEXT NOT NULL DEFAULT 'other',  -- 'walk','meal','hospital','medicine','bath','other'
-  memo TEXT,
-  start_date TIMESTAMPTZ NOT NULL,
-  end_date TIMESTAMPTZ,                    -- 다일(multi-day) 스케줄 종료일 (null이면 단일 날짜)
-  is_all_day BOOLEAN DEFAULT FALSE,
-  is_recurring BOOLEAN DEFAULT FALSE,
-  rrule TEXT,                              -- RFC 5545 반복 규칙 (e.g. "FREQ=DAILY;INTERVAL=1")
-  recurrence_end_date TIMESTAMPTZ,
-  reminder TEXT DEFAULT 'none',            -- 'none','on_time','10min','30min','1hour'
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-```
+### Supabase 테이블
 
-### Supabase: `schedule_exceptions` 테이블
-```sql
--- 반복 스케줄에서 특정 날짜만 수정/삭제한 경우
-CREATE TABLE schedule_exceptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  schedule_id UUID NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
-  exception_date DATE NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('modified', 'deleted')),
-  modified_fields JSONB,                   -- 수정된 필드 (type='modified')
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE (schedule_id, exception_date)
-);
-```
+> SQL 마이그레이션: [supabase/migrations/001_schedules.sql](../../../supabase/migrations/001_schedules.sql)
 
-### Supabase: `schedule_completions` 테이블
-```sql
--- 날짜별 실행 상태 (완료 또는 무시)
-CREATE TABLE schedule_completions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  schedule_id UUID NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
-  completion_date DATE NOT NULL,
-  status TEXT NOT NULL DEFAULT 'completed' CHECK (status IN ('completed', 'dismissed')),
-  completed_by TEXT NOT NULL REFERENCES users(id),
-  completed_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE (schedule_id, completion_date)
-);
-```
+- `schedules` — 스케줄 본체 (제목, 카테고리, 날짜, 반복 규칙, 알림 등)
+- `schedule_exceptions` — 반복 스케줄의 개별 날짜 수정/삭제 예외
+- `schedule_completions` — 날짜별 실행 상태 (completed / dismissed)
+
 > `status` 필드: `completed`(완료) 또는 `dismissed`(무시)
 > - 완료도 무시도 아닌 스케줄 = 미실행 → 리마인더 알림 대상
 
@@ -340,7 +305,12 @@ interface Schedule {
 }
 
 type ScheduleCategory = 'walk' | 'meal' | 'hospital' | 'medicine' | 'bath' | 'other';
-type ReminderType = 'none' | 'on_time' | '10min' | '30min' | '1hour';
+// 시간 지정 스케줄용
+type TimedReminderType = 'none' | 'on_time' | '5min' | '10min' | '15min' | '30min' | '1hour' | '1day';
+// 종일 스케줄용
+type AllDayReminderType = 'none' | 'same_day_9am' | '1day_before_9am';
+// 통합 타입
+type ReminderType = TimedReminderType | AllDayReminderType;
 type CompletionStatus = 'completed' | 'dismissed';
 
 interface ScheduleCompletion {
@@ -354,26 +324,11 @@ interface ScheduleCompletion {
 ```
 
 ### RLS 정책
-```sql
--- 소유자 또는 공유받은 유저 읽기 가능
-CREATE POLICY "Schedule read access"
-  ON schedules FOR SELECT
-  USING (
-    owner_id = auth.uid()
-    OR pet_id IN (
-      SELECT pet_id FROM calendar_shares
-      WHERE shared_user_id = auth.uid() AND status = 'accepted'
-    )
-  );
 
--- 소유자만 쓰기
-CREATE POLICY "Schedule write access"
-  ON schedules FOR INSERT WITH CHECK (owner_id = auth.uid());
-CREATE POLICY "Schedule update access"
-  ON schedules FOR UPDATE USING (owner_id = auth.uid());
-CREATE POLICY "Schedule delete access"
-  ON schedules FOR DELETE USING (owner_id = auth.uid());
-```
+> RLS 정책은 별도 마이그레이션 파일로 관리 예정
+
+- 소유자 또는 공유받은 유저: SELECT 가능
+- 소유자만: INSERT / UPDATE / DELETE 가능
 
 ## 예외 처리
 

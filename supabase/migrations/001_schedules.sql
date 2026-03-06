@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS schedules (
   is_recurring BOOLEAN DEFAULT FALSE,
   rrule TEXT,
   recurrence_end_date TIMESTAMPTZ,
-  reminder TEXT DEFAULT 'none',
+  reminder TEXT DEFAULT 'none',              -- timed: 'none','on_time','5min','10min','15min','30min','1hour','1day'
+                                              -- all-day: 'none','same_day_9am','1day_before_9am'
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

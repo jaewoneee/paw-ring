@@ -58,7 +58,9 @@
 - [ ] 단건 스케줄 알림 등록 (로컬 알림)
 - [ ] 반복 스케줄 알림 등록
 - [ ] 스케줄 수정/삭제 시 알림 업데이트/취소
-- [ ] 알림 시간 옵션: 없음 / 정시 / 10분 전 / 30분 전 / 1시간 전 / 커스텀
+- [ ] 알림 시간 옵션 (스위치 토글 ON/OFF)
+  - 시간 지정 스케줄: 시작 시간 / 5분 전 / 10분 전 / 15분 전 / 30분 전 / 1시간 전 / 1일 전
+  - 종일 스케줄: 당일 오전 9시 / 1일 전 오전 9시
 
 ### 미실행 스케줄 리마인더
 - [ ] 미실행 스케줄 감지 (전날 완료/무시되지 않은 스케줄 조회)
@@ -141,35 +143,13 @@ supabase/
 
 ## 데이터 모델
 
-### Supabase: `users` 테이블 (알림 관련 필드)
-```sql
--- users 테이블에 notification_enabled 컬럼 포함
--- (data-architecture.md 참고)
-```
+### Supabase 테이블
 
-### Supabase: `fcm_tokens` 테이블
-```sql
-CREATE TABLE fcm_tokens (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  token TEXT NOT NULL,
-  device_info TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE (user_id, token)
-);
-```
+> SQL 마이그레이션 파일은 구현 시 `supabase/migrations/` 디렉토리에 추가 예정
 
-### Supabase: `pet_notification_settings` 테이블
-```sql
-CREATE TABLE pet_notification_settings (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
-  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  enabled BOOLEAN DEFAULT TRUE,
-  UNIQUE (pet_id, user_id)
-);
-```
+- `users.notification_enabled` — 전체 알림 ON/OFF ([data-architecture.md](../data-architecture.md) 참고)
+- `fcm_tokens` — FCM 디바이스 토큰 관리 (user_id, token, device_info)
+- `pet_notification_settings` — 반려동물(캘린더) 단위 알림 ON/OFF (pet_id, user_id, enabled)
 
 ## 예외 처리
 

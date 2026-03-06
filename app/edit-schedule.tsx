@@ -63,7 +63,7 @@ export default function EditScheduleScreen() {
   const [isLoading, setIsLoading] = useState(true);
 
   // End date
-  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date>(new Date());
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
   const [tempEndDate, setTempEndDate] = useState<Date>(new Date());
 
@@ -84,10 +84,16 @@ export default function EditScheduleScreen() {
     dayjs().add(1, "month").toDate()
   );
 
+  const [endTime, setEndTime] = useState<Date>(
+    dayjs().add(1, "hour").toDate()
+  );
+
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showStartTimePicker, setShowStartTimePicker] = useState(false);
+  const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
   const [tempTime, setTempTime] = useState(new Date());
+  const [tempEndTime, setTempEndTime] = useState(dayjs().add(1, "hour").toDate());
 
   const fetchSchedule = useCallback(async () => {
     if (!id) return;
@@ -103,9 +109,12 @@ export default function EditScheduleScreen() {
       setIsCompletable(data.is_completable ?? false);
       setMemo(data.memo ?? "");
 
-      // Restore end date
+      // Restore end date & end time
       if (data.end_date) {
         setEndDate(dayjs(data.end_date).toDate());
+        setEndTime(dayjs(data.end_date).toDate());
+      } else {
+        setEndDate(dayjs(data.start_date).toDate());
       }
 
       // Restore recurrence
@@ -144,12 +153,21 @@ export default function EditScheduleScreen() {
     }
   };
 
-  const handleTimeChange = (_: DateTimePickerEvent, d?: Date) => {
+  const handleStartTimeChange = (_: DateTimePickerEvent, d?: Date) => {
     if (Platform.OS === "android") {
       if (d) setTime(d);
-      setShowTimePicker(false);
+      setShowStartTimePicker(false);
     } else if (d) {
       setTempTime(d);
+    }
+  };
+
+  const handleEndTimeChange = (_: DateTimePickerEvent, d?: Date) => {
+    if (Platform.OS === "android") {
+      if (d) setEndTime(d);
+      setShowEndTimePicker(false);
+    } else if (d) {
+      setTempEndTime(d);
     }
   };
 
@@ -183,7 +201,7 @@ export default function EditScheduleScreen() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!title.trim()) newErrors.title = "제목을 입력해주세요";
-    if (endDate && dayjs(endDate).isBefore(dayjs(date), "day")) {
+    if (dayjs(endDate).isBefore(dayjs(date), "day")) {
       newErrors.endDate = "종료 날짜는 시작 날짜 이후여야 합니다";
     }
     if (
@@ -211,15 +229,13 @@ export default function EditScheduleScreen() {
             .second(0)
             .toISOString();
 
-      const computedEndDate = endDate
-        ? isAllDay
-          ? dayjs(endDate).endOf("day").toISOString()
-          : dayjs(endDate)
-              .hour(time.getHours())
-              .minute(time.getMinutes())
-              .second(0)
-              .toISOString()
-        : null;
+      const computedEndDate = isAllDay
+        ? dayjs(endDate).endOf("day").toISOString()
+        : dayjs(endDate)
+            .hour(endTime.getHours())
+            .minute(endTime.getMinutes())
+            .second(0)
+            .toISOString();
 
       const rrule = isRecurring
         ? buildRRule({
@@ -375,50 +391,33 @@ export default function EditScheduleScreen() {
 
               {/* 종료 날짜 */}
               <View style={{ gap: 6 }}>
-                <View className="flex-row items-center justify-between">
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: "500",
-                      color: colors.foreground,
-                    }}
-                  >
-                    종료 날짜
+                <Text
+                  style={{
+                    fontSize: 14,
+                    fontWeight: "500",
+                    color: colors.foreground,
+                  }}
+                >
+                  종료 날짜
+                </Text>
+                <Pressable
+                  onPress={() => {
+                    setTempEndDate(endDate);
+                    setShowEndDatePicker(true);
+                  }}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: colors.border,
+                    backgroundColor: colors.surfaceElevated,
+                    borderRadius: 12,
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                  }}
+                >
+                  <Text style={{ fontSize: 16, color: colors.foreground }}>
+                    {formatDate(endDate)}
                   </Text>
-                  <Pressable
-                    onPress={() =>
-                      setEndDate(
-                        endDate
-                          ? null
-                          : dayjs(date).add(1, "day").toDate()
-                      )
-                    }
-                  >
-                    <Text style={{ fontSize: 13, color: colors.primary }}>
-                      {endDate ? "제거" : "추가"}
-                    </Text>
-                  </Pressable>
-                </View>
-                {endDate && (
-                  <Pressable
-                    onPress={() => {
-                      setTempEndDate(endDate);
-                      setShowEndDatePicker(true);
-                    }}
-                    style={{
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      backgroundColor: colors.surfaceElevated,
-                      borderRadius: 12,
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                    }}
-                  >
-                    <Text style={{ fontSize: 16, color: colors.foreground }}>
-                      {formatDate(endDate)}
-                    </Text>
-                  </Pressable>
-                )}
+                </Pressable>
                 {errors.endDate && (
                   <Text style={{ fontSize: 12, color: "#EF4444" }}>
                     {errors.endDate}
@@ -441,7 +440,7 @@ export default function EditScheduleScreen() {
                 <Switch value={isCompletable} onValueChange={setIsCompletable} />
               </View>
 
-              {/* 시간 */}
+              {/* 시작 시간 / 종료 시간 */}
               {!isAllDay && (
                 <View style={{ gap: 6 }}>
                   <Text
@@ -453,24 +452,52 @@ export default function EditScheduleScreen() {
                   >
                     시간
                   </Text>
-                  <Pressable
-                    onPress={() => {
-                      setTempTime(time);
-                      setShowTimePicker(true);
-                    }}
-                    style={{
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                      backgroundColor: colors.surfaceElevated,
-                      borderRadius: 12,
-                      paddingHorizontal: 16,
-                      paddingVertical: 12,
-                    }}
-                  >
-                    <Text style={{ fontSize: 16, color: colors.foreground }}>
-                      {dayjs(time).format("HH:mm")}
-                    </Text>
-                  </Pressable>
+                  <View className="flex-row gap-3">
+                    <Pressable
+                      onPress={() => {
+                        setTempTime(time);
+                        setShowStartTimePicker(true);
+                      }}
+                      style={{
+                        flex: 1,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        backgroundColor: colors.surfaceElevated,
+                        borderRadius: 12,
+                        paddingHorizontal: 16,
+                        paddingVertical: 12,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 2 }}>
+                        시작
+                      </Text>
+                      <Text style={{ fontSize: 16, color: colors.foreground }}>
+                        {dayjs(time).format("HH:mm")}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => {
+                        setTempEndTime(endTime);
+                        setShowEndTimePicker(true);
+                      }}
+                      style={{
+                        flex: 1,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                        backgroundColor: colors.surfaceElevated,
+                        borderRadius: 12,
+                        paddingHorizontal: 16,
+                        paddingVertical: 12,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 2 }}>
+                        종료
+                      </Text>
+                      <Text style={{ fontSize: 16, color: colors.foreground }}>
+                        {dayjs(endTime).format("HH:mm")}
+                      </Text>
+                    </Pressable>
+                  </View>
                 </View>
               )}
 
@@ -663,49 +690,55 @@ export default function EditScheduleScreen() {
               )}
 
               {/* 알림 */}
-              <View style={{ gap: 6 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: "500",
-                    color: colors.foreground,
+              <View className="flex-row items-center justify-between">
+                <Typography variant="body-md">알림</Typography>
+                <Switch
+                  value={reminder !== "none"}
+                  onValueChange={(v) => {
+                    if (v) {
+                      setReminder(isAllDay ? "same_day_9am" : "on_time");
+                    } else {
+                      setReminder("none");
+                    }
                   }}
-                >
-                  알림
-                </Text>
+                />
+              </View>
+              {reminder !== "none" && (
                 <View className="flex-row flex-wrap gap-2">
-                  {(isAllDay ? ALL_DAY_REMINDER_OPTIONS : TIMED_REMINDER_OPTIONS).map((opt) => {
-                    const isActive = reminder === opt.value;
-                    return (
-                      <Pressable
-                        key={opt.value}
-                        onPress={() => setReminder(opt.value)}
-                        className="px-3 py-2 rounded-full border"
-                        style={{
-                          borderColor: isActive
-                            ? colors.primary
-                            : colors.border,
-                          backgroundColor: isActive
-                            ? colors.primary + "15"
-                            : "transparent",
-                        }}
-                      >
-                        <Text
+                  {(isAllDay ? ALL_DAY_REMINDER_OPTIONS : TIMED_REMINDER_OPTIONS)
+                    .filter((opt) => opt.value !== "none")
+                    .map((opt) => {
+                      const isActive = reminder === opt.value;
+                      return (
+                        <Pressable
+                          key={opt.value}
+                          onPress={() => setReminder(opt.value)}
+                          className="px-3 py-2 rounded-full border"
                           style={{
-                            fontSize: 13,
-                            color: isActive
+                            borderColor: isActive
                               ? colors.primary
-                              : colors.mutedForeground,
-                            fontWeight: isActive ? "600" : "400",
+                              : colors.border,
+                            backgroundColor: isActive
+                              ? colors.primary + "15"
+                              : "transparent",
                           }}
                         >
-                          {opt.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
+                          <Text
+                            style={{
+                              fontSize: 13,
+                              color: isActive
+                                ? colors.primary
+                                : colors.mutedForeground,
+                              fontWeight: isActive ? "600" : "400",
+                            }}
+                          >
+                            {opt.label}
+                          </Text>
+                        </Pressable>
+                      );
+                    })}
                 </View>
-              </View>
+              )}
 
               {/* 메모 */}
               <View style={{ gap: 6 }}>
@@ -821,10 +854,10 @@ export default function EditScheduleScreen() {
           </View>
         </BottomSheet>
 
-        {/* 시간 피커 */}
+        {/* 시작 시간 피커 */}
         <BottomSheet
-          visible={showTimePicker}
-          onClose={() => setShowTimePicker(false)}
+          visible={showStartTimePicker}
+          onClose={() => setShowStartTimePicker(false)}
         >
           <View style={{ gap: 12 }}>
             <Text
@@ -835,13 +868,13 @@ export default function EditScheduleScreen() {
                 textAlign: "center",
               }}
             >
-              시간 선택
+              시작 시간 선택
             </Text>
             <DateTimePicker
               value={tempTime}
               mode="time"
               display="spinner"
-              onChange={handleTimeChange}
+              onChange={handleStartTimeChange}
               themeVariant={colorScheme === "dark" ? "dark" : "light"}
               locale="ko-KR"
               style={{ alignSelf: "center", width: "100%" }}
@@ -849,7 +882,43 @@ export default function EditScheduleScreen() {
             <Button
               onPress={() => {
                 setTime(tempTime);
-                setShowTimePicker(false);
+                setShowStartTimePicker(false);
+              }}
+            >
+              확인
+            </Button>
+          </View>
+        </BottomSheet>
+
+        {/* 종료 시간 피커 */}
+        <BottomSheet
+          visible={showEndTimePicker}
+          onClose={() => setShowEndTimePicker(false)}
+        >
+          <View style={{ gap: 12 }}>
+            <Text
+              style={{
+                fontSize: 18,
+                fontWeight: "600",
+                color: colors.foreground,
+                textAlign: "center",
+              }}
+            >
+              종료 시간 선택
+            </Text>
+            <DateTimePicker
+              value={tempEndTime}
+              mode="time"
+              display="spinner"
+              onChange={handleEndTimeChange}
+              themeVariant={colorScheme === "dark" ? "dark" : "light"}
+              locale="ko-KR"
+              style={{ alignSelf: "center", width: "100%" }}
+            />
+            <Button
+              onPress={() => {
+                setEndTime(tempEndTime);
+                setShowEndTimePicker(false);
               }}
             >
               확인
