@@ -1,6 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
+import { formatShortDate } from '@/utils/dayjs';
 import React from 'react';
 import { View } from 'react-native';
 
@@ -26,7 +25,7 @@ export function DayScheduleList({
 }: DayScheduleListProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
-  const dateLabel = dayjs(date).locale('ko').format('M월 D일 (dd)');
+  const dateLabel = formatShortDate(date);
 
   return (
     <View className="px-4 pt-3 pb-4 gap-3">

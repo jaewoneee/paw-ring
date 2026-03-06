@@ -1,6 +1,6 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useFocusEffect } from '@react-navigation/native';
-import dayjs from 'dayjs';
+import dayjs, { formatISODate } from '@/utils/dayjs';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -28,7 +28,7 @@ export default function CalendarScreen() {
   const [year, setYear] = useState(dayjs().year());
   const [month, setMonth] = useState(dayjs().month());
   const [selectedDate, setSelectedDate] = useState(
-    dayjs().format('YYYY-MM-DD')
+    formatISODate(dayjs())
   );
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
 
@@ -73,19 +73,19 @@ export default function CalendarScreen() {
     const now = dayjs();
     setYear(now.year());
     setMonth(now.month());
-    setSelectedDate(now.format('YYYY-MM-DD'));
+    setSelectedDate(formatISODate(now));
   };
 
   const handlePrevWeek = () => {
     const prev = dayjs(selectedDate).subtract(7, 'day');
-    setSelectedDate(prev.format('YYYY-MM-DD'));
+    setSelectedDate(formatISODate(prev));
     setYear(prev.year());
     setMonth(prev.month());
   };
 
   const handleNextWeek = () => {
     const next = dayjs(selectedDate).add(7, 'day');
-    setSelectedDate(next.format('YYYY-MM-DD'));
+    setSelectedDate(formatISODate(next));
     setYear(next.year());
     setMonth(next.month());
   };

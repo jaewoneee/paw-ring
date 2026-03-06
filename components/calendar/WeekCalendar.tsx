@@ -1,7 +1,6 @@
 import { Text } from '@/components/ui/Text';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
+import dayjs, { formatISODate, formatShortMonth } from '@/utils/dayjs';
 import React, { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -34,16 +33,16 @@ export function WeekCalendar({
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const grid = useMemo(() => getWeekGrid(selectedDate), [selectedDate]);
-  const today = dayjs().format('YYYY-MM-DD');
-  const isCurrentWeek = grid.some(d => d.format('YYYY-MM-DD') === today);
+  const today = formatISODate(dayjs());
+  const isCurrentWeek = grid.some(d => formatISODate(d) === today);
 
   // 월 레이블: 주가 걸쳐있으면 두 달 표시
   const weekStart = grid[0];
   const weekEnd = grid[6];
   const monthLabel =
     weekStart.month() === weekEnd.month()
-      ? weekStart.locale('ko').format('M월')
-      : `${weekStart.locale('ko').format('M월')} - ${weekEnd.locale('ko').format('M월')}`;
+      ? formatShortMonth(weekStart)
+      : `${formatShortMonth(weekStart)} - ${formatShortMonth(weekEnd)}`;
 
   // 날짜별 스케줄 존재 여부
   const datesWithSchedules = useMemo(() => {
@@ -133,7 +132,7 @@ export function WeekCalendar({
       {/* 날짜 행 */}
       <View className="flex-row px-2 pt-1 pb-2">
         {grid.map((day, i) => {
-          const dateStr = day.format('YYYY-MM-DD');
+          const dateStr = formatISODate(day);
           const isToday = dateStr === today;
           const isSelected = dateStr === selectedDate;
           const dayOfWeek = day.day();

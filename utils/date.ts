@@ -1,13 +1,18 @@
-import dayjs, { type Dayjs } from "dayjs";
+import dayjs, {
+  type Dayjs,
+  formatDisplayDate,
+  formatISODate,
+  formatTime24,
+} from "./dayjs";
 
 /** 날짜를 "YYYY. MM. DD" 형식으로 포맷 */
 export function formatDate(date: Date | string): string {
-  return dayjs(date).format("YYYY. MM. DD");
+  return formatDisplayDate(date);
 }
 
 /** 날짜를 ISO 문자열(YYYY-MM-DD)로 변환 */
 export function toDateString(date: Date): string {
-  return dayjs(date).format("YYYY-MM-DD");
+  return formatISODate(date);
 }
 
 /** 월간 캘린더 42일(6행x7열) 그리드 반환 (일요일 시작) */
@@ -27,14 +32,14 @@ export function getMonthRange(
   month: number
 ): { start: string; end: string } {
   const firstDay = dayjs().year(year).month(month).startOf("month");
-  const start = firstDay.startOf("week").format("YYYY-MM-DD");
-  const end = firstDay.endOf("month").endOf("week").format("YYYY-MM-DD");
+  const start = formatISODate(firstDay.startOf("week"));
+  const end = formatISODate(firstDay.endOf("month").endOf("week"));
   return { start, end };
 }
 
 /** ISO 문자열에서 시간만 "HH:mm" 포맷으로 추출 */
 export function formatTime(isoString: string): string {
-  return dayjs(isoString).format("HH:mm");
+  return formatTime24(isoString);
 }
 
 /** 특정 날짜가 속한 주의 7일(일~토) 반환 */
@@ -53,5 +58,5 @@ export function isSameDay(
   a: string | Date | Dayjs,
   b: string | Date | Dayjs
 ): boolean {
-  return dayjs(a).format("YYYY-MM-DD") === dayjs(b).format("YYYY-MM-DD");
+  return formatISODate(a) === formatISODate(b);
 }

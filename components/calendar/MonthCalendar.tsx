@@ -1,6 +1,6 @@
 import { Text } from '@/components/ui/Text';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import dayjs from 'dayjs';
+import dayjs, { formatISODate, formatMonthLabel } from '@/utils/dayjs';
 import React, { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 
@@ -39,8 +39,8 @@ export function MonthCalendar({
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const grid = useMemo(() => getMonthGrid(year, month), [year, month]);
-  const today = dayjs().format('YYYY-MM-DD');
-  const monthLabel = dayjs().year(year).month(month).format('YYYY년 M월');
+  const today = formatISODate(dayjs());
+  const monthLabel = formatMonthLabel(dayjs().year(year).month(month));
   const isCurrentMonth = year === dayjs().year() && month === dayjs().month();
 
   // 날짜별 스케줄 그룹핑
@@ -130,7 +130,7 @@ export function MonthCalendar({
       {/* 날짜 그리드 */}
       <View className="flex-row flex-wrap">
         {grid.map(day => {
-          const dateStr = day.format('YYYY-MM-DD');
+          const dateStr = formatISODate(day);
           const isCurrentMonth = day.month() === month;
           const isToday = dateStr === today;
           const isSelected = dateStr === selectedDate;

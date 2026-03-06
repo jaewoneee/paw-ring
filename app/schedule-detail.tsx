@@ -1,6 +1,5 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import dayjs from "dayjs";
-import "dayjs/locale/ko";
+import dayjs, { formatISODate, formatKoreanDate, formatKoreanDateNoDay } from "@/utils/dayjs";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
@@ -38,7 +37,7 @@ export default function ScheduleDetailScreen() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
 
-  const todayDateStr = dayjs().format("YYYY-MM-DD");
+  const todayDateStr = formatISODate(dayjs());
 
   const fetchSchedule = useCallback(async () => {
     if (!id) return;
@@ -183,9 +182,7 @@ export default function ScheduleDetailScreen() {
   }
 
   const meta = CATEGORY_META[schedule.category];
-  const dateLabel = dayjs(schedule.start_date)
-    .locale("ko")
-    .format("YYYY년 M월 D일 (dd)");
+  const dateLabel = formatKoreanDate(schedule.start_date);
   const timeLabel = schedule.is_all_day
     ? "종일"
     : formatTime(schedule.start_date);
@@ -193,7 +190,7 @@ export default function ScheduleDetailScreen() {
     REMINDER_OPTIONS.find((r) => r.value === schedule.reminder)?.label ?? "없음";
 
   const endDateLabel = schedule.end_date
-    ? dayjs(schedule.end_date).locale("ko").format("YYYY년 M월 D일 (dd)")
+    ? formatKoreanDate(schedule.end_date)
     : null;
 
   const recurrenceLabel =
@@ -203,7 +200,7 @@ export default function ScheduleDetailScreen() {
 
   const recurrenceEndLabel =
     schedule.is_recurring && schedule.recurrence_end_date
-      ? dayjs(schedule.recurrence_end_date).locale("ko").format("YYYY년 M월 D일")
+      ? formatKoreanDateNoDay(schedule.recurrence_end_date)
       : null;
 
   return (

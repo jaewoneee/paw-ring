@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import dayjs, { formatISODate } from "@/utils/dayjs";
 import { useCallback, useEffect, useState } from "react";
 
 import { getScheduleExceptions, getSchedulesByRange } from "@/services/schedule";
@@ -68,9 +68,9 @@ export function useMonthSchedules(
             });
           }
         } else {
-          const sDate = dayjs(schedule.start_date).format("YYYY-MM-DD");
+          const sDate = formatISODate(schedule.start_date);
           const eDate = schedule.end_date
-            ? dayjs(schedule.end_date).format("YYYY-MM-DD")
+            ? formatISODate(schedule.end_date)
             : null;
 
           if (eDate && eDate !== sDate) {
@@ -78,7 +78,7 @@ export function useMonthSchedules(
             let d = dayjs(sDate);
             const last = dayjs(eDate);
             while (!d.isAfter(last, "day")) {
-              const occDate = d.format("YYYY-MM-DD");
+              const occDate = formatISODate(d);
               if (occDate >= start && occDate <= end) {
                 instances.push({
                   schedule,

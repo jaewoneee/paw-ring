@@ -7,7 +7,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { CATEGORY_META } from '@/constants/Schedule';
 import type { Schedule } from '@/types/schedule';
-import dayjs from 'dayjs';
+import { formatISODate, formatTime12 } from '@/utils/dayjs';
 
 interface ScheduleItemProps {
   schedule: Schedule;
@@ -104,9 +104,9 @@ export function ScheduleItem({
           {/* 내용 */}
           <View className="flex-1">
             <Typography style={isStacked ? { color: textColor } : undefined}>
-              {dayjs(schedule.start_date).format(
-                schedule.is_all_day ? 'YYYY-MM-DD' : 'YYYY-MM-DD HH시 mm분'
-              )}
+              {schedule.is_all_day
+                ? formatISODate(schedule.start_date)
+                : `${formatISODate(schedule.start_date)} ${formatTime12(schedule.start_date)}`}
             </Typography>
             <Typography
               variant="body-xl"

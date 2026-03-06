@@ -3,8 +3,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
+import dayjs, { formatTime24 } from '@/utils/dayjs';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -15,7 +14,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-dayjs.locale('ko');
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
@@ -526,7 +524,7 @@ export default function EditScheduleScreen() {
                         시작
                       </Text>
                       <Text style={{ fontSize: 16, color: colors.foreground }}>
-                        {dayjs(time).format('HH:mm')}
+                        {formatTime24(time)}
                       </Text>
                     </Pressable>
                     <Pressable
@@ -554,7 +552,7 @@ export default function EditScheduleScreen() {
                         종료
                       </Text>
                       <Text style={{ fontSize: 16, color: colors.foreground }}>
-                        {dayjs(endTime).format('HH:mm')}
+                        {formatTime24(endTime)}
                       </Text>
                     </Pressable>
                   </View>

@@ -4,8 +4,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { CATEGORY_META } from '@/constants/Schedule';
 import type { ScheduleInstance } from '@/types/schedule';
-import dayjs from 'dayjs';
-import 'dayjs/locale/ko';
+import dayjs, { formatKoreanDateFull, formatISODate, formatTime24 } from '@/utils/dayjs';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
@@ -29,9 +28,7 @@ export function DayTimeGrid({
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const scrollRef = useRef<ScrollView>(null);
 
-  const dateLabel = dayjs(date)
-    .locale('ko')
-    .format('YYYY년 M월 D일 dddd');
+  const dateLabel = formatKoreanDateFull(date);
 
   // 종일 이벤트와 시간 이벤트 분리
   const { allDaySchedules, timedSchedules } = useMemo(() => {
@@ -156,7 +153,7 @@ export function DayTimeGrid({
           ))}
 
           {/* 현재 시간 인디케이터 */}
-          {dayjs().format('YYYY-MM-DD') === date && (
+          {formatISODate(dayjs()) === date && (
             <View
               style={{
                 position: 'absolute',
@@ -220,9 +217,9 @@ export function DayTimeGrid({
                   className="text-xs"
                   style={{ color: colors.mutedForeground }}
                 >
-                  {dayjs(instance.schedule.start_date).format('HH:mm')}
+                  {formatTime24(instance.schedule.start_date)}
                   {instance.schedule.end_date &&
-                    ` - ${dayjs(instance.schedule.end_date).format('HH:mm')}`}
+                    ` - ${formatTime24(instance.schedule.end_date)}`}
                 </Text>
               )}
             </Pressable>
