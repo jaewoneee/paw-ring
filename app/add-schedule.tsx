@@ -1,9 +1,9 @@
 import { Text } from '@/components/ui/Text';
+import dayjs, { formatTime12 } from '@/utils/dayjs';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import dayjs, { formatTime12 } from '@/utils/dayjs';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -231,11 +231,15 @@ export default function AddScheduleScreen() {
     <Screen>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ paddingBlock: 8, gap: 16, paddingBottom: 40 }}
+        contentContainerStyle={{
+          paddingBlock: 8,
+          gap: 16,
+          borderWidth: 0,
+        }}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
-        <Card>
+        <Card style={{ borderWidth: 0 }}>
           <CardContent>
             <View className="gap-5">
               {/* 제목 */}
@@ -880,7 +884,9 @@ export default function AddScheduleScreen() {
               mode="time"
               display="spinner"
               onChange={handleEndTimeChange}
-              minimumDate={dayjs(date).isSame(dayjs(endDate), 'day') ? time : undefined}
+              minimumDate={
+                dayjs(date).isSame(dayjs(endDate), 'day') ? time : undefined
+              }
               themeVariant={colorScheme === 'dark' ? 'dark' : 'light'}
               locale="ko-KR"
               style={{ alignSelf: 'center', width: '100%' }}

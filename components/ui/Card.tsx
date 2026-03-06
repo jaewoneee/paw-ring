@@ -7,9 +7,10 @@ import { useColorScheme } from '@/components/useColorScheme';
 interface CardProps {
   children: ReactNode;
   className?: string;
+  style?: import('react-native').StyleProp<import('react-native').ViewStyle>;
 }
 
-export function Card({ children, className = '' }: CardProps) {
+export function Card({ children, className = '', style }: CardProps) {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -24,6 +25,7 @@ export function Card({ children, className = '' }: CardProps) {
         className={`rounded-2xl overflow-hidden ${className}`}
         style={[
           styles.inner,
+          style,
           // {
           //   backgroundColor: isDark
           //     ? 'rgba(255, 255, 255, 0.1)'

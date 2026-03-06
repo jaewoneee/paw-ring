@@ -4,10 +4,20 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { CATEGORY_META } from '@/constants/Schedule';
 import type { ScheduleInstance } from '@/types/schedule';
-import dayjs, { formatKoreanDateFull, formatISODate, formatTime24 } from '@/utils/dayjs';
+import dayjs, {
+  formatISODate,
+  formatKoreanDateFull,
+  formatTime24,
+} from '@/utils/dayjs';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { LayoutChangeEvent, Pressable, ScrollView, View } from 'react-native';
 
 const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -27,6 +37,11 @@ export function DayTimeGrid({
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   const scrollRef = useRef<ScrollView>(null);
+  const [gridWidth, setGridWidth] = useState(0);
+
+  const handleGridLayout = useCallback((e: LayoutChangeEvent) => {
+    setGridWidth(e.nativeEvent.layout.width);
+  }, []);
 
   const dateLabel = formatKoreanDateFull(date);
 
@@ -44,9 +59,9 @@ export function DayTimeGrid({
     return { allDaySchedules: allDay, timedSchedules: timed };
   }, [schedules]);
 
-  // 시간 이벤트의 위치 계산
+  // 시간 이벤트의 위치 계산 + 겹침 감지 컬럼 배치
   const timedBlocks = useMemo(() => {
-    return timedSchedules.map(s => {
+    const blocks = timedSchedules.map(s => {
       const start = dayjs(s.schedule.start_date);
       const end = s.schedule.end_date
         ? dayjs(s.schedule.end_date)
@@ -61,15 +76,73 @@ export function DayTimeGrid({
         top: (startMinutes / 60) * HOUR_HEIGHT,
         height: (duration / 60) * HOUR_HEIGHT,
         meta: CATEGORY_META[s.schedule.category],
+        startMinutes,
+        endMinutes: startMinutes + duration,
+        column: 0,
+        totalColumns: 1,
       };
     });
+
+    // 시작 시간순 정렬
+    blocks.sort(
+      (a, b) => a.startMinutes - b.startMinutes || a.endMinutes - b.endMinutes
+    );
+
+    // 겹침 그룹 분류 및 컬럼 배치
+    const groups: (typeof blocks)[] = [];
+    for (const block of blocks) {
+      let placed = false;
+      for (const group of groups) {
+        if (
+          group.some(
+            g =>
+              g.startMinutes < block.endMinutes &&
+              block.startMinutes < g.endMinutes
+          )
+        ) {
+          group.push(block);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) groups.push([block]);
+    }
+
+    for (const group of groups) {
+      // 각 블록에 컬럼 배정 (greedy)
+      const columns: (typeof blocks)[] = [];
+      for (const block of group) {
+        let col = 0;
+        while (col < columns.length) {
+          if (
+            columns[col].every(
+              b =>
+                b.endMinutes <= block.startMinutes ||
+                block.endMinutes <= b.startMinutes
+            )
+          )
+            break;
+          col++;
+        }
+        block.column = col;
+        if (!columns[col]) columns[col] = [];
+        columns[col].push(block);
+      }
+      const totalCols = columns.length;
+      for (const block of group) {
+        block.totalColumns = totalCols;
+      }
+    }
+
+    return blocks;
   }, [timedSchedules]);
 
   // 초기 스크롤: 첫 이벤트 또는 현재 시간 근처로
   useEffect(() => {
-    const scrollToHour = timedBlocks.length > 0
-      ? Math.max(0, Math.floor(timedBlocks[0].top / HOUR_HEIGHT) - 1)
-      : Math.max(0, dayjs().hour() - 1);
+    const scrollToHour =
+      timedBlocks.length > 0
+        ? Math.max(0, Math.floor(timedBlocks[0].top / HOUR_HEIGHT) - 1)
+        : Math.max(0, dayjs().hour() - 1);
 
     setTimeout(() => {
       scrollRef.current?.scrollTo({
@@ -90,10 +163,7 @@ export function DayTimeGrid({
     <View className="flex-1">
       {/* 선택 날짜 레이블 */}
       <View className="py-2 px-4">
-        <Typography
-          variant="body-md"
-          className="font-semibold text-center"
-        >
+        <Typography variant="body-md" className="font-semibold text-center">
           {dateLabel}
         </Typography>
       </View>
@@ -111,10 +181,13 @@ export function DayTimeGrid({
       <ScrollView
         ref={scrollRef}
         className="flex-1"
-        contentContainerStyle={{ height: 24 * HOUR_HEIGHT + HOUR_HEIGHT }}
+        contentContainerStyle={{
+          height: 24 * HOUR_HEIGHT + HOUR_HEIGHT,
+          paddingTop: 12,
+        }}
         showsVerticalScrollIndicator={false}
       >
-        <View style={{ position: 'relative' }}>
+        <View style={{ position: 'relative' }} onLayout={handleGridLayout}>
           {/* 시간 라인들 */}
           {HOURS.map(hour => (
             <View
@@ -158,8 +231,7 @@ export function DayTimeGrid({
               style={{
                 position: 'absolute',
                 top:
-                  ((dayjs().hour() * 60 + dayjs().minute()) / 60) *
-                  HOUR_HEIGHT,
+                  ((dayjs().hour() * 60 + dayjs().minute()) / 60) * HOUR_HEIGHT,
                 left: TIME_LABEL_WIDTH - 4,
                 right: 0,
                 flexDirection: 'row',
@@ -186,44 +258,57 @@ export function DayTimeGrid({
           )}
 
           {/* 스케줄 블록 */}
-          {timedBlocks.map(({ instance, top, height, meta }) => (
-            <Pressable
-              key={`${instance.schedule.id}-${instance.occurrenceDate}`}
-              onPress={() => onPressSchedule(instance)}
-              style={{
-                position: 'absolute',
-                top,
-                left: TIME_LABEL_WIDTH + 4,
-                right: 12,
-                height: Math.max(height, 28),
-                backgroundColor: meta.color + '25',
-                borderLeftWidth: 3,
-                borderLeftColor: meta.color,
-                borderRadius: 4,
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                justifyContent: 'center',
-              }}
-            >
-              <Text
-                className="text-xs font-semibold"
-                style={{ color: colors.foreground }}
-                numberOfLines={1}
-              >
-                {instance.schedule.title}
-              </Text>
-              {height >= 40 && (
-                <Text
-                  className="text-xs"
-                  style={{ color: colors.mutedForeground }}
-                >
-                  {formatTime24(instance.schedule.start_date)}
-                  {instance.schedule.end_date &&
-                    ` - ${formatTime24(instance.schedule.end_date)}`}
-                </Text>
-              )}
-            </Pressable>
-          ))}
+          {gridWidth > 0 &&
+            timedBlocks.map(
+              ({ instance, top, height, meta, column, totalColumns }) => {
+                const gridStart = TIME_LABEL_WIDTH + 4;
+                const gridEnd = 16;
+                const availableWidth = gridWidth - gridStart - gridEnd;
+                const gap = 2;
+                const colWidth =
+                  (availableWidth - gap * (totalColumns - 1)) / totalColumns;
+                const blockLeft = gridStart + column * (colWidth + gap);
+
+                return (
+                  <Pressable
+                    key={`${instance.schedule.id}-${instance.occurrenceDate}`}
+                    onPress={() => onPressSchedule(instance)}
+                    style={{
+                      position: 'absolute',
+                      top,
+                      left: blockLeft,
+                      width: colWidth,
+                      height: Math.max(height, 28),
+                      backgroundColor: meta.color + '25',
+                      borderLeftWidth: 3,
+                      borderLeftColor: meta.color,
+                      borderRadius: 4,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text
+                      className="text-xs font-semibold"
+                      style={{ color: colors.foreground }}
+                      numberOfLines={1}
+                    >
+                      {instance.schedule.title}
+                    </Text>
+                    {height >= 40 && (
+                      <Text
+                        className="text-xs"
+                        style={{ color: colors.mutedForeground }}
+                      >
+                        {formatTime24(instance.schedule.start_date)}
+                        {instance.schedule.end_date &&
+                          ` - ${formatTime24(instance.schedule.end_date)}`}
+                      </Text>
+                    )}
+                  </Pressable>
+                );
+              }
+            )}
         </View>
       </ScrollView>
     </View>
@@ -246,8 +331,8 @@ function AllDaySection({
   const visible = expanded ? schedules : schedules.slice(0, MAX_COLLAPSED);
 
   return (
-    <View className="px-4 pb-2">
-      <View className="gap-1.5">
+    <View className=" pb-2">
+      <View className="gap-1.5 px-4">
         {visible.map(s => {
           const meta = CATEGORY_META[s.schedule.category];
           return (

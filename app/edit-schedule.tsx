@@ -333,7 +333,7 @@ export default function EditScheduleScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
-        <Card>
+        <Card style={{ borderWidth: 0 }}>
           <CardContent>
             <View className="gap-5">
               {/* 제목 */}
