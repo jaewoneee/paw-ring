@@ -60,7 +60,7 @@ export default function AddScheduleScreen() {
   const [category, setCategory] = useState<ScheduleCategory>('other');
   const [date, setDate] = useState<Date>(initialDate);
   const [time, setTime] = useState<Date>(new Date());
-  const [isAllDay, setIsAllDay] = useState(false);
+  const [isAllDay, setIsAllDay] = useState(true);
   const [reminder, setReminder] = useState<ReminderType>('none');
   const [memo, setMemo] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
