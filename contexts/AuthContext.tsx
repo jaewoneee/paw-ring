@@ -63,6 +63,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           });
           profile = await getUserProfile(firebaseUser.uid);
         }
+        // Firebase emailVerified → Supabase email_verified 동기화
+        if (profile && firebaseUser.emailVerified && !profile.email_verified) {
+          await updateUserProfile(firebaseUser.uid, { email_verified: true });
+          profile = { ...profile, email_verified: true };
+        }
         setUserProfile(profile);
       } else {
         setUserProfile(null);

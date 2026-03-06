@@ -59,11 +59,11 @@
 ## 주요 기능 요구사항
 
 ### 이메일 로그인
-- [ ] 이메일/비밀번호 회원가입 (`createUserWithEmailAndPassword`)
-- [ ] 이메일/비밀번호 로그인 (`signInWithEmailAndPassword`)
-- [ ] 입력값 유효성 검증 (이메일 형식, 비밀번호 최소 8자 영문+숫자)
-- [ ] 이메일 인증 발송 (`sendEmailVerification`)
-- [ ] 비밀번호 재설정 이메일 발송 (`sendPasswordResetEmail`)
+- [x] 이메일/비밀번호 회원가입 (`createUserWithEmailAndPassword`)
+- [x] 이메일/비밀번호 로그인 (`signInWithEmailAndPassword`)
+- [x] 입력값 유효성 검증 (이메일 형식, 비밀번호 최소 8자 영문+숫자)
+- [x] 이메일 인증 발송 (`sendEmailVerification`)
+- [x] 비밀번호 재설정 이메일 발송 (`sendPasswordResetEmail`)
 
 ### 구글 로그인
 - [x] Google OAuth 2.0 연동 (expo-auth-session)
@@ -72,11 +72,11 @@
 - [ ] 기존 이메일 계정과 동일 이메일의 구글 계정 연동 처리
 
 ### 공통
-- [ ] 인증 상태 감지 (`onAuthStateChanged`)
-- [ ] 자동 로그인 (Firebase SDK 내장 세션 관리)
-- [ ] 로그아웃 (`signOut`)
-- [ ] 회원 탈퇴 (`deleteUser` + Firestore 문서 삭제)
-- [ ] 닉네임 설정 (회원가입 시 필수)
+- [x] 인증 상태 감지 (`onAuthStateChanged`)
+- [x] 자동 로그인 (Firebase SDK 내장 세션 관리)
+- [x] 로그아웃 (`signOut`)
+- [x] 회원 탈퇴 (`deleteUser` + Firestore 문서 삭제)
+- [x] 닉네임 설정 (회원가입 시 필수)
 
 ## 화면 구성
 

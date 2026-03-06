@@ -29,10 +29,10 @@
 | # | 기능 | 상태 | 상세 문서 |
 |---|------|------|-----------|
 | 1.1 | 이메일 회원가입 / 로그인 | ✅ | [login.md](./feature/login.md) |
-| 1.2 | 구글 소셜 로그인 | ⬜ | [login.md](./feature/login.md) |
-| 1.3 | 이메일 인증 | 🔧 | [login.md](./feature/login.md) |
-| 1.4 | 비밀번호 찾기 (재설정) | ⬜ | [login.md](./feature/login.md) |
-| 1.5 | 자동 로그인 (세션 유지) | 🔧 | [login.md](./feature/login.md) |
+| 1.2 | 구글 소셜 로그인 | ✅ | [login.md](./feature/login.md) |
+| 1.3 | 이메일 인증 | ✅ | [login.md](./feature/login.md) |
+| 1.4 | 비밀번호 찾기 (재설정) | ✅ | [login.md](./feature/login.md) |
+| 1.5 | 자동 로그인 (세션 유지) | ✅ | [login.md](./feature/login.md) |
 | 1.6 | 로그아웃 | ✅ | [login.md](./feature/login.md) |
 | 1.7 | 회원 탈퇴 | ✅ | [login.md](./feature/login.md) |
 
@@ -45,7 +45,7 @@
 | 2.1 | 반려동물 등록 (이름, 종류, 나이, 사진 등) | ✅ | [pet.md](./feature/pet.md) |
 | 2.2 | 반려동물 프로필 수정 | ✅ | [pet.md](./feature/pet.md) |
 | 2.3 | 반려동물 삭제 | ✅ | [pet.md](./feature/pet.md) |
-| 2.4 | 반려동물 목록 조회 | ⬜ | [pet.md](./feature/pet.md) |
+| 2.4 | 반려동물 목록 조회 | ✅ | [pet.md](./feature/pet.md) |
 
 ---
 
@@ -53,16 +53,17 @@
 
 | # | 기능 | 상태 | 상세 문서 |
 |---|------|------|-----------|
-| 3.1 | 캘린더 생성 (반려동물 단위) | 🔧 | [calendar-schedule.md](./feature/calendar-schedule.md) |
+| 3.1 | 캘린더 생성 (반려동물 단위) | ✅ | [calendar-schedule.md](./feature/calendar-schedule.md) |
 | 3.2 | 캘린더 목록 조회 (내 캘린더 + 공유받은 캘린더) | ⬜ | [calendar-schedule.md](./feature/calendar-schedule.md) |
-| 3.3 | 스케줄 생성 (단건) | 🔧 | [calendar-schedule.md](./feature/calendar-schedule.md) |
-| 3.4 | 반복 스케줄 생성 (매일/매주/격주/매월/커스텀) | ⬜ | [calendar-schedule.md](./feature/calendar-schedule.md) |
-| 3.5 | 스케줄 수정 (단건 수정 / 이후 전체 수정) | ⬜ | [calendar-schedule.md](./feature/calendar-schedule.md) |
-| 3.6 | 스케줄 삭제 (단건 삭제 / 이후 전체 삭제) | ⬜ | [calendar-schedule.md](./feature/calendar-schedule.md) |
-| 3.7 | 스케줄 완료 체크 | ⬜ | [calendar-schedule.md](./feature/calendar-schedule.md) |
+| 3.3 | 스케줄 생성 (단건) | ✅ | [calendar-schedule.md](./feature/calendar-schedule.md) |
+| 3.4 | 반복 스케줄 생성 (매일/매주/격주/매월/커스텀) | ✅ | [calendar-schedule.md](./feature/calendar-schedule.md) |
+| 3.5 | 스케줄 수정 (단건 수정 / 이후 전체 수정) | 🔧 | [calendar-schedule.md](./feature/calendar-schedule.md) |
+| 3.6 | 스케줄 삭제 (단건 삭제 / 이후 전체 삭제) | 🔧 | [calendar-schedule.md](./feature/calendar-schedule.md) |
+| 3.7 | 스케줄 완료 체크 | 🔧 | [calendar-schedule.md](./feature/calendar-schedule.md) |
 | 3.8 | 캘린더 뷰 (월간/주간/일간) | 🔧 | [calendar-schedule.md](./feature/calendar-schedule.md) |
 | 3.9 | 스케줄 카테고리 (산책, 식사, 병원, 약 투여 등) | 🔧 | [calendar-schedule.md](./feature/calendar-schedule.md) |
 | 3.10 | 미실행 스케줄 추적 (완료/무시 상태 관리) | ⬜ | [calendar-schedule.md](./feature/calendar-schedule.md) |
+| 3.11 | 커스텀 카테고리 관리 (카테고리명/색상 커스터마이징) | ⬜ | [calendar-schedule.md](./feature/calendar-schedule.md) |
 
 ---
 
@@ -121,6 +122,6 @@
 
 - 1.6, 1.7 (로그아웃, 탈퇴)
 - 2.2, 2.3 (반려동물 수정/삭제)
-- 3.5 ~ 3.7, 3.9, 3.10 (스케줄 수정/삭제/완료/카테고리/미실행 추적)
+- 3.5 ~ 3.7, 3.9 ~ 3.11 (스케줄 수정/삭제/완료/카테고리/미실행 추적/커스텀 카테고리)
 - 5.4, 5.5 (공유 멤버 관리)
 - 6.1 ~ 6.3 (설정)
