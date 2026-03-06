@@ -116,7 +116,6 @@ export default function ScheduleDetailScreen() {
         { text: "취소", style: "cancel" },
         {
           text: "이 일정만",
-          style: "destructive",
           onPress: async () => {
             try {
               await deleteScheduleThisOnly(id!, occurrenceDate ?? todayDateStr);
@@ -129,13 +128,25 @@ export default function ScheduleDetailScreen() {
         },
         {
           text: "이후 모든 일정",
-          style: "destructive",
           onPress: async () => {
             try {
               await deleteScheduleThisAndFollowing(id!, occurrenceDate ?? todayDateStr);
               router.back();
             } catch (err) {
               console.error("[ScheduleDetail] delete following failed:", err);
+              Alert.alert("오류", "일정 삭제에 실패했습니다.");
+            }
+          },
+        },
+        {
+          text: "모든 일정 삭제",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteSchedule(id!);
+              router.back();
+            } catch (err) {
+              console.error("[ScheduleDetail] delete all failed:", err);
               Alert.alert("오류", "일정 삭제에 실패했습니다.");
             }
           },
