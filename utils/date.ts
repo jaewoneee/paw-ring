@@ -37,6 +37,17 @@ export function formatTime(isoString: string): string {
   return dayjs(isoString).format("HH:mm");
 }
 
+/** 특정 날짜가 속한 주의 7일(일~토) 반환 */
+export function getWeekGrid(date: string): Dayjs[] {
+  const d = dayjs(date);
+  const startOfWeek = d.startOf("week");
+  const days: Dayjs[] = [];
+  for (let i = 0; i < 7; i++) {
+    days.push(startOfWeek.add(i, "day"));
+  }
+  return days;
+}
+
 /** 두 날짜가 같은 날인지 비교 */
 export function isSameDay(
   a: string | Date | Dayjs,

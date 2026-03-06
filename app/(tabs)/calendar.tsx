@@ -6,7 +6,9 @@ import React, { useCallback, useMemo, useState } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
 
 import { DayScheduleList } from '@/components/calendar/DayScheduleList';
+import { DayTimeGrid } from '@/components/calendar/DayTimeGrid';
 import { MonthCalendar } from '@/components/calendar/MonthCalendar';
+import { WeekCalendar } from '@/components/calendar/WeekCalendar';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
 import { Typography } from '@/components/ui/Typography';
@@ -14,6 +16,8 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { usePets } from '@/contexts/PetContext';
 import { useMonthSchedules } from '@/hooks/useSchedules';
+
+type CalendarViewMode = 'month' | 'week';
 
 export default function CalendarScreen() {
   const router = useRouter();
@@ -26,6 +30,7 @@ export default function CalendarScreen() {
   const [selectedDate, setSelectedDate] = useState(
     dayjs().format('YYYY-MM-DD')
   );
+  const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
 
   const { schedules, refresh } = useMonthSchedules(
     selectedPet?.id,
@@ -71,8 +76,36 @@ export default function CalendarScreen() {
     setSelectedDate(now.format('YYYY-MM-DD'));
   };
 
+  const handlePrevWeek = () => {
+    const prev = dayjs(selectedDate).subtract(7, 'day');
+    setSelectedDate(prev.format('YYYY-MM-DD'));
+    setYear(prev.year());
+    setMonth(prev.month());
+  };
+
+  const handleNextWeek = () => {
+    const next = dayjs(selectedDate).add(7, 'day');
+    setSelectedDate(next.format('YYYY-MM-DD'));
+    setYear(next.year());
+    setMonth(next.month());
+  };
+
+  const handleSelectDateInWeek = (date: string) => {
+    setSelectedDate(date);
+    const d = dayjs(date);
+    setYear(d.year());
+    setMonth(d.month());
+  };
+
   const handleAddSchedule = () => {
     router.push({ pathname: '/add-schedule', params: { date: selectedDate } });
+  };
+
+  const handlePressSchedule = (s: { schedule: { id: string } }) => {
+    router.push({
+      pathname: '/schedule-detail',
+      params: { id: s.schedule.id },
+    });
   };
 
   // 반려동물 미등록
@@ -108,12 +141,54 @@ export default function CalendarScreen() {
     );
   }
 
+  // 주간 뷰: WeekCalendar(고정) + DayTimeGrid(스크롤)
+  if (viewMode === 'week') {
+    return (
+      <Screen edges={['top', 'bottom']}>
+        <View className="flex-1">
+          {/* 뷰 모드 토글 */}
+          <ViewModeToggle
+            viewMode={viewMode}
+            onChangeMode={setViewMode}
+            colors={colors}
+          />
+
+          <WeekCalendar
+            selectedDate={selectedDate}
+            schedules={schedules}
+            onSelectDate={handleSelectDateInWeek}
+            onPrevWeek={handlePrevWeek}
+            onNextWeek={handleNextWeek}
+            onGoToday={handleGoToday}
+          />
+
+          <DayTimeGrid
+            date={selectedDate}
+            schedules={daySchedules}
+            onPressSchedule={handlePressSchedule}
+          />
+        </View>
+
+        {/* FAB */}
+        <FAB onPress={handleAddSchedule} colors={colors} />
+      </Screen>
+    );
+  }
+
+  // 월간 뷰: MonthCalendar + DayScheduleList (기존)
   return (
     <Screen edges={['top', 'bottom']}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 }}
       >
+        {/* 뷰 모드 토글 */}
+        <ViewModeToggle
+          viewMode={viewMode}
+          onChangeMode={setViewMode}
+          colors={colors}
+        />
+
         <MonthCalendar
           year={year}
           month={month}
@@ -131,35 +206,106 @@ export default function CalendarScreen() {
         <DayScheduleList
           date={selectedDate}
           schedules={daySchedules}
-          onPressSchedule={s =>
-            router.push({
-              pathname: '/schedule-detail',
-              params: { id: s.schedule.id },
-            })
-          }
+          onPressSchedule={handlePressSchedule}
           onPressAdd={handleAddSchedule}
         />
       </ScrollView>
 
       {/* FAB */}
-      <Pressable
-        onPress={handleAddSchedule}
-        className="absolute items-center justify-center rounded-full"
-        style={{
-          right: 20,
-          bottom: 100,
-          width: 52,
-          height: 52,
-          backgroundColor: colors.primary,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.25,
-          shadowRadius: 4,
-          elevation: 5,
-        }}
-      >
-        <FontAwesome name="plus" size={20} color={colors.primaryForeground} />
-      </Pressable>
+      <FAB onPress={handleAddSchedule} colors={colors} />
     </Screen>
+  );
+}
+
+function ViewModeToggle({
+  viewMode,
+  onChangeMode,
+  colors,
+}: {
+  viewMode: CalendarViewMode;
+  onChangeMode: (mode: CalendarViewMode) => void;
+  colors: (typeof Colors)['light'] | (typeof Colors)['dark'];
+}) {
+  return (
+    <View className="flex-row justify-end px-4 pt-2">
+      <View
+        className="flex-row rounded-lg overflow-hidden"
+        style={{ backgroundColor: colors.surface }}
+      >
+        <Pressable
+          onPress={() => onChangeMode('month')}
+          className="px-3 py-1.5"
+          style={
+            viewMode === 'month'
+              ? { backgroundColor: colors.primary }
+              : undefined
+          }
+        >
+          <Typography
+            variant="body-sm"
+            className="font-medium"
+            style={{
+              color:
+                viewMode === 'month'
+                  ? colors.primaryForeground
+                  : colors.mutedForeground,
+            }}
+          >
+            월
+          </Typography>
+        </Pressable>
+        <Pressable
+          onPress={() => onChangeMode('week')}
+          className="px-3 py-1.5"
+          style={
+            viewMode === 'week'
+              ? { backgroundColor: colors.primary }
+              : undefined
+          }
+        >
+          <Typography
+            variant="body-sm"
+            className="font-medium"
+            style={{
+              color:
+                viewMode === 'week'
+                  ? colors.primaryForeground
+                  : colors.mutedForeground,
+            }}
+          >
+            주
+          </Typography>
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function FAB({
+  onPress,
+  colors,
+}: {
+  onPress: () => void;
+  colors: (typeof Colors)['light'] | (typeof Colors)['dark'];
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      className="absolute items-center justify-center rounded-full"
+      style={{
+        right: 20,
+        bottom: 100,
+        width: 52,
+        height: 52,
+        backgroundColor: colors.primary,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+      }}
+    >
+      <FontAwesome name="plus" size={20} color={colors.primaryForeground} />
+    </Pressable>
   );
 }
