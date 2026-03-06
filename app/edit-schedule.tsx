@@ -1,10 +1,12 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Text } from '@/components/ui/Text';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 import DateTimePicker, {
   type DateTimePickerEvent,
-} from "@react-native-community/datetimepicker";
-import dayjs from "dayjs";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+} from '@react-native-community/datetimepicker';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   Platform,
@@ -12,18 +14,18 @@ import {
   ScrollView,
   TextInput,
   View,
-} from "react-native";
-import { Text } from "@/components/ui/Text";
+} from 'react-native';
+dayjs.locale('ko');
 
-import { BottomSheet } from "@/components/ui/BottomSheet";
-import { Button } from "@/components/ui/Button";
-import { Card, CardContent } from "@/components/ui/Card";
-import { Input } from "@/components/ui/Input";
-import { Screen } from "@/components/ui/Screen";
-import { Switch } from "@/components/ui/Switch";
-import { Typography } from "@/components/ui/Typography";
-import { useColorScheme } from "@/components/useColorScheme";
-import Colors from "@/constants/Colors";
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Screen } from '@/components/ui/Screen';
+import { Switch } from '@/components/ui/Switch';
+import { Typography } from '@/components/ui/Typography';
+import { useColorScheme } from '@/components/useColorScheme';
+import Colors from '@/constants/Colors';
 import {
   ALL_DAY_REMINDER_OPTIONS,
   CATEGORIES,
@@ -32,31 +34,31 @@ import {
   RECURRENCE_END_OPTIONS,
   RECURRENCE_FREQUENCY_OPTIONS,
   TIMED_REMINDER_OPTIONS,
-} from "@/constants/Schedule";
-import { getScheduleById, updateSchedule } from "@/services/schedule";
+} from '@/constants/Schedule';
+import { getScheduleById, updateSchedule } from '@/services/schedule';
 import type {
   RecurrenceFrequency,
   ReminderType,
   Schedule,
   ScheduleCategory,
-} from "@/types/schedule";
-import { formatDate } from "@/utils/date";
-import { buildRRule, parseRRule } from "@/utils/rrule";
+} from '@/types/schedule';
+import { formatDate } from '@/utils/date';
+import { buildRRule, parseRRule } from '@/utils/rrule';
 
 export default function EditScheduleScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colorScheme } = useColorScheme();
-  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const [schedule, setSchedule] = useState<Schedule | null>(null);
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<ScheduleCategory>("other");
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState<ScheduleCategory>('other');
   const [date, setDate] = useState<Date>(new Date());
   const [time, setTime] = useState<Date>(new Date());
   const [isAllDay, setIsAllDay] = useState(false);
-  const [reminder, setReminder] = useState<ReminderType>("none");
-  const [memo, setMemo] = useState("");
+  const [reminder, setReminder] = useState<ReminderType>('none');
+  const [memo, setMemo] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isCompletable, setIsCompletable] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -70,30 +72,30 @@ export default function EditScheduleScreen() {
   // Recurrence
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceFrequency, setRecurrenceFrequency] =
-    useState<RecurrenceFrequency>("daily");
+    useState<RecurrenceFrequency>('daily');
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [recurrenceEndType, setRecurrenceEndType] = useState<"never" | "date">(
-    "never"
+  const [recurrenceEndType, setRecurrenceEndType] = useState<'never' | 'date'>(
+    'never'
   );
   const [recurrenceEndDate, setRecurrenceEndDate] = useState<Date>(
-    dayjs().add(1, "month").toDate()
+    dayjs().add(1, 'month').toDate()
   );
   const [showRecurrenceEndDatePicker, setShowRecurrenceEndDatePicker] =
     useState(false);
   const [tempRecurrenceEndDate, setTempRecurrenceEndDate] = useState<Date>(
-    dayjs().add(1, "month").toDate()
+    dayjs().add(1, 'month').toDate()
   );
 
-  const [endTime, setEndTime] = useState<Date>(
-    dayjs().add(1, "hour").toDate()
-  );
+  const [endTime, setEndTime] = useState<Date>(dayjs().add(1, 'hour').toDate());
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStartTimePicker, setShowStartTimePicker] = useState(false);
   const [showEndTimePicker, setShowEndTimePicker] = useState(false);
   const [tempDate, setTempDate] = useState(new Date());
   const [tempTime, setTempTime] = useState(new Date());
-  const [tempEndTime, setTempEndTime] = useState(dayjs().add(1, "hour").toDate());
+  const [tempEndTime, setTempEndTime] = useState(
+    dayjs().add(1, 'hour').toDate()
+  );
 
   const fetchSchedule = useCallback(async () => {
     if (!id) return;
@@ -107,7 +109,7 @@ export default function EditScheduleScreen() {
       setIsAllDay(data.is_all_day);
       setReminder(data.reminder);
       setIsCompletable(data.is_completable ?? false);
-      setMemo(data.memo ?? "");
+      setMemo(data.memo ?? '');
 
       // Restore end date & end time
       if (data.end_date) {
@@ -125,15 +127,15 @@ export default function EditScheduleScreen() {
         setSelectedDays(parsed.selectedDays);
 
         if (data.recurrence_end_date) {
-          setRecurrenceEndType("date");
+          setRecurrenceEndType('date');
           setRecurrenceEndDate(dayjs(data.recurrence_end_date).toDate());
         } else {
-          setRecurrenceEndType("never");
+          setRecurrenceEndType('never');
         }
       }
     } catch (err) {
-      console.error("[EditSchedule] fetch failed:", err);
-      Alert.alert("오류", "일정을 불러올 수 없습니다.");
+      console.error('[EditSchedule] fetch failed:', err);
+      Alert.alert('오류', '일정을 불러올 수 없습니다.');
       router.back();
     } finally {
       setIsLoading(false);
@@ -145,7 +147,7 @@ export default function EditScheduleScreen() {
   }, [fetchSchedule]);
 
   const handleDateChange = (_: DateTimePickerEvent, d?: Date) => {
-    if (Platform.OS === "android") {
+    if (Platform.OS === 'android') {
       if (d) setDate(d);
       setShowDatePicker(false);
     } else if (d) {
@@ -154,7 +156,7 @@ export default function EditScheduleScreen() {
   };
 
   const handleStartTimeChange = (_: DateTimePickerEvent, d?: Date) => {
-    if (Platform.OS === "android") {
+    if (Platform.OS === 'android') {
       if (d) setTime(d);
       setShowStartTimePicker(false);
     } else if (d) {
@@ -163,7 +165,7 @@ export default function EditScheduleScreen() {
   };
 
   const handleEndTimeChange = (_: DateTimePickerEvent, d?: Date) => {
-    if (Platform.OS === "android") {
+    if (Platform.OS === 'android') {
       if (d) setEndTime(d);
       setShowEndTimePicker(false);
     } else if (d) {
@@ -172,7 +174,7 @@ export default function EditScheduleScreen() {
   };
 
   const handleEndDateChange = (_: DateTimePickerEvent, d?: Date) => {
-    if (Platform.OS === "android") {
+    if (Platform.OS === 'android') {
       if (d) setEndDate(d);
       setShowEndDatePicker(false);
     } else if (d) {
@@ -180,11 +182,8 @@ export default function EditScheduleScreen() {
     }
   };
 
-  const handleRecurrenceEndDateChange = (
-    _: DateTimePickerEvent,
-    d?: Date
-  ) => {
-    if (Platform.OS === "android") {
+  const handleRecurrenceEndDateChange = (_: DateTimePickerEvent, d?: Date) => {
+    if (Platform.OS === 'android') {
       if (d) setRecurrenceEndDate(d);
       setShowRecurrenceEndDatePicker(false);
     } else if (d) {
@@ -193,24 +192,23 @@ export default function EditScheduleScreen() {
   };
 
   const toggleDayOfWeek = (day: string) => {
-    setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+    setSelectedDays(prev =>
+      prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]
     );
   };
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
-    if (!title.trim()) newErrors.title = "제목을 입력해주세요";
-    if (dayjs(endDate).isBefore(dayjs(date), "day")) {
-      newErrors.endDate = "종료 날짜는 시작 날짜 이후여야 합니다";
+    if (!title.trim()) newErrors.title = '제목을 입력해주세요';
+    if (dayjs(endDate).isBefore(dayjs(date), 'day')) {
+      newErrors.endDate = '종료 날짜는 시작 날짜 이후여야 합니다';
     }
     if (
       isRecurring &&
-      recurrenceEndType === "date" &&
-      dayjs(recurrenceEndDate).isBefore(dayjs(date), "day")
+      recurrenceEndType === 'date' &&
+      dayjs(recurrenceEndDate).isBefore(dayjs(date), 'day')
     ) {
-      newErrors.recurrenceEndDate =
-        "반복 종료일은 시작 날짜 이후여야 합니다";
+      newErrors.recurrenceEndDate = '반복 종료일은 시작 날짜 이후여야 합니다';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -222,7 +220,7 @@ export default function EditScheduleScreen() {
     setSubmitting(true);
     try {
       const startDate = isAllDay
-        ? dayjs(date).startOf("day").toISOString()
+        ? dayjs(date).startOf('day').toISOString()
         : dayjs(date)
             .hour(time.getHours())
             .minute(time.getMinutes())
@@ -230,7 +228,7 @@ export default function EditScheduleScreen() {
             .toISOString();
 
       const computedEndDate = isAllDay
-        ? dayjs(endDate).endOf("day").toISOString()
+        ? dayjs(endDate).endOf('day').toISOString()
         : dayjs(endDate)
             .hour(endTime.getHours())
             .minute(endTime.getMinutes())
@@ -241,10 +239,10 @@ export default function EditScheduleScreen() {
         ? buildRRule({
             frequency: recurrenceFrequency,
             selectedDays:
-              recurrenceFrequency === "weekly" ? selectedDays : undefined,
+              recurrenceFrequency === 'weekly' ? selectedDays : undefined,
             endDate:
-              recurrenceEndType === "date"
-                ? dayjs(recurrenceEndDate).endOf("day").toISOString()
+              recurrenceEndType === 'date'
+                ? dayjs(recurrenceEndDate).endOf('day').toISOString()
                 : undefined,
           })
         : null;
@@ -261,15 +259,15 @@ export default function EditScheduleScreen() {
         is_recurring: isRecurring,
         rrule,
         recurrence_end_date:
-          isRecurring && recurrenceEndType === "date"
-            ? dayjs(recurrenceEndDate).endOf("day").toISOString()
+          isRecurring && recurrenceEndType === 'date'
+            ? dayjs(recurrenceEndDate).endOf('day').toISOString()
             : null,
       });
 
       router.back();
     } catch (err) {
-      console.error("[EditSchedule] update failed:", err);
-      Alert.alert("오류", "일정 수정에 실패했습니다. 다시 시도해주세요.");
+      console.error('[EditSchedule] update failed:', err);
+      Alert.alert('오류', '일정 수정에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setSubmitting(false);
     }
@@ -289,7 +287,7 @@ export default function EditScheduleScreen() {
     <Screen>
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingBlock: 8, gap: 16, paddingBottom: 40 }}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
@@ -301,9 +299,9 @@ export default function EditScheduleScreen() {
                 label="제목"
                 placeholder="일정 제목을 입력하세요"
                 value={title}
-                onChangeText={(t) => {
+                onChangeText={t => {
                   setTitle(t);
-                  if (errors.title) setErrors((p) => ({ ...p, title: "" }));
+                  if (errors.title) setErrors(p => ({ ...p, title: '' }));
                 }}
                 error={!!errors.title}
                 errorMessage={errors.title}
@@ -314,14 +312,14 @@ export default function EditScheduleScreen() {
                 <Text
                   style={{
                     fontSize: 14,
-                    fontWeight: "500",
+                    fontWeight: '500',
                     color: colors.foreground,
                   }}
                 >
                   카테고리
                 </Text>
                 <View className="flex-row flex-wrap gap-2">
-                  {CATEGORIES.map((cat) => {
+                  {CATEGORIES.map(cat => {
                     const meta = CATEGORY_META[cat];
                     const isActive = category === cat;
                     return (
@@ -332,8 +330,8 @@ export default function EditScheduleScreen() {
                         style={{
                           borderColor: isActive ? meta.color : colors.border,
                           backgroundColor: isActive
-                            ? meta.color + "15"
-                            : "transparent",
+                            ? meta.color + '15'
+                            : 'transparent',
                         }}
                       >
                         <FontAwesome
@@ -347,7 +345,7 @@ export default function EditScheduleScreen() {
                             color: isActive
                               ? meta.color
                               : colors.mutedForeground,
-                            fontWeight: isActive ? "600" : "400",
+                            fontWeight: isActive ? '600' : '400',
                           }}
                         >
                           {meta.label}
@@ -363,7 +361,7 @@ export default function EditScheduleScreen() {
                 <Text
                   style={{
                     fontSize: 14,
-                    fontWeight: "500",
+                    fontWeight: '500',
                     color: colors.foreground,
                   }}
                 >
@@ -394,7 +392,7 @@ export default function EditScheduleScreen() {
                 <Text
                   style={{
                     fontSize: 14,
-                    fontWeight: "500",
+                    fontWeight: '500',
                     color: colors.foreground,
                   }}
                 >
@@ -419,7 +417,7 @@ export default function EditScheduleScreen() {
                   </Text>
                 </Pressable>
                 {errors.endDate && (
-                  <Text style={{ fontSize: 12, color: "#EF4444" }}>
+                  <Text style={{ fontSize: 12, color: '#EF4444' }}>
                     {errors.endDate}
                   </Text>
                 )}
@@ -428,16 +426,22 @@ export default function EditScheduleScreen() {
               {/* 종일 토글 */}
               <View className="flex-row items-center justify-between">
                 <Typography variant="body-md">종일</Typography>
-                <Switch value={isAllDay} onValueChange={(v) => {
-                  setIsAllDay(v);
-                  setReminder("none");
-                }} />
+                <Switch
+                  value={isAllDay}
+                  onValueChange={v => {
+                    setIsAllDay(v);
+                    setReminder('none');
+                  }}
+                />
               </View>
 
               {/* 완료 체크 토글 */}
               <View className="flex-row items-center justify-between">
                 <Typography variant="body-md">완료 체크</Typography>
-                <Switch value={isCompletable} onValueChange={setIsCompletable} />
+                <Switch
+                  value={isCompletable}
+                  onValueChange={setIsCompletable}
+                />
               </View>
 
               {/* 시작 시간 / 종료 시간 */}
@@ -446,7 +450,7 @@ export default function EditScheduleScreen() {
                   <Text
                     style={{
                       fontSize: 14,
-                      fontWeight: "500",
+                      fontWeight: '500',
                       color: colors.foreground,
                     }}
                   >
@@ -468,11 +472,17 @@ export default function EditScheduleScreen() {
                         paddingVertical: 12,
                       }}
                     >
-                      <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 2 }}>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: colors.mutedForeground,
+                          marginBottom: 2,
+                        }}
+                      >
                         시작
                       </Text>
                       <Text style={{ fontSize: 16, color: colors.foreground }}>
-                        {dayjs(time).format("HH:mm")}
+                        {dayjs(time).format('HH:mm')}
                       </Text>
                     </Pressable>
                     <Pressable
@@ -490,11 +500,17 @@ export default function EditScheduleScreen() {
                         paddingVertical: 12,
                       }}
                     >
-                      <Text style={{ fontSize: 12, color: colors.mutedForeground, marginBottom: 2 }}>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          color: colors.mutedForeground,
+                          marginBottom: 2,
+                        }}
+                      >
                         종료
                       </Text>
                       <Text style={{ fontSize: 16, color: colors.foreground }}>
-                        {dayjs(endTime).format("HH:mm")}
+                        {dayjs(endTime).format('HH:mm')}
                       </Text>
                     </Pressable>
                   </View>
@@ -506,12 +522,12 @@ export default function EditScheduleScreen() {
                 <Typography variant="body-md">반복</Typography>
                 <Switch
                   value={isRecurring}
-                  onValueChange={(v) => {
+                  onValueChange={v => {
                     setIsRecurring(v);
                     if (!v) {
-                      setRecurrenceFrequency("daily");
+                      setRecurrenceFrequency('daily');
                       setSelectedDays([]);
-                      setRecurrenceEndType("never");
+                      setRecurrenceEndType('never');
                     }
                   }}
                 />
@@ -523,21 +539,21 @@ export default function EditScheduleScreen() {
                   <Text
                     style={{
                       fontSize: 14,
-                      fontWeight: "500",
+                      fontWeight: '500',
                       color: colors.foreground,
                     }}
                   >
                     반복 주기
                   </Text>
                   <View className="flex-row flex-wrap gap-2">
-                    {RECURRENCE_FREQUENCY_OPTIONS.map((opt) => {
+                    {RECURRENCE_FREQUENCY_OPTIONS.map(opt => {
                       const isActive = recurrenceFrequency === opt.value;
                       return (
                         <Pressable
                           key={opt.value}
                           onPress={() => {
                             setRecurrenceFrequency(opt.value);
-                            if (opt.value !== "weekly") setSelectedDays([]);
+                            if (opt.value !== 'weekly') setSelectedDays([]);
                           }}
                           className="px-3 py-2 rounded-full border"
                           style={{
@@ -545,8 +561,8 @@ export default function EditScheduleScreen() {
                               ? colors.primary
                               : colors.border,
                             backgroundColor: isActive
-                              ? colors.primary + "15"
-                              : "transparent",
+                              ? colors.primary + '15'
+                              : 'transparent',
                           }}
                         >
                           <Text
@@ -555,7 +571,7 @@ export default function EditScheduleScreen() {
                               color: isActive
                                 ? colors.primary
                                 : colors.mutedForeground,
-                              fontWeight: isActive ? "600" : "400",
+                              fontWeight: isActive ? '600' : '400',
                             }}
                           >
                             {opt.label}
@@ -568,19 +584,19 @@ export default function EditScheduleScreen() {
               )}
 
               {/* 요일 선택 (매주일 때) */}
-              {isRecurring && recurrenceFrequency === "weekly" && (
+              {isRecurring && recurrenceFrequency === 'weekly' && (
                 <View style={{ gap: 6 }}>
                   <Text
                     style={{
                       fontSize: 14,
-                      fontWeight: "500",
+                      fontWeight: '500',
                       color: colors.foreground,
                     }}
                   >
                     요일 선택
                   </Text>
                   <View className="flex-row gap-2">
-                    {DAY_OF_WEEK_OPTIONS.map((day) => {
+                    {DAY_OF_WEEK_OPTIONS.map(day => {
                       const isActive = selectedDays.includes(day.value);
                       return (
                         <Pressable
@@ -592,8 +608,8 @@ export default function EditScheduleScreen() {
                               ? colors.primary
                               : colors.border,
                             backgroundColor: isActive
-                              ? colors.primary + "15"
-                              : "transparent",
+                              ? colors.primary + '15'
+                              : 'transparent',
                           }}
                         >
                           <Text
@@ -602,7 +618,7 @@ export default function EditScheduleScreen() {
                               color: isActive
                                 ? colors.primary
                                 : colors.mutedForeground,
-                              fontWeight: isActive ? "600" : "400",
+                              fontWeight: isActive ? '600' : '400',
                             }}
                           >
                             {day.label}
@@ -620,14 +636,14 @@ export default function EditScheduleScreen() {
                   <Text
                     style={{
                       fontSize: 14,
-                      fontWeight: "500",
+                      fontWeight: '500',
                       color: colors.foreground,
                     }}
                   >
                     반복 종료
                   </Text>
                   <View className="flex-row flex-wrap gap-2">
-                    {RECURRENCE_END_OPTIONS.map((opt) => {
+                    {RECURRENCE_END_OPTIONS.map(opt => {
                       const isActive = recurrenceEndType === opt.value;
                       return (
                         <Pressable
@@ -639,8 +655,8 @@ export default function EditScheduleScreen() {
                               ? colors.primary
                               : colors.border,
                             backgroundColor: isActive
-                              ? colors.primary + "15"
-                              : "transparent",
+                              ? colors.primary + '15'
+                              : 'transparent',
                           }}
                         >
                           <Text
@@ -649,7 +665,7 @@ export default function EditScheduleScreen() {
                               color: isActive
                                 ? colors.primary
                                 : colors.mutedForeground,
-                              fontWeight: isActive ? "600" : "400",
+                              fontWeight: isActive ? '600' : '400',
                             }}
                           >
                             {opt.label}
@@ -658,7 +674,7 @@ export default function EditScheduleScreen() {
                       );
                     })}
                   </View>
-                  {recurrenceEndType === "date" && (
+                  {recurrenceEndType === 'date' && (
                     <Pressable
                       onPress={() => {
                         setTempRecurrenceEndDate(recurrenceEndDate);
@@ -674,15 +690,13 @@ export default function EditScheduleScreen() {
                         marginTop: 4,
                       }}
                     >
-                      <Text
-                        style={{ fontSize: 16, color: colors.foreground }}
-                      >
+                      <Text style={{ fontSize: 16, color: colors.foreground }}>
                         {formatDate(recurrenceEndDate)}
                       </Text>
                     </Pressable>
                   )}
                   {errors.recurrenceEndDate && (
-                    <Text style={{ fontSize: 12, color: "#EF4444" }}>
+                    <Text style={{ fontSize: 12, color: '#EF4444' }}>
                       {errors.recurrenceEndDate}
                     </Text>
                   )}
@@ -693,21 +707,24 @@ export default function EditScheduleScreen() {
               <View className="flex-row items-center justify-between">
                 <Typography variant="body-md">알림</Typography>
                 <Switch
-                  value={reminder !== "none"}
-                  onValueChange={(v) => {
+                  value={reminder !== 'none'}
+                  onValueChange={v => {
                     if (v) {
-                      setReminder(isAllDay ? "same_day_9am" : "on_time");
+                      setReminder(isAllDay ? 'same_day_9am' : 'on_time');
                     } else {
-                      setReminder("none");
+                      setReminder('none');
                     }
                   }}
                 />
               </View>
-              {reminder !== "none" && (
+              {reminder !== 'none' && (
                 <View className="flex-row flex-wrap gap-2">
-                  {(isAllDay ? ALL_DAY_REMINDER_OPTIONS : TIMED_REMINDER_OPTIONS)
-                    .filter((opt) => opt.value !== "none")
-                    .map((opt) => {
+                  {(isAllDay
+                    ? ALL_DAY_REMINDER_OPTIONS
+                    : TIMED_REMINDER_OPTIONS
+                  )
+                    .filter(opt => opt.value !== 'none')
+                    .map(opt => {
                       const isActive = reminder === opt.value;
                       return (
                         <Pressable
@@ -719,8 +736,8 @@ export default function EditScheduleScreen() {
                               ? colors.primary
                               : colors.border,
                             backgroundColor: isActive
-                              ? colors.primary + "15"
-                              : "transparent",
+                              ? colors.primary + '15'
+                              : 'transparent',
                           }}
                         >
                           <Text
@@ -729,7 +746,7 @@ export default function EditScheduleScreen() {
                               color: isActive
                                 ? colors.primary
                                 : colors.mutedForeground,
-                              fontWeight: isActive ? "600" : "400",
+                              fontWeight: isActive ? '600' : '400',
                             }}
                           >
                             {opt.label}
@@ -745,7 +762,7 @@ export default function EditScheduleScreen() {
                 <Text
                   style={{
                     fontSize: 14,
-                    fontWeight: "500",
+                    fontWeight: '500',
                     color: colors.foreground,
                   }}
                 >
@@ -766,10 +783,10 @@ export default function EditScheduleScreen() {
                     paddingHorizontal: 16,
                     paddingVertical: 12,
                     fontSize: 16,
-                    fontFamily: "Pretendard",
+                    fontFamily: 'Pretendard',
                     color: colors.foreground,
                     minHeight: 80,
-                    textAlignVertical: "top",
+                    textAlignVertical: 'top',
                   }}
                 />
               </View>
@@ -790,9 +807,9 @@ export default function EditScheduleScreen() {
             <Text
               style={{
                 fontSize: 18,
-                fontWeight: "600",
+                fontWeight: '600',
                 color: colors.foreground,
-                textAlign: "center",
+                textAlign: 'center',
               }}
             >
               시작 날짜 선택
@@ -802,9 +819,9 @@ export default function EditScheduleScreen() {
               mode="date"
               display="spinner"
               onChange={handleDateChange}
-              themeVariant={colorScheme === "dark" ? "dark" : "light"}
+              themeVariant={colorScheme === 'dark' ? 'dark' : 'light'}
               locale="ko-KR"
-              style={{ alignSelf: "center", width: "100%" }}
+              style={{ alignSelf: 'center', width: '100%' }}
             />
             <Button
               onPress={() => {
@@ -826,9 +843,9 @@ export default function EditScheduleScreen() {
             <Text
               style={{
                 fontSize: 18,
-                fontWeight: "600",
+                fontWeight: '600',
                 color: colors.foreground,
-                textAlign: "center",
+                textAlign: 'center',
               }}
             >
               종료 날짜 선택
@@ -839,9 +856,9 @@ export default function EditScheduleScreen() {
               display="spinner"
               onChange={handleEndDateChange}
               minimumDate={date}
-              themeVariant={colorScheme === "dark" ? "dark" : "light"}
+              themeVariant={colorScheme === 'dark' ? 'dark' : 'light'}
               locale="ko-KR"
-              style={{ alignSelf: "center", width: "100%" }}
+              style={{ alignSelf: 'center', width: '100%' }}
             />
             <Button
               onPress={() => {
@@ -863,9 +880,9 @@ export default function EditScheduleScreen() {
             <Text
               style={{
                 fontSize: 18,
-                fontWeight: "600",
+                fontWeight: '600',
                 color: colors.foreground,
-                textAlign: "center",
+                textAlign: 'center',
               }}
             >
               시작 시간 선택
@@ -875,13 +892,20 @@ export default function EditScheduleScreen() {
               mode="time"
               display="spinner"
               onChange={handleStartTimeChange}
-              themeVariant={colorScheme === "dark" ? "dark" : "light"}
+              themeVariant={colorScheme === 'dark' ? 'dark' : 'light'}
               locale="ko-KR"
-              style={{ alignSelf: "center", width: "100%" }}
+              style={{ alignSelf: 'center', width: '100%' }}
             />
             <Button
               onPress={() => {
                 setTime(tempTime);
+                if (
+                  dayjs(date).isSame(dayjs(endDate), 'day') &&
+                  dayjs(endTime).hour() * 60 + dayjs(endTime).minute() <
+                    dayjs(tempTime).hour() * 60 + dayjs(tempTime).minute()
+                ) {
+                  setEndTime(tempTime);
+                }
                 setShowStartTimePicker(false);
               }}
             >
@@ -899,9 +923,9 @@ export default function EditScheduleScreen() {
             <Text
               style={{
                 fontSize: 18,
-                fontWeight: "600",
+                fontWeight: '600',
                 color: colors.foreground,
-                textAlign: "center",
+                textAlign: 'center',
               }}
             >
               종료 시간 선택
@@ -911,9 +935,12 @@ export default function EditScheduleScreen() {
               mode="time"
               display="spinner"
               onChange={handleEndTimeChange}
-              themeVariant={colorScheme === "dark" ? "dark" : "light"}
+              minimumDate={
+                dayjs(date).isSame(dayjs(endDate), 'day') ? time : undefined
+              }
+              themeVariant={colorScheme === 'dark' ? 'dark' : 'light'}
               locale="ko-KR"
-              style={{ alignSelf: "center", width: "100%" }}
+              style={{ alignSelf: 'center', width: '100%' }}
             />
             <Button
               onPress={() => {
@@ -935,9 +962,9 @@ export default function EditScheduleScreen() {
             <Text
               style={{
                 fontSize: 18,
-                fontWeight: "600",
+                fontWeight: '600',
                 color: colors.foreground,
-                textAlign: "center",
+                textAlign: 'center',
               }}
             >
               반복 종료 날짜 선택
@@ -948,9 +975,9 @@ export default function EditScheduleScreen() {
               display="spinner"
               onChange={handleRecurrenceEndDateChange}
               minimumDate={date}
-              themeVariant={colorScheme === "dark" ? "dark" : "light"}
+              themeVariant={colorScheme === 'dark' ? 'dark' : 'light'}
               locale="ko-KR"
-              style={{ alignSelf: "center", width: "100%" }}
+              style={{ alignSelf: 'center', width: '100%' }}
             />
             <Button
               onPress={() => {

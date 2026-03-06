@@ -4,6 +4,8 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import dayjs from 'dayjs';
+import 'dayjs/locale/ko';
+dayjs.locale('ko');
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -417,7 +419,7 @@ export default function AddScheduleScreen() {
                         시작
                       </Text>
                       <Text style={{ fontSize: 16, color: colors.foreground }}>
-                        {dayjs(time).format('HH:mm')}
+                        {dayjs(time).format('A hh:mm')}
                       </Text>
                     </Pressable>
                     <Pressable
@@ -445,7 +447,7 @@ export default function AddScheduleScreen() {
                         종료
                       </Text>
                       <Text style={{ fontSize: 16, color: colors.foreground }}>
-                        {dayjs(endTime).format('HH:mm')}
+                        {dayjs(endTime).format('A hh:mm')}
                       </Text>
                     </Pressable>
                   </View>
@@ -843,6 +845,14 @@ export default function AddScheduleScreen() {
             <Button
               onPress={() => {
                 setTime(tempTime);
+                // 같은 날짜이고 종료 시간이 시작 시간보다 이전이면 종료 시간을 시작 시간으로 보정
+                if (
+                  dayjs(date).isSame(dayjs(endDate), 'day') &&
+                  dayjs(endTime).hour() * 60 + dayjs(endTime).minute() <
+                    dayjs(tempTime).hour() * 60 + dayjs(tempTime).minute()
+                ) {
+                  setEndTime(tempTime);
+                }
                 setShowStartTimePicker(false);
               }}
             >
@@ -872,6 +882,7 @@ export default function AddScheduleScreen() {
               mode="time"
               display="spinner"
               onChange={handleEndTimeChange}
+              minimumDate={dayjs(date).isSame(dayjs(endDate), 'day') ? time : undefined}
               themeVariant={colorScheme === 'dark' ? 'dark' : 'light'}
               locale="ko-KR"
               style={{ alignSelf: 'center', width: '100%' }}
