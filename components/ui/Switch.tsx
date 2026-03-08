@@ -4,9 +4,9 @@ import { Animated, Pressable, StyleSheet } from "react-native";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 
-const TRACK_WIDTH = 48;
-const TRACK_HEIGHT = 28;
-const THUMB_SIZE = 22;
+const TRACK_WIDTH = 44;
+const TRACK_HEIGHT = 24;
+const THUMB_SIZE = 18;
 const TRACK_PADDING = (TRACK_HEIGHT - THUMB_SIZE) / 2;
 
 interface SwitchProps {
@@ -19,7 +19,9 @@ export function Switch({ value, onValueChange, disabled }: SwitchProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
   const translateX = useRef(
-    new Animated.Value(value ? TRACK_WIDTH - THUMB_SIZE - TRACK_PADDING * 2 : 0)
+    new Animated.Value(
+      value ? TRACK_WIDTH - THUMB_SIZE - TRACK_PADDING * 2 : 0,
+    ),
   ).current;
 
   useEffect(() => {

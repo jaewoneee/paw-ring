@@ -390,7 +390,8 @@ export default function EditScheduleScreen() {
           setSubmitting(true);
           try {
             await performUpdate('following');
-            router.back();
+            // 분할 시 원본 스케줄 상세가 아닌 캘린더로 복귀 (원본은 잘리고 새 스케줄이 생성되므로)
+            router.dismiss(2);
           } catch (err) {
             console.error('[EditSchedule] update failed:', err);
             Alert.alert('오류', '일정 수정에 실패했습니다. 다시 시도해주세요.');
@@ -484,6 +485,9 @@ export default function EditScheduleScreen() {
                 </View>
               </View>
 
+              {/* ── 날짜/시간 ── */}
+              <View className="border-b border-border" />
+
               {/* 시작 날짜 */}
               <View style={{ gap: 6 }}>
                 <Text
@@ -515,7 +519,8 @@ export default function EditScheduleScreen() {
                 </Pressable>
               </View>
 
-              {/* 종료 날짜 */}
+              {/* 종료 날짜 (반복 일정이 아닐 때만 표시) */}
+              {!isRecurring && (
               <View style={{ gap: 6 }}>
                 <Text
                   style={{
@@ -550,6 +555,7 @@ export default function EditScheduleScreen() {
                   </Text>
                 )}
               </View>
+              )}
 
               {/* 종일 토글 */}
               <View className="flex-row items-center justify-between">
@@ -565,15 +571,6 @@ export default function EditScheduleScreen() {
                       setEndTime(dayjs(now).add(1, 'hour').toDate());
                     }
                   }}
-                />
-              </View>
-
-              {/* 완료 체크 토글 */}
-              <View className="flex-row items-center justify-between">
-                <Typography variant="body-md">완료 체크</Typography>
-                <Switch
-                  value={isCompletable}
-                  onValueChange={setIsCompletable}
                 />
               </View>
 
@@ -649,6 +646,9 @@ export default function EditScheduleScreen() {
                   </View>
                 </View>
               )}
+
+              {/* ── 반복 ── */}
+              <View className="border-b border-border" />
 
               {/* 반복 토글 */}
               <View className="flex-row items-center justify-between">
@@ -836,6 +836,18 @@ export default function EditScheduleScreen() {
                 </View>
               )}
 
+              {/* ── 옵션 ── */}
+              <View className="border-b border-border" />
+
+              {/* 완료 체크 토글 */}
+              <View className="flex-row items-center justify-between">
+                <Typography variant="body-md">완료 체크</Typography>
+                <Switch
+                  value={isCompletable}
+                  onValueChange={setIsCompletable}
+                />
+              </View>
+
               {/* 알림 */}
               <View className="flex-row items-center justify-between">
                 <Typography variant="body-md">알림</Typography>
@@ -890,7 +902,9 @@ export default function EditScheduleScreen() {
                 </View>
               )}
 
-              {/* 메모 */}
+              {/* ── 메모 ── */}
+              <View className="border-b border-border" />
+
               <View style={{ gap: 6 }}>
                 <Text
                   style={{

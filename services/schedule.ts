@@ -327,6 +327,23 @@ export async function getScheduleById(id: string): Promise<Schedule> {
   return data as Schedule;
 }
 
+/** 특정 날짜의 스케줄 예외 조회 (반복 스케줄의 "이 일정만" 수정 데이터) */
+export async function getScheduleExceptionByDate(
+  scheduleId: string,
+  exceptionDate: string
+): Promise<ScheduleException | null> {
+  const { data, error } = await supabase
+    .from("schedule_exceptions")
+    .select("*")
+    .eq("schedule_id", scheduleId)
+    .eq("exception_date", exceptionDate)
+    .eq("type", "modified")
+    .maybeSingle();
+
+  if (error) throw error;
+  return data as ScheduleException | null;
+}
+
 /** 스케줄 수정 */
 export async function updateSchedule(
   id: string,
@@ -338,6 +355,20 @@ export async function updateSchedule(
     .eq("id", id);
 
   if (error) throw error;
+
+  // 원본(루트) 스케줄의 제목/카테고리 변경 시 파생 스케줄에도 전파
+  if (data.title !== undefined || data.category !== undefined) {
+    const cascadeFields: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (data.title !== undefined) cascadeFields.title = data.title;
+    if (data.category !== undefined) cascadeFields.category = data.category;
+
+    await supabase
+      .from("schedules")
+      .update(cascadeFields)
+      .eq("parent_schedule_id", id);
+  }
 }
 
 /** 스케줄 삭제 (전체) */
@@ -412,12 +443,22 @@ export async function updateScheduleThisAndFollowing(
     await updateSchedule(originalScheduleId, {
       recurrence_end_date: toLocalISOString(dayBefore),
     });
+    // 파생 스케줄의 start_date는 fromDate 기준으로 보정 (form의 원래 시작일이 아님)
+    const newStartDate = newData.is_all_day
+      ? toLocalISOString(dayjs(fromDate).startOf("day"))
+      : toLocalISOString(
+          dayjs(fromDate)
+            .hour(dayjs(newData.start_date).hour())
+            .minute(dayjs(newData.start_date).minute())
+            .second(0)
+        );
     // 원본의 parent_schedule_id가 있으면 그것을 사용, 없으면 원본 id를 parent로 설정
     const rootId = original.parent_schedule_id ?? originalScheduleId;
     const { data: newSchedule, error } = await supabase
       .from("schedules")
       .insert({
         ...newData,
+        start_date: newStartDate,
         parent_schedule_id: rootId,
       })
       .select()

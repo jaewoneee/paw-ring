@@ -1,8 +1,8 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { formatKoreanDate, formatKoreanDateNoDay } from "@/utils/dayjs";
-import { useFocusEffect } from "@react-navigation/native";
+import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
@@ -21,6 +21,7 @@ import {
   deleteScheduleThisOnly,
   getScheduleById,
   getScheduleCompletion,
+  getScheduleExceptionByDate,
   uncompleteSchedule,
 } from "@/services/schedule";
 import type { Schedule } from "@/types/schedule";
@@ -43,11 +44,22 @@ export default function ScheduleDetailScreen() {
 
   const fetchSchedule = useCallback(async () => {
     if (!id) return;
+    setIsLoading(true);
+    setIsCompleted(false);
     try {
       const data = await getScheduleById(id);
-      setSchedule(data);
       // 반복 스케줄은 occurrenceDate 기준, 단건은 start_date 기준
       const targetDate = occurrenceDate ?? data.start_date.split("T")[0];
+
+      // 반복 스케줄 + occurrenceDate가 있으면 예외(이 일정만 수정) 데이터 병합
+      if (data.is_recurring && occurrenceDate) {
+        const exception = await getScheduleExceptionByDate(id, occurrenceDate);
+        if (exception?.modified_fields) {
+          Object.assign(data, exception.modified_fields);
+        }
+      }
+
+      setSchedule(data);
       setCompletionDate(targetDate);
       if (data.is_completable) {
         const completion = await getScheduleCompletion(id, targetDate);
@@ -62,11 +74,13 @@ export default function ScheduleDetailScreen() {
     }
   }, [id, occurrenceDate]);
 
-  useFocusEffect(
-    useCallback(() => {
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (isFocused) {
       fetchSchedule();
-    }, [fetchSchedule])
-  );
+    }
+  }, [isFocused, fetchSchedule]);
 
   const handleToggleComplete = async () => {
     if (!schedule || !user || isToggling) return;

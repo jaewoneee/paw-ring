@@ -126,6 +126,13 @@ export function expandRRule(
   if (frequency === "weekly" && selectedDays.length > 0) {
     // 주간 + 요일 지정: 각 주의 지정된 요일마다 생성
     const targetDays = selectedDays.map((d) => RRULE_DAY_TO_DAYJS[d]).filter((n) => n !== undefined);
+
+    // start_date 자체는 항상 첫 번째 occurrence (RFC 5545 DTSTART 규칙)
+    // 요일이 BYDAY에 없더라도 시작일은 포함
+    if (!start.isBefore(rStart, "day") && !start.isAfter(effectiveEnd, "day") && !start.isAfter(rEnd, "day")) {
+      results.push(start.format("YYYY-MM-DD"));
+    }
+
     // 시작 주의 일요일부터
     let weekStart = start.startOf("week");
     // 최적화: rangeStart가 멀면 점프
@@ -138,6 +145,7 @@ export function expandRRule(
       for (const dow of targetDays) {
         const d = weekStart.day(dow);
         if (d.isBefore(start, "day")) continue;
+        if (d.isSame(start, "day")) continue; // 이미 위에서 추가됨
         if (d.isAfter(effectiveEnd, "day")) continue;
         if (d.isBefore(rStart, "day")) continue;
         if (d.isAfter(rEnd, "day")) continue;

@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import React, { createRef, useCallback, useRef, useState } from 'react';
-import { Image, Pressable, ScrollView, View } from 'react-native';
+import { Image, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -62,18 +62,32 @@ export default function HomeScreen() {
   const colors = Colors[isDark ? 'dark' : 'light'];
 
   const [upcomingSchedules, setUpcomingSchedules] = useState<Schedule[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchUpcomingSchedules = useCallback(async () => {
+    if (!selectedPet?.id) {
+      setUpcomingSchedules([]);
+      return;
+    }
+    try {
+      const schedules = await getUpcomingSchedules(selectedPet.id);
+      setUpcomingSchedules(schedules);
+    } catch {
+      setUpcomingSchedules([]);
+    }
+  }, [selectedPet?.id]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!selectedPet?.id) {
-        setUpcomingSchedules([]);
-        return;
-      }
-      getUpcomingSchedules(selectedPet.id)
-        .then(setUpcomingSchedules)
-        .catch(() => setUpcomingSchedules([]));
-    }, [selectedPet?.id])
+      fetchUpcomingSchedules();
+    }, [fetchUpcomingSchedules])
   );
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await fetchUpcomingSchedules();
+    setRefreshing(false);
+  }, [fetchUpcomingSchedules]);
 
   const handleCompleteSchedule = useCallback(
     async (schedule: Schedule) => {
@@ -176,6 +190,9 @@ export default function HomeScreen() {
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
         <View className="p-4 gap-5">
           {/* 인사말 */}

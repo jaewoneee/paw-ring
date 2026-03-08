@@ -304,6 +304,9 @@ export default function AddScheduleScreen() {
                 </View>
               </View>
 
+              {/* ── 날짜/시간 ── */}
+              <View className="border-b border-border" />
+
               {/* 시작 날짜 */}
               <View style={{ gap: 6 }}>
                 <Text
@@ -335,7 +338,8 @@ export default function AddScheduleScreen() {
                 </Pressable>
               </View>
 
-              {/* 종료 날짜 */}
+              {/* 종료 날짜 (반복 일정이 아닐 때만 표시) */}
+              {!isRecurring && (
               <View style={{ gap: 6 }}>
                 <Text
                   style={{
@@ -370,6 +374,7 @@ export default function AddScheduleScreen() {
                   </Text>
                 )}
               </View>
+              )}
 
               {/* 종일 토글 */}
               <View className="flex-row items-center justify-between">
@@ -455,6 +460,9 @@ export default function AddScheduleScreen() {
                   </View>
                 </View>
               )}
+
+              {/* ── 반복 ── */}
+              <View className="border-b border-border" />
 
               {/* 반복 토글 */}
               <View className="flex-row items-center justify-between">
@@ -642,6 +650,9 @@ export default function AddScheduleScreen() {
                 </View>
               )}
 
+              {/* ── 옵션 ── */}
+              <View className="border-b border-border" />
+
               {/* 완료 체크 토글 */}
               <View className="flex-row items-center justify-between">
                 <Typography variant="body-md">완료 체크</Typography>
@@ -705,7 +716,9 @@ export default function AddScheduleScreen() {
                 </View>
               )}
 
-              {/* 메모 */}
+              {/* ── 메모 ── */}
+              <View className="border-b border-border" />
+
               <View style={{ gap: 6 }}>
                 <Text
                   style={{

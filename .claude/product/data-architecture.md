@@ -134,6 +134,8 @@ CREATE TABLE schedules (
   is_recurring BOOLEAN DEFAULT FALSE,
   rrule TEXT,                              -- RFC 5545 반복 규칙
   recurrence_end_date TIMESTAMPTZ,
+  parent_schedule_id UUID REFERENCES schedules(id) ON DELETE SET NULL,  -- 반복 분열 시 원본 ID
+  is_completable BOOLEAN DEFAULT FALSE,    -- 완료 체크 가능 여부
   reminder TEXT DEFAULT 'none',            -- 'none','on_time','10min','30min','1hour'
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
