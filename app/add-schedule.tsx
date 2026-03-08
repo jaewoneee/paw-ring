@@ -1,5 +1,5 @@
 import { Text } from '@/components/ui/Text';
-import dayjs, { formatTime12 } from '@/utils/dayjs';
+import dayjs, { formatTime12, toLocalISOString } from '@/utils/dayjs';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import DateTimePicker, {
   type DateTimePickerEvent,
@@ -171,20 +171,22 @@ export default function AddScheduleScreen() {
     setSubmitting(true);
     try {
       const startDate = isAllDay
-        ? dayjs(date).startOf('day').toISOString()
-        : dayjs(date)
-            .hour(time.getHours())
-            .minute(time.getMinutes())
-            .second(0)
-            .toISOString();
+        ? toLocalISOString(dayjs(date).startOf('day'))
+        : toLocalISOString(
+            dayjs(date)
+              .hour(time.getHours())
+              .minute(time.getMinutes())
+              .second(0)
+          );
 
       const computedEndDate = isAllDay
-        ? dayjs(endDate).endOf('day').toISOString()
-        : dayjs(endDate)
-            .hour(endTime.getHours())
-            .minute(endTime.getMinutes())
-            .second(0)
-            .toISOString();
+        ? toLocalISOString(dayjs(endDate).endOf('day'))
+        : toLocalISOString(
+            dayjs(endDate)
+              .hour(endTime.getHours())
+              .minute(endTime.getMinutes())
+              .second(0)
+          );
 
       const rrule = isRecurring
         ? buildRRule({
@@ -193,7 +195,7 @@ export default function AddScheduleScreen() {
               recurrenceFrequency === 'weekly' ? selectedDays : undefined,
             endDate:
               recurrenceEndType === 'date'
-                ? dayjs(recurrenceEndDate).endOf('day').toISOString()
+                ? toLocalISOString(dayjs(recurrenceEndDate).endOf('day'))
                 : undefined,
           })
         : undefined;
@@ -213,7 +215,7 @@ export default function AddScheduleScreen() {
         rrule,
         recurrence_end_date:
           isRecurring && recurrenceEndType === 'date'
-            ? dayjs(recurrenceEndDate).endOf('day').toISOString()
+            ? toLocalISOString(dayjs(recurrenceEndDate).endOf('day'))
             : undefined,
       });
 

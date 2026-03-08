@@ -48,6 +48,20 @@ export function formatShortDate(date: dayjs.ConfigType): string {
   return dayjs(date).format('M월 D일 (dd)');
 }
 
+// --- 로컬 타임존 ISO 변환 ---
+
+/**
+ * 로컬 타임존 기준 ISO 문자열 반환: "2026-03-08T09:00:00"
+ *
+ * ⚠️ 스케줄 날짜를 DB에 저장할 때 반드시 이 함수를 사용할 것.
+ *    .toISOString()은 UTC로 변환하므로 사용 금지.
+ *
+ * @see .claude/product/datetime-policy.md
+ */
+export function toLocalISOString(date: dayjs.ConfigType): string {
+  return dayjs(date).format('YYYY-MM-DDTHH:mm:ss');
+}
+
 // --- 시간 포맷 ---
 
 /** 24시간 형식: "14:30" */

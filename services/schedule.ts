@@ -1,4 +1,4 @@
-import dayjs, { formatISODate } from "@/utils/dayjs";
+import dayjs, { formatISODate, toLocalISOString } from "@/utils/dayjs";
 import { supabase } from "@/lib/supabase";
 import type {
   CreateScheduleInput,
@@ -304,12 +304,9 @@ export async function updateScheduleThisAndFollowing(
   newData: CreateScheduleInput
 ): Promise<void> {
   // 1) 원본 스케줄의 반복 종료일을 fromDate 전날로 설정
-  const dayBefore = new Date(fromDate);
-  dayBefore.setDate(dayBefore.getDate() - 1);
-  const endDateStr = dayBefore.toISOString().split("T")[0] + "T23:59:59.000Z";
-
+  const dayBefore = dayjs(fromDate).subtract(1, "day").endOf("day");
   await updateSchedule(originalScheduleId, {
-    recurrence_end_date: endDateStr,
+    recurrence_end_date: toLocalISOString(dayBefore),
   });
 
   // 2) 새 스케줄 생성
@@ -349,11 +346,8 @@ export async function deleteScheduleThisAndFollowing(
   }
 
   // 그렇지 않으면 전날까지로 반복 종료
-  const dayBefore = new Date(fromDate);
-  dayBefore.setDate(dayBefore.getDate() - 1);
-  const endDateStr = dayBefore.toISOString().split("T")[0] + "T23:59:59.000Z";
-
+  const dayBefore = dayjs(fromDate).subtract(1, "day").endOf("day");
   await updateSchedule(scheduleId, {
-    recurrence_end_date: endDateStr,
+    recurrence_end_date: toLocalISOString(dayBefore),
   });
 }

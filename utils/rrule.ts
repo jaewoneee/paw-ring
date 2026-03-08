@@ -42,11 +42,8 @@ export function buildRRule(params: RRuleParams): string {
   }
 
   if (params.endDate) {
-    const d = new Date(params.endDate);
-    const until = d
-      .toISOString()
-      .replace(/[-:]/g, "")
-      .replace(/\.\d{3}/, "");
+    // 로컬 타임존 기준 UNTIL 생성 (UTC 변환 없음)
+    const until = dayjs(params.endDate).format("YYYYMMDDTHHmmss");
     parts.push(`UNTIL=${until}`);
   }
 
@@ -95,9 +92,10 @@ const RRULE_DAY_TO_DAYJS: Record<string, number> = {
 
 /** rrule 문자열에서 UNTIL 값을 Date로 파싱 */
 function parseUntil(rrule: string): dayjs.Dayjs | null {
-  const match = rrule.match(/UNTIL=(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/);
+  // 로컬 포맷 (Z 없음) 및 레거시 UTC 포맷 (Z 포함) 모두 지원
+  const match = rrule.match(/UNTIL=(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z?/);
   if (!match) return null;
-  return dayjs(`${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6]}Z`);
+  return dayjs(`${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6]}`);
 }
 
 /**

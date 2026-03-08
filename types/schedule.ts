@@ -18,7 +18,10 @@ export type CompletionStatus = 'completed' | 'dismissed';
 export type RecurrenceFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly';
 export type RecurrenceEndType = 'never' | 'date';
 
-/** Supabase schedules 테이블 스키마 */
+/**
+ * Supabase schedules 테이블 스키마
+ * @see .claude/product/datetime-policy.md
+ */
 export interface Schedule {
   id: string;
   pet_id: string;
@@ -26,16 +29,16 @@ export interface Schedule {
   title: string;
   category: ScheduleCategory;
   memo: string | null;
-  start_date: string;
-  end_date: string | null;
+  start_date: string;            // TIMESTAMP — 로컬 시간 (toLocalISOString)
+  end_date: string | null;       // TIMESTAMP — 로컬 시간 (toLocalISOString)
   is_all_day: boolean;
   is_recurring: boolean;
   rrule: string | null;
-  recurrence_end_date: string | null;
+  recurrence_end_date: string | null;  // TIMESTAMP — 로컬 시간 (toLocalISOString)
   reminder: ReminderType;
   is_completable: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at: string;            // TIMESTAMPTZ — 시스템 UTC
+  updated_at: string;            // TIMESTAMPTZ — 시스템 UTC
 }
 
 /** Supabase schedule_completions 테이블 스키마 */

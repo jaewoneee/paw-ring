@@ -3,7 +3,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
-import dayjs, { formatTime24 } from '@/utils/dayjs';
+import dayjs, { formatTime24, toLocalISOString } from '@/utils/dayjs';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -226,20 +226,22 @@ export default function EditScheduleScreen() {
     setSubmitting(true);
     try {
       const startDate = isAllDay
-        ? dayjs(date).startOf('day').toISOString()
-        : dayjs(date)
-            .hour(time.getHours())
-            .minute(time.getMinutes())
-            .second(0)
-            .toISOString();
+        ? toLocalISOString(dayjs(date).startOf('day'))
+        : toLocalISOString(
+            dayjs(date)
+              .hour(time.getHours())
+              .minute(time.getMinutes())
+              .second(0)
+          );
 
       const computedEndDate = isAllDay
-        ? dayjs(endDate).endOf('day').toISOString()
-        : dayjs(endDate)
-            .hour(endTime.getHours())
-            .minute(endTime.getMinutes())
-            .second(0)
-            .toISOString();
+        ? toLocalISOString(dayjs(endDate).endOf('day'))
+        : toLocalISOString(
+            dayjs(endDate)
+              .hour(endTime.getHours())
+              .minute(endTime.getMinutes())
+              .second(0)
+          );
 
       const rrule = isRecurring
         ? buildRRule({
@@ -248,7 +250,7 @@ export default function EditScheduleScreen() {
               recurrenceFrequency === 'weekly' ? selectedDays : undefined,
             endDate:
               recurrenceEndType === 'date'
-                ? dayjs(recurrenceEndDate).endOf('day').toISOString()
+                ? toLocalISOString(dayjs(recurrenceEndDate).endOf('day'))
                 : undefined,
           })
         : null;
@@ -282,7 +284,7 @@ export default function EditScheduleScreen() {
           rrule: rrule ?? undefined,
           recurrence_end_date:
             isRecurring && recurrenceEndType === 'date'
-              ? dayjs(recurrenceEndDate).endOf('day').toISOString()
+              ? toLocalISOString(dayjs(recurrenceEndDate).endOf('day'))
               : undefined,
         });
       } else {
@@ -300,7 +302,7 @@ export default function EditScheduleScreen() {
           rrule,
           recurrence_end_date:
             isRecurring && recurrenceEndType === 'date'
-              ? dayjs(recurrenceEndDate).endOf('day').toISOString()
+              ? toLocalISOString(dayjs(recurrenceEndDate).endOf('day'))
               : null,
         });
       }
