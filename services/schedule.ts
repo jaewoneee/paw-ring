@@ -9,6 +9,70 @@ import type {
 } from "@/types/schedule";
 import { expandRRule } from "@/utils/rrule";
 
+/**
+ * parent_schedule_id 기반 중복 제거
+ *
+ * keepLatestOnly = false (캘린더 뷰): 범위 내 occurrence가 있는 것만 남긴다 (날짜별 정확도 중요)
+ * keepLatestOnly = true  (다가오는 일정): 같은 계열 중 가장 최신(자식) 하나만 남긴다
+ */
+function deduplicateByParent(
+  schedules: Schedule[],
+  rangeStart: string,
+  rangeEnd: string,
+  keepLatestOnly = false,
+): Schedule[] {
+  // 계열별로 그룹핑 (parent_schedule_id 또는 자기 id 기준)
+  const familyMap = new Map<string, Schedule[]>();
+  for (const s of schedules) {
+    const rootId = s.parent_schedule_id ?? s.id;
+    const group = familyMap.get(rootId) ?? [];
+    group.push(s);
+    familyMap.set(rootId, group);
+  }
+
+  const result: Schedule[] = [];
+  for (const group of familyMap.values()) {
+    if (group.length <= 1) {
+      result.push(...group);
+      continue;
+    }
+
+    if (keepLatestOnly) {
+      // 다가오는 일정: 같은 계열 중 가장 늦게 생성된(자식) 스케줄만 표시
+      const withOccurrences = group.filter((s) => {
+        if (s.is_recurring && s.rrule) {
+          return expandRRule(s.start_date, s.rrule, rangeStart, rangeEnd, s.recurrence_end_date).length > 0;
+        }
+        return true;
+      });
+      if (withOccurrences.length === 0) continue;
+      // 자식(parent_schedule_id가 있는 것)을 우선, 동률이면 start_date가 가장 늦은 것
+      withOccurrences.sort((a, b) => {
+        const aIsChild = a.parent_schedule_id ? 1 : 0;
+        const bIsChild = b.parent_schedule_id ? 1 : 0;
+        if (aIsChild !== bIsChild) return bIsChild - aIsChild;
+        return b.start_date.localeCompare(a.start_date);
+      });
+      result.push(withOccurrences[0]);
+    } else {
+      // 캘린더 뷰: 범위 내 occurrence가 있는 모든 스케줄 유지
+      for (const s of group) {
+        if (s.is_recurring && s.rrule) {
+          const occurrences = expandRRule(
+            s.start_date, s.rrule, rangeStart, rangeEnd, s.recurrence_end_date,
+          );
+          if (occurrences.length > 0) {
+            result.push(s);
+          }
+        } else {
+          result.push(s);
+        }
+      }
+    }
+  }
+  return result;
+}
+
 /** 스케줄 생성 */
 export async function createSchedule(
   data: CreateScheduleInput
@@ -83,7 +147,7 @@ export async function getSchedulesByRange(
   for (const s of [...(inRangeRes.data ?? []), ...(recurringBeforeRes.data ?? []), ...(multiDayBeforeRes.data ?? [])]) {
     map.set(s.id, s as Schedule);
   }
-  return Array.from(map.values());
+  return deduplicateByParent(Array.from(map.values()), startDate, endDate);
 }
 
 /** 다가오는 스케줄 조회 (홈 화면용, 일주일 이내, 완료된 것 제외) */
@@ -174,7 +238,10 @@ export async function getUpcomingSchedules(
   // id 기준 중복 제거
   const map = new Map<string, Schedule>();
   for (const s of result) map.set(s.id, s);
-  return Array.from(map.values());
+
+  // parent_schedule_id 기반 중복 제거:
+  // 같은 계열 중 가장 최신(자식) 스케줄만 표시
+  return deduplicateByParent(Array.from(map.values()), todayDateStr, oneWeekLaterDateStr, true);
 }
 
 /** 특정 스케줄의 특정 날짜 완료 여부 조회 */
@@ -340,12 +407,22 @@ export async function updateScheduleThisAndFollowing(
       recurrence_end_date: newData.recurrence_end_date ?? null,
     });
   } else {
-    // 중간 날짜부터 변경: 원본 종료 + 새 스케줄 생성
+    // 중간 날짜부터 변경: 원본 종료 + 새 스케줄 생성 (parent_schedule_id로 연결)
     const dayBefore = dayjs(fromDate).subtract(1, "day").endOf("day");
     await updateSchedule(originalScheduleId, {
       recurrence_end_date: toLocalISOString(dayBefore),
     });
-    await createSchedule(newData);
+    // 원본의 parent_schedule_id가 있으면 그것을 사용, 없으면 원본 id를 parent로 설정
+    const rootId = original.parent_schedule_id ?? originalScheduleId;
+    const { data: newSchedule, error } = await supabase
+      .from("schedules")
+      .insert({
+        ...newData,
+        parent_schedule_id: rootId,
+      })
+      .select()
+      .single();
+    if (error) throw error;
   }
 }
 

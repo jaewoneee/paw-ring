@@ -48,9 +48,8 @@ import { buildRRule, parseRRule } from '@/utils/rrule';
 
 export default function EditScheduleScreen() {
   const router = useRouter();
-  const { id, editMode, occurrenceDate } = useLocalSearchParams<{
+  const { id, occurrenceDate } = useLocalSearchParams<{
     id: string;
-    editMode?: 'single' | 'following';
     occurrenceDate?: string;
   }>();
   const { colorScheme } = useColorScheme();
@@ -110,13 +109,7 @@ export default function EditScheduleScreen() {
       setSchedule(data);
       setTitle(data.title);
       setCategory(data.category);
-      // 'following' 모드에서는 occurrenceDate 기준으로 시작일 설정
-      const effectiveStartDate = editMode === 'following' && occurrenceDate
-        ? dayjs(occurrenceDate)
-            .hour(dayjs(data.start_date).hour())
-            .minute(dayjs(data.start_date).minute())
-            .second(dayjs(data.start_date).second())
-        : dayjs(data.start_date);
+      const effectiveStartDate = dayjs(data.start_date);
       setDate(effectiveStartDate.toDate());
       setTime(effectiveStartDate.toDate());
       setIsAllDay(data.is_all_day);
@@ -126,19 +119,8 @@ export default function EditScheduleScreen() {
 
       // Restore end date & end time
       if (data.end_date) {
-        if (editMode === 'following' && occurrenceDate) {
-          // 'following' 모드: 원본의 start→end 기간차를 유지하며 occurrenceDate 기준으로 이동
-          const dayDiff = dayjs(data.end_date).diff(dayjs(data.start_date), 'day');
-          const effectiveEndDate = dayjs(occurrenceDate).add(dayDiff, 'day')
-            .hour(dayjs(data.end_date).hour())
-            .minute(dayjs(data.end_date).minute())
-            .second(dayjs(data.end_date).second());
-          setEndDate(effectiveEndDate.toDate());
-          setEndTime(effectiveEndDate.toDate());
-        } else {
-          setEndDate(dayjs(data.end_date).toDate());
-          setEndTime(dayjs(data.end_date).toDate());
-        }
+        setEndDate(dayjs(data.end_date).toDate());
+        setEndTime(dayjs(data.end_date).toDate());
       } else {
         setEndDate(effectiveStartDate.toDate());
       }
@@ -238,100 +220,186 @@ export default function EditScheduleScreen() {
     return Object.keys(newErrors).length === 0;
   };
 
+  /** 반복 종료일/메모만 변경했는지 판별 (이 경우 분열 불필요, 원본 직접 수정) */
+  const isRecurrenceEndOrMemoOnlyChange = (): boolean => {
+    if (!schedule) return false;
+    const titleSame = title.trim() === schedule.title;
+    const categorySame = category === schedule.category;
+    const isAllDaySame = isAllDay === schedule.is_all_day;
+    const isCompletableSame = isCompletable === (schedule.is_completable ?? false);
+    const reminderSame = reminder === schedule.reminder;
+    // 시작/종료 날짜·시간 비교
+    const startDateSame = dayjs(date).isSame(dayjs(schedule.start_date), 'day')
+      && (isAllDay || (time.getHours() === dayjs(schedule.start_date).hour()
+        && time.getMinutes() === dayjs(schedule.start_date).minute()));
+    const endDateSame = schedule.end_date
+      ? dayjs(endDate).isSame(dayjs(schedule.end_date), 'day')
+        && (isAllDay || (endTime.getHours() === dayjs(schedule.end_date).hour()
+          && endTime.getMinutes() === dayjs(schedule.end_date).minute()))
+      : true;
+    // 반복 주기(frequency/selectedDays)도 동일한지 확인
+    const parsedOriginal = schedule.rrule ? parseRRule(schedule.rrule) : null;
+    const frequencySame = parsedOriginal
+      ? recurrenceFrequency === parsedOriginal.frequency
+        && JSON.stringify([...selectedDays].sort()) === JSON.stringify([...parsedOriginal.selectedDays].sort())
+      : !isRecurring;
+    return titleSame && categorySame && isAllDaySame && isCompletableSame
+      && reminderSame && startDateSame && endDateSame && frequencySame;
+  };
+
+  const buildUpdateData = () => {
+    const startDate = isAllDay
+      ? toLocalISOString(dayjs(date).startOf('day'))
+      : toLocalISOString(
+          dayjs(date)
+            .hour(time.getHours())
+            .minute(time.getMinutes())
+            .second(0)
+        );
+
+    const computedEndDate = isAllDay
+      ? toLocalISOString(dayjs(endDate).endOf('day'))
+      : toLocalISOString(
+          dayjs(endDate)
+            .hour(endTime.getHours())
+            .minute(endTime.getMinutes())
+            .second(0)
+        );
+
+    const rrule = isRecurring
+      ? buildRRule({
+          frequency: recurrenceFrequency,
+          selectedDays:
+            recurrenceFrequency === 'weekly' ? selectedDays : undefined,
+          endDate:
+            recurrenceEndType === 'date'
+              ? toLocalISOString(dayjs(recurrenceEndDate).endOf('day'))
+              : undefined,
+        })
+      : null;
+
+    const recEndDate =
+      isRecurring && recurrenceEndType === 'date'
+        ? toLocalISOString(dayjs(recurrenceEndDate).endOf('day'))
+        : null;
+
+    return { startDate, computedEndDate, rrule, recEndDate };
+  };
+
+  const performUpdate = async (editMode: 'single' | 'following' | 'direct') => {
+    const { startDate, computedEndDate, rrule, recEndDate } = buildUpdateData();
+
+    if (editMode === 'single' && occurrenceDate) {
+      await updateScheduleThisOnly(id!, occurrenceDate, {
+        title: title.trim(),
+        category,
+        memo: memo.trim() || null,
+        start_date: startDate,
+        end_date: computedEndDate,
+        is_all_day: isAllDay,
+        is_completable: isCompletable,
+        reminder,
+      });
+    } else if (editMode === 'following' && occurrenceDate && schedule) {
+      await updateScheduleThisAndFollowing(id!, occurrenceDate, {
+        pet_id: schedule.pet_id,
+        owner_id: schedule.owner_id,
+        title: title.trim(),
+        category,
+        memo: memo.trim() || undefined,
+        start_date: startDate,
+        end_date: computedEndDate,
+        is_all_day: isAllDay,
+        is_completable: isCompletable,
+        reminder,
+        is_recurring: isRecurring,
+        rrule: rrule ?? undefined,
+        recurrence_end_date: recEndDate ?? undefined,
+      });
+    } else {
+      await updateSchedule(id!, {
+        title: title.trim(),
+        category,
+        memo: memo.trim() || null,
+        start_date: startDate,
+        end_date: computedEndDate,
+        is_all_day: isAllDay,
+        is_completable: isCompletable,
+        reminder,
+        is_recurring: isRecurring,
+        rrule,
+        recurrence_end_date: recEndDate,
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validate() || !id) return;
 
-    setSubmitting(true);
-    try {
-      const startDate = isAllDay
-        ? toLocalISOString(dayjs(date).startOf('day'))
-        : toLocalISOString(
-            dayjs(date)
-              .hour(time.getHours())
-              .minute(time.getMinutes())
-              .second(0)
-          );
-
-      const computedEndDate = isAllDay
-        ? toLocalISOString(dayjs(endDate).endOf('day'))
-        : toLocalISOString(
-            dayjs(endDate)
-              .hour(endTime.getHours())
-              .minute(endTime.getMinutes())
-              .second(0)
-          );
-
-      const rrule = isRecurring
-        ? buildRRule({
-            frequency: recurrenceFrequency,
-            selectedDays:
-              recurrenceFrequency === 'weekly' ? selectedDays : undefined,
-            endDate:
-              recurrenceEndType === 'date'
-                ? toLocalISOString(dayjs(recurrenceEndDate).endOf('day'))
-                : undefined,
-          })
-        : null;
-
-      if (editMode === 'single' && occurrenceDate) {
-        // 이 일정만 수정: 예외 레코드 생성
-        await updateScheduleThisOnly(id, occurrenceDate, {
-          title: title.trim(),
-          category,
-          memo: memo.trim() || null,
-          start_date: startDate,
-          end_date: computedEndDate,
-          is_all_day: isAllDay,
-          is_completable: isCompletable,
-          reminder,
-        });
-      } else if (editMode === 'following' && occurrenceDate && schedule) {
-        // 이후 모든 일정 수정: 원본 종료 + 새 스케줄 생성
-        await updateScheduleThisAndFollowing(id, occurrenceDate, {
-          pet_id: schedule.pet_id,
-          owner_id: schedule.owner_id,
-          title: title.trim(),
-          category,
-          memo: memo.trim() || undefined,
-          start_date: startDate,
-          end_date: computedEndDate,
-          is_all_day: isAllDay,
-          is_completable: isCompletable,
-          reminder,
-          is_recurring: isRecurring,
-          rrule: rrule ?? undefined,
-          recurrence_end_date:
-            isRecurring && recurrenceEndType === 'date'
-              ? toLocalISOString(dayjs(recurrenceEndDate).endOf('day'))
-              : undefined,
-        });
-      } else {
-        // 일반 수정 (비반복 스케줄)
-        await updateSchedule(id, {
-          title: title.trim(),
-          category,
-          memo: memo.trim() || null,
-          start_date: startDate,
-          end_date: computedEndDate,
-          is_all_day: isAllDay,
-          is_completable: isCompletable,
-          reminder,
-          is_recurring: isRecurring,
-          rrule,
-          recurrence_end_date:
-            isRecurring && recurrenceEndType === 'date'
-              ? toLocalISOString(dayjs(recurrenceEndDate).endOf('day'))
-              : null,
-        });
+    // 비반복 스케줄이면 바로 수정
+    if (!schedule?.is_recurring || !occurrenceDate) {
+      setSubmitting(true);
+      try {
+        await performUpdate('direct');
+        router.back();
+      } catch (err) {
+        console.error('[EditSchedule] update failed:', err);
+        Alert.alert('오류', '일정 수정에 실패했습니다. 다시 시도해주세요.');
+      } finally {
+        setSubmitting(false);
       }
-
-      router.back();
-    } catch (err) {
-      console.error('[EditSchedule] update failed:', err);
-      Alert.alert('오류', '일정 수정에 실패했습니다. 다시 시도해주세요.');
-    } finally {
-      setSubmitting(false);
+      return;
     }
+
+    // 반복 주기/종료일/메모만 변경 → 원본 직접 수정 (분열 불필요)
+    if (isRecurrenceEndOrMemoOnlyChange()) {
+      setSubmitting(true);
+      try {
+        await performUpdate('direct');
+        router.back();
+      } catch (err) {
+        console.error('[EditSchedule] update failed:', err);
+        Alert.alert('오류', '일정 수정에 실패했습니다. 다시 시도해주세요.');
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
+    // 그 외 변경 → 사용자에게 질문
+    Alert.alert('반복 일정 수정', '어떻게 수정할까요?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '이 일정만',
+        onPress: async () => {
+          setSubmitting(true);
+          try {
+            await performUpdate('single');
+            router.back();
+          } catch (err) {
+            console.error('[EditSchedule] update failed:', err);
+            Alert.alert('오류', '일정 수정에 실패했습니다. 다시 시도해주세요.');
+          } finally {
+            setSubmitting(false);
+          }
+        },
+      },
+      {
+        text: '이후 모든 일정',
+        onPress: async () => {
+          setSubmitting(true);
+          try {
+            await performUpdate('following');
+            router.back();
+          } catch (err) {
+            console.error('[EditSchedule] update failed:', err);
+            Alert.alert('오류', '일정 수정에 실패했습니다. 다시 시도해주세요.');
+          } finally {
+            setSubmitting(false);
+          }
+        },
+      },
+    ]);
   };
 
   if (isLoading) {

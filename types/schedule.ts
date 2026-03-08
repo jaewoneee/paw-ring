@@ -35,6 +35,7 @@ export interface Schedule {
   is_recurring: boolean;
   rrule: string | null;
   recurrence_end_date: string | null;  // TIMESTAMP — 로컬 시간 (toLocalISOString)
+  parent_schedule_id: string | null;   // 반복 스케줄 분열 시 원본 ID
   reminder: ReminderType;
   is_completable: boolean;
   created_at: string;            // TIMESTAMPTZ — 시스템 UTC

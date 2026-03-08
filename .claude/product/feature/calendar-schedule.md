@@ -390,6 +390,7 @@ interface Schedule {
   is_recurring: boolean;
   rrule: string | null;
   recurrence_end_date: string | null;
+  parent_schedule_id: string | null;  // 반복 스케줄 분열 시 원본(또는 최초 원본) ID
   reminder: ReminderType;
   created_at: string;
   updated_at: string;
@@ -459,7 +460,8 @@ interface ScheduleCompletion {
 | 날짜/시간 미선택                 | "날짜와 시간을 선택해주세요"                   |
 | 과거 날짜에 스케줄 생성          | 허용 (기록 목적)                               |
 | 반복 종료일 < 시작일             | "반복 종료일은 시작일 이후여야 합니다"         |
-| 반복 스케줄 수정 시              | "이 일정만 / 이후 모든 일정" 선택지 표시       |
+| 반복 스케줄 수정 시 (반복 종료일/메모만 변경) | 질문 없이 원본 직접 수정                       |
+| 반복 스케줄 수정 시 (그 외 변경) | 수정 완료 시점에 "이 일정만 / 이후 모든 일정" 선택지 표시 |
 | 반복 스케줄 삭제 시              | "이 일정만 / 이후 모든 일정" 선택지 표시       |
 | 네트워크 오류                    | "네트워크 연결을 확인해주세요"                 |
 | 이미 무시한 스케줄을 다시 활성화 | 무시 해제 → 미완료 상태로 복귀                 |

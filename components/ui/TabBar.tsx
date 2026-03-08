@@ -112,7 +112,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingVertical: 14,
+    paddingVertical: 5,
     borderWidth: 1,
     borderRadius: 28,
   },
@@ -120,6 +120,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
+    minHeight: 48,
   },
 });

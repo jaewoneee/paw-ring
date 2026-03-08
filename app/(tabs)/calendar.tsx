@@ -1,75 +1,73 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useFocusEffect } from '@react-navigation/native';
-import dayjs, { formatISODate } from '@/utils/dayjs';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useMemo, useState } from 'react';
-import { Alert, Pressable, ScrollView, View } from 'react-native';
+import dayjs, { formatISODate } from "@/utils/dayjs";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useFocusEffect } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 
-import { DayScheduleList } from '@/components/calendar/DayScheduleList';
-import { DayTimeGrid } from '@/components/calendar/DayTimeGrid';
-import { MonthCalendar } from '@/components/calendar/MonthCalendar';
-import { WeekCalendar } from '@/components/calendar/WeekCalendar';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Screen } from '@/components/ui/Screen';
-import { Typography } from '@/components/ui/Typography';
-import { useColorScheme } from '@/components/useColorScheme';
-import Colors from '@/constants/Colors';
-import { usePets } from '@/contexts/PetContext';
-import { useAuth } from '@/hooks/useAuth';
-import { useMonthSchedules } from '@/hooks/useSchedules';
-import { completeSchedule, uncompleteSchedule } from '@/services/schedule';
-import type { ScheduleInstance } from '@/types/schedule';
+import { DayScheduleList } from "@/components/calendar/DayScheduleList";
+import { DayTimeGrid } from "@/components/calendar/DayTimeGrid";
+import { MonthCalendar } from "@/components/calendar/MonthCalendar";
+import { WeekCalendar } from "@/components/calendar/WeekCalendar";
+import { Card, CardContent } from "@/components/ui/Card";
+import { Screen } from "@/components/ui/Screen";
+import { Typography } from "@/components/ui/Typography";
+import { useColorScheme } from "@/components/useColorScheme";
+import Colors from "@/constants/Colors";
+import { usePets } from "@/contexts/PetContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useMonthSchedules } from "@/hooks/useSchedules";
+import { completeSchedule, uncompleteSchedule } from "@/services/schedule";
+import type { ScheduleInstance } from "@/types/schedule";
 
-type CalendarViewMode = 'month' | 'week';
+type CalendarViewMode = "month" | "week";
 
 export default function CalendarScreen() {
   const router = useRouter();
   const { selectedPet } = usePets();
   const { user } = useAuth();
   const { colorScheme } = useColorScheme();
-  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
   const [year, setYear] = useState(dayjs().year());
   const [month, setMonth] = useState(dayjs().month());
-  const [selectedDate, setSelectedDate] = useState(
-    formatISODate(dayjs())
-  );
-  const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
+  const [selectedDate, setSelectedDate] = useState(formatISODate(dayjs()));
+  const [viewMode, setViewMode] = useState<CalendarViewMode>("month");
 
   const { schedules, refresh, updateCompletionStatus } = useMonthSchedules(
     selectedPet?.id,
     year,
-    month
+    month,
   );
 
   // 화면 복귀 시 데이터 refresh
   useFocusEffect(
     useCallback(() => {
       refresh();
-    }, [refresh])
+    }, [refresh]),
   );
 
   // 선택 날짜의 스케줄 (월간 데이터에서 필터링)
   const daySchedules = useMemo(
-    () => schedules.filter(s => s.occurrenceDate === selectedDate),
-    [schedules, selectedDate]
+    () => schedules.filter((s) => s.occurrenceDate === selectedDate),
+    [schedules, selectedDate],
   );
 
   const handlePrevMonth = () => {
     if (month === 0) {
-      setYear(y => y - 1);
+      setYear((y) => y - 1);
       setMonth(11);
     } else {
-      setMonth(m => m - 1);
+      setMonth((m) => m - 1);
     }
   };
 
   const handleNextMonth = () => {
     if (month === 11) {
-      setYear(y => y + 1);
+      setYear((y) => y + 1);
       setMonth(0);
     } else {
-      setMonth(m => m + 1);
+      setMonth((m) => m + 1);
     }
   };
 
@@ -81,14 +79,14 @@ export default function CalendarScreen() {
   };
 
   const handlePrevWeek = () => {
-    const prev = dayjs(selectedDate).subtract(7, 'day');
+    const prev = dayjs(selectedDate).subtract(7, "day");
     setSelectedDate(formatISODate(prev));
     setYear(prev.year());
     setMonth(prev.month());
   };
 
   const handleNextWeek = () => {
-    const next = dayjs(selectedDate).add(7, 'day');
+    const next = dayjs(selectedDate).add(7, "day");
     setSelectedDate(formatISODate(next));
     setYear(next.year());
     setMonth(next.month());
@@ -101,36 +99,46 @@ export default function CalendarScreen() {
     setMonth(d.month());
   };
 
-  const handleToggleComplete = useCallback(async (instance: ScheduleInstance) => {
-    if (!user) return;
-    const { schedule, occurrenceDate, completionStatus } = instance;
-    const wasCompleted = completionStatus === 'completed';
-    const newStatus = wasCompleted ? null : 'completed' as const;
+  const handleToggleComplete = useCallback(
+    async (instance: ScheduleInstance) => {
+      if (!user) return;
+      const { schedule, occurrenceDate, completionStatus } = instance;
+      const wasCompleted = completionStatus === "completed";
+      const newStatus = wasCompleted ? null : ("completed" as const);
 
-    // 낙관적 업데이트
-    updateCompletionStatus(schedule.id, occurrenceDate, newStatus);
+      // 낙관적 업데이트
+      updateCompletionStatus(schedule.id, occurrenceDate, newStatus);
 
-    try {
-      if (wasCompleted) {
-        await uncompleteSchedule(schedule.id, occurrenceDate);
-      } else {
-        await completeSchedule(schedule.id, occurrenceDate, user.uid);
+      try {
+        if (wasCompleted) {
+          await uncompleteSchedule(schedule.id, occurrenceDate);
+        } else {
+          await completeSchedule(schedule.id, occurrenceDate, user.uid);
+        }
+      } catch (err) {
+        // 실패 시 롤백
+        updateCompletionStatus(
+          schedule.id,
+          occurrenceDate,
+          completionStatus ?? null,
+        );
+        console.error("[CalendarScreen] toggle complete failed:", err);
+        Alert.alert("오류", "완료 상태 변경에 실패했습니다.");
       }
-    } catch (err) {
-      // 실패 시 롤백
-      updateCompletionStatus(schedule.id, occurrenceDate, completionStatus ?? null);
-      console.error('[CalendarScreen] toggle complete failed:', err);
-      Alert.alert('오류', '완료 상태 변경에 실패했습니다.');
-    }
-  }, [user, updateCompletionStatus]);
+    },
+    [user, updateCompletionStatus],
+  );
 
   const handleAddSchedule = () => {
-    router.push({ pathname: '/add-schedule', params: { date: selectedDate } });
+    router.push({ pathname: "/add-schedule", params: { date: selectedDate } });
   };
 
-  const handlePressSchedule = (s: { schedule: { id: string }; occurrenceDate: string }) => {
+  const handlePressSchedule = (s: {
+    schedule: { id: string };
+    occurrenceDate: string;
+  }) => {
     router.push({
-      pathname: '/schedule-detail',
+      pathname: "/schedule-detail",
       params: { id: s.schedule.id, occurrenceDate: s.occurrenceDate },
     });
   };
@@ -138,7 +146,7 @@ export default function CalendarScreen() {
   // 반려동물 미등록
   if (!selectedPet) {
     return (
-      <Screen>
+      <Screen edges={["top"]}>
         <ScrollView
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 100 }}
@@ -157,7 +165,7 @@ export default function CalendarScreen() {
                     variant="body-sm"
                     className="text-muted-foreground text-center"
                   >
-                    반려동물을 등록하면{'\n'}일정을 관리할 수 있어요
+                    반려동물을 등록하면{"\n"}일정을 관리할 수 있어요
                   </Typography>
                 </View>
               </CardContent>
@@ -169,15 +177,15 @@ export default function CalendarScreen() {
   }
 
   // 주간 뷰: WeekCalendar(고정) + DayTimeGrid(스크롤)
-  if (viewMode === 'week') {
+  if (viewMode === "week") {
     return (
-      <Screen edges={['top', 'bottom']}>
+      <Screen edges={["top", "bottom"]}>
         <View className="flex-1">
           {/* 뷰 모드 토글 */}
           <ViewModeToggle
             viewMode={viewMode}
             onChangeMode={setViewMode}
-            onCategoryManage={() => router.push('/category-manage')}
+            onCategoryManage={() => router.push("/category-manage")}
             colors={colors}
           />
 
@@ -205,7 +213,7 @@ export default function CalendarScreen() {
 
   // 월간 뷰: MonthCalendar + DayScheduleList (기존)
   return (
-    <Screen edges={['top', 'bottom']}>
+    <Screen edges={["top", "bottom"]}>
       <ScrollView
         className="flex-1"
         contentContainerStyle={{ paddingBottom: 100 }}
@@ -214,7 +222,7 @@ export default function CalendarScreen() {
         <ViewModeToggle
           viewMode={viewMode}
           onChangeMode={setViewMode}
-          onCategoryManage={() => router.push('/category-manage')}
+          onCategoryManage={() => router.push("/category-manage")}
           colors={colors}
         />
 
@@ -256,7 +264,7 @@ function ViewModeToggle({
   viewMode: CalendarViewMode;
   onChangeMode: (mode: CalendarViewMode) => void;
   onCategoryManage: () => void;
-  colors: (typeof Colors)['light'] | (typeof Colors)['dark'];
+  colors: (typeof Colors)["light"] | (typeof Colors)["dark"];
 }) {
   return (
     <View className="flex-row justify-between items-center px-4 pt-2">
@@ -272,10 +280,10 @@ function ViewModeToggle({
         style={{ backgroundColor: colors.surface }}
       >
         <Pressable
-          onPress={() => onChangeMode('month')}
+          onPress={() => onChangeMode("month")}
           className="px-3 py-1.5"
           style={
-            viewMode === 'month'
+            viewMode === "month"
               ? { backgroundColor: colors.primary }
               : undefined
           }
@@ -285,7 +293,7 @@ function ViewModeToggle({
             className="font-medium"
             style={{
               color:
-                viewMode === 'month'
+                viewMode === "month"
                   ? colors.primaryForeground
                   : colors.mutedForeground,
             }}
@@ -294,10 +302,10 @@ function ViewModeToggle({
           </Typography>
         </Pressable>
         <Pressable
-          onPress={() => onChangeMode('week')}
+          onPress={() => onChangeMode("week")}
           className="px-3 py-1.5"
           style={
-            viewMode === 'week'
+            viewMode === "week"
               ? { backgroundColor: colors.primary }
               : undefined
           }
@@ -307,7 +315,7 @@ function ViewModeToggle({
             className="font-medium"
             style={{
               color:
-                viewMode === 'week'
+                viewMode === "week"
                   ? colors.primaryForeground
                   : colors.mutedForeground,
             }}
@@ -325,7 +333,7 @@ function FAB({
   colors,
 }: {
   onPress: () => void;
-  colors: (typeof Colors)['light'] | (typeof Colors)['dark'];
+  colors: (typeof Colors)["light"] | (typeof Colors)["dark"];
 }) {
   return (
     <Pressable
@@ -337,7 +345,7 @@ function FAB({
         width: 52,
         height: 52,
         backgroundColor: colors.primary,
-        shadowColor: '#000',
+        shadowColor: "#000",
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 4,

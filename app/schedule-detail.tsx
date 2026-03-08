@@ -88,32 +88,13 @@ export default function ScheduleDetailScreen() {
   };
 
   const handleEdit = () => {
-    if (schedule?.is_recurring) {
-      Alert.alert("반복 일정 수정", "어떻게 수정할까요?", [
-        { text: "취소", style: "cancel" },
-        {
-          text: "이 일정만",
-          onPress: () =>
-            router.push({
-              pathname: "/edit-schedule",
-              params: { id: schedule.id, editMode: "single", occurrenceDate },
-            }),
-        },
-        {
-          text: "이후 모든 일정",
-          onPress: () =>
-            router.push({
-              pathname: "/edit-schedule",
-              params: { id: schedule.id, editMode: "following", occurrenceDate },
-            }),
-        },
-      ]);
-    } else {
-      router.push({
-        pathname: "/edit-schedule",
-        params: { id: schedule!.id },
-      });
-    }
+    router.push({
+      pathname: "/edit-schedule",
+      params: {
+        id: schedule!.id,
+        ...(schedule?.is_recurring && occurrenceDate ? { occurrenceDate } : {}),
+      },
+    });
   };
 
   const handleDelete = () => {
