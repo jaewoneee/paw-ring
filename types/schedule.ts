@@ -73,6 +73,7 @@ export interface ScheduleInstance {
   schedule: Schedule;
   occurrenceDate: string; // "YYYY-MM-DD"
   isRecurringInstance: boolean;
+  completionStatus?: CompletionStatus | null; // 완료/무시 상태
 }
 
 /** Supabase schedule_exceptions 테이블 스키마 */

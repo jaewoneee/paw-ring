@@ -1,8 +1,8 @@
 import dayjs, { formatISODate } from "@/utils/dayjs";
 import { useCallback, useEffect, useState } from "react";
 
-import { getScheduleExceptions, getSchedulesByRange } from "@/services/schedule";
-import type { ScheduleException, ScheduleInstance } from "@/types/schedule";
+import { getCompletionsByRange, getScheduleExceptions, getSchedulesByRange } from "@/services/schedule";
+import type { CompletionStatus, ScheduleException, ScheduleInstance } from "@/types/schedule";
 import { getMonthRange } from "@/utils/date";
 import { expandRRule } from "@/utils/rrule";
 
@@ -98,6 +98,24 @@ export function useMonthSchedules(
         }
       }
 
+      // completion 상태 일괄 조회 (completable 스케줄만)
+      const allScheduleIds = [...new Set(
+        instances.filter(i => i.schedule.is_completable).map(i => i.schedule.id)
+      )];
+      const completions = await getCompletionsByRange(allScheduleIds, start, end);
+      const completionMap = new Map<string, CompletionStatus>();
+      for (const c of completions) {
+        // DB DATE 컬럼 반환 포맷이 다를 수 있으므로 YYYY-MM-DD로 정규화
+        const normalizedDate = formatISODate(c.completion_date);
+        completionMap.set(`${c.schedule_id}_${normalizedDate}`, c.status);
+      }
+
+      // completion 상태를 인스턴스에 매핑
+      for (const instance of instances) {
+        const key = `${instance.schedule.id}_${instance.occurrenceDate}`;
+        instance.completionStatus = completionMap.get(key) ?? null;
+      }
+
       // occurrenceDate → 시간순 정렬
       instances.sort((a, b) => {
         if (a.occurrenceDate !== b.occurrenceDate) {
@@ -118,5 +136,19 @@ export function useMonthSchedules(
     refresh();
   }, [refresh]);
 
-  return { schedules, isLoading, refresh };
+  /** 낙관적 업데이트: 특정 인스턴스의 completionStatus를 로컬에서 즉시 변경 */
+  const updateCompletionStatus = useCallback(
+    (scheduleId: string, occurrenceDate: string, status: CompletionStatus | null) => {
+      setSchedules(prev =>
+        prev.map(inst =>
+          inst.schedule.id === scheduleId && inst.occurrenceDate === occurrenceDate
+            ? { ...inst, completionStatus: status }
+            : inst
+        )
+      );
+    },
+    []
+  );
+
+  return { schedules, isLoading, refresh, updateCompletionStatus };
 }

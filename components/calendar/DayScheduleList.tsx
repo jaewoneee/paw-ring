@@ -15,6 +15,7 @@ interface DayScheduleListProps {
   schedules: ScheduleInstance[];
   onPressSchedule: (instance: ScheduleInstance) => void;
   onPressAdd: () => void;
+  onToggleComplete?: (instance: ScheduleInstance) => void;
 }
 
 export function DayScheduleList({
@@ -22,6 +23,7 @@ export function DayScheduleList({
   schedules,
   onPressSchedule,
   onPressAdd,
+  onToggleComplete,
 }: DayScheduleListProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
@@ -57,7 +59,9 @@ export function DayScheduleList({
             <ScheduleItem
               key={`${s.schedule.id}-${s.occurrenceDate}`}
               schedule={s.schedule}
+              completionStatus={s.completionStatus}
               onPress={() => onPressSchedule(s)}
+              onToggleComplete={onToggleComplete ? () => onToggleComplete(s) : undefined}
             />
           ))}
         </View>

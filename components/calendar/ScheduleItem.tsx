@@ -1,18 +1,20 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import React, { useCallback, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { Animated, Pressable, View } from 'react-native';
 
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { useCategoryContext } from '@/contexts/CategoryContext';
-import type { Schedule } from '@/types/schedule';
+import type { CompletionStatus, Schedule } from '@/types/schedule';
 import { formatISODate, formatTime12 } from '@/utils/dayjs';
 
 interface ScheduleItemProps {
   schedule: Schedule;
   onPress: (schedule: Schedule) => void;
   onComplete?: (schedule: Schedule) => void;
+  onToggleComplete?: () => void;
+  completionStatus?: CompletionStatus | null;
   variant?: 'default' | 'stacked';
   cardColor?: string;
   textColor?: string;
@@ -22,6 +24,8 @@ export function ScheduleItem({
   schedule,
   onPress,
   onComplete,
+  onToggleComplete,
+  completionStatus,
   variant = 'default',
   cardColor,
   textColor,
@@ -31,12 +35,14 @@ export function ScheduleItem({
   const { getCategoryMeta } = useCategoryContext();
   const meta = getCategoryMeta(schedule.category);
   const isStacked = variant === 'stacked';
+  const isCompleted = completionStatus === 'completed';
 
-  const slideAnim = useRef(new Animated.Value(0)).current;
+  // slide-out 애니메이션 (stacked variant 전용)
+  const slideAnim = useRef(isStacked ? new Animated.Value(0) : null).current;
   const isAnimating = useRef(false);
 
   const handleComplete = useCallback(() => {
-    if (!onComplete || isAnimating.current) return;
+    if (!onComplete || isAnimating.current || !slideAnim) return;
     isAnimating.current = true;
 
     Animated.timing(slideAnim, {
@@ -48,18 +54,15 @@ export function ScheduleItem({
     });
   }, [onComplete, schedule, slideAnim]);
 
-  const translateX = slideAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [0, -400],
-  });
-
-  const opacity = slideAnim.interpolate({
-    inputRange: [0, 0.5, 1],
-    outputRange: [1, 0.5, 0],
-  });
+  const animStyle = slideAnim
+    ? {
+        transform: [{ translateX: slideAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -400] }) }],
+        opacity: slideAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 0.5, 0] }),
+      }
+    : undefined;
 
   return (
-    <Animated.View style={{ transform: [{ translateX }], opacity }}>
+    <Animated.View style={animStyle}>
       <Pressable
         onPress={() => onPress(schedule)}
         className="flex-row items-center rounded-xl overflow-hidden"
@@ -80,30 +83,52 @@ export function ScheduleItem({
             style={{
               width: 4,
               alignSelf: 'stretch',
-              backgroundColor: meta.color,
+              backgroundColor: isCompleted ? colors.mutedForeground : meta.color,
+              opacity: isCompleted ? 0.4 : 1,
             }}
           />
         )}
 
         <View className="flex-1 flex-row items-center gap-3 px-3 py-3">
-          {/* 카테고리 아이콘 */}
-          <View
-            className="w-8 h-8 rounded-full items-center justify-center"
-            style={{
-              backgroundColor: isStacked
-                ? 'rgba(255,255,255,0.25)'
-                : meta.color + '20',
-            }}
-          >
-            <FontAwesome
-              name={meta.icon as any}
-              size={14}
-              color={isStacked ? (textColor ?? meta.color) : meta.color}
-            />
-          </View>
+          {/* 체크박스 (default variant + completable) */}
+          {!isStacked && schedule.is_completable && onToggleComplete ? (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation?.();
+                onToggleComplete();
+              }}
+              hitSlop={8}
+              className="w-7 h-7 rounded-md items-center justify-center border-2"
+              style={{
+                borderColor: isCompleted ? meta.color : colors.mutedForeground,
+                backgroundColor: isCompleted ? meta.color : 'transparent',
+              }}
+            >
+              {isCompleted && (
+                <FontAwesome name="check" size={12} color="#fff" />
+              )}
+            </Pressable>
+          ) : (
+            /* 카테고리 아이콘 */
+            <View
+              className="w-8 h-8 rounded-full items-center justify-center"
+              style={{
+                backgroundColor: isStacked
+                  ? 'rgba(255,255,255,0.25)'
+                  : meta.color + '20',
+                opacity: isCompleted ? 0.4 : 1,
+              }}
+            >
+              <FontAwesome
+                name={meta.icon as any}
+                size={14}
+                color={isStacked ? (textColor ?? meta.color) : meta.color}
+              />
+            </View>
+          )}
 
           {/* 내용 */}
-          <View className="flex-1">
+          <View className="flex-1" style={{ opacity: isCompleted ? 0.45 : 1 }}>
             <Typography style={isStacked ? { color: textColor } : undefined}>
               {schedule.is_all_day
                 ? formatISODate(schedule.start_date)
@@ -112,7 +137,10 @@ export function ScheduleItem({
             <Typography
               variant="body-xl"
               className="font-semibold"
-              style={isStacked ? { color: textColor } : undefined}
+              style={[
+                isStacked ? { color: textColor } : undefined,
+                isCompleted && { textDecorationLine: 'line-through' },
+              ]}
               numberOfLines={isStacked ? 1 : undefined}
             >
               {schedule.title}

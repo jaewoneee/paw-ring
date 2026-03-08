@@ -33,6 +33,21 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
           useNativeDriver: true,
         }),
       ]).start();
+    } else if (mounted) {
+      Animated.parallel([
+        Animated.timing(overlay, {
+          toValue: 0,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        Animated.timing(translateY, {
+          toValue: 300,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setMounted(false);
+      });
     }
   }, [visible]);
 

@@ -1,7 +1,8 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import dayjs, { formatISODate, formatKoreanDate, formatKoreanDateNoDay } from "@/utils/dayjs";
+import { formatKoreanDate, formatKoreanDateNoDay } from "@/utils/dayjs";
+import { useFocusEffect } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
@@ -38,16 +39,16 @@ export default function ScheduleDetailScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCompleted, setIsCompleted] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
-
-  // 반복 스케줄은 occurrenceDate 기준, 단건은 start_date 기준으로 완료 조회
-  const completionDate = occurrenceDate ?? formatISODate(dayjs());
+  const [completionDate, setCompletionDate] = useState<string>('');
 
   const fetchSchedule = useCallback(async () => {
     if (!id) return;
     try {
       const data = await getScheduleById(id);
       setSchedule(data);
+      // 반복 스케줄은 occurrenceDate 기준, 단건은 start_date 기준
       const targetDate = occurrenceDate ?? data.start_date.split("T")[0];
+      setCompletionDate(targetDate);
       if (data.is_completable) {
         const completion = await getScheduleCompletion(id, targetDate);
         setIsCompleted(!!completion);
@@ -61,9 +62,11 @@ export default function ScheduleDetailScreen() {
     }
   }, [id, occurrenceDate]);
 
-  useEffect(() => {
-    fetchSchedule();
-  }, [fetchSchedule]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchSchedule();
+    }, [fetchSchedule])
+  );
 
   const handleToggleComplete = async () => {
     if (!schedule || !user || isToggling) return;

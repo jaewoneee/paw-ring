@@ -59,7 +59,7 @@
 | 3.4 | 반복 스케줄 생성 (매일/매주/격주/매월/커스텀) | ✅ | [calendar-schedule.md](./feature/calendar-schedule.md) |
 | 3.5 | 스케줄 수정 (단건 수정 / 이후 전체 수정) | ✅ | [calendar-schedule.md](./feature/calendar-schedule.md) |
 | 3.6 | 스케줄 삭제 (단건 삭제 / 이후 전체 삭제) | ✅ | [calendar-schedule.md](./feature/calendar-schedule.md) |
-| 3.7 | 스케줄 완료 체크 | 🔧 | [calendar-schedule.md](./feature/calendar-schedule.md) |
+| 3.7 | 스케줄 완료 체크 | ✅ | [calendar-schedule.md](./feature/calendar-schedule.md) |
 | 3.8 | 캘린더 뷰 (월간/주간) | ✅ | [calendar-schedule.md](./feature/calendar-schedule.md) |
 | 3.9 | 스케줄 카테고리 (산책, 식사, 병원, 약 투여 등) | ✅ | [calendar-schedule.md](./feature/calendar-schedule.md) |
 | 3.10 | 미실행 스케줄 추적 (완료/무시 상태 관리) | ⬜ | [calendar-schedule.md](./feature/calendar-schedule.md) |

@@ -10,7 +10,7 @@ import dayjs, {
   formatTime24,
 } from '@/utils/dayjs';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import React, {
+import {
   useCallback,
   useEffect,
   useMemo,
@@ -136,7 +136,7 @@ export function DayTimeGrid({
     }
 
     return blocks;
-  }, [timedSchedules]);
+  }, [timedSchedules, getCategoryMeta]);
 
   // 초기 스크롤: 첫 이벤트 또는 현재 시간 근처로
   useEffect(() => {
@@ -269,6 +269,7 @@ export function DayTimeGrid({
                 const colWidth =
                   (availableWidth - gap * (totalColumns - 1)) / totalColumns;
                 const blockLeft = gridStart + column * (colWidth + gap);
+                const isBlockCompleted = instance.completionStatus === 'completed';
 
                 return (
                   <Pressable
@@ -291,7 +292,10 @@ export function DayTimeGrid({
                   >
                     <Text
                       className="text-xs font-semibold"
-                      style={{ color: colors.foreground }}
+                      style={{
+                        color: colors.foreground,
+                        textDecorationLine: isBlockCompleted ? 'line-through' : 'none',
+                      }}
                       numberOfLines={1}
                     >
                       {instance.schedule.title}
@@ -337,6 +341,7 @@ function AllDaySection({
       <View className="gap-1.5 px-4">
         {visible.map(s => {
           const meta = getCategoryMeta(s.schedule.category);
+          const isItemCompleted = s.completionStatus === 'completed';
           return (
             <Pressable
               key={`${s.schedule.id}-${s.occurrenceDate}`}
@@ -358,6 +363,7 @@ function AllDaySection({
                 variant="body-sm"
                 className="font-medium flex-1"
                 numberOfLines={1}
+                style={isItemCompleted ? { textDecorationLine: 'line-through' } : undefined}
               >
                 {s.schedule.title}
               </Typography>

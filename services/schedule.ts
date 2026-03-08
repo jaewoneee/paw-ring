@@ -230,6 +230,24 @@ export async function uncompleteSchedule(
   if (error) throw error;
 }
 
+/** 기간 내 completion 상태 일괄 조회 */
+export async function getCompletionsByRange(
+  scheduleIds: string[],
+  startDate: string,
+  endDate: string
+): Promise<ScheduleCompletion[]> {
+  if (scheduleIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from("schedule_completions")
+    .select("*")
+    .in("schedule_id", scheduleIds)
+    .gte("completion_date", startDate)
+    .lte("completion_date", endDate);
+
+  if (error) throw error;
+  return (data ?? []) as ScheduleCompletion[];
+}
+
 /** 단건 스케줄 조회 */
 export async function getScheduleById(id: string): Promise<Schedule> {
   const { data, error } = await supabase
@@ -303,14 +321,32 @@ export async function updateScheduleThisAndFollowing(
   fromDate: string,
   newData: CreateScheduleInput
 ): Promise<void> {
-  // 1) 원본 스케줄의 반복 종료일을 fromDate 전날로 설정
-  const dayBefore = dayjs(fromDate).subtract(1, "day").endOf("day");
-  await updateSchedule(originalScheduleId, {
-    recurrence_end_date: toLocalISOString(dayBefore),
-  });
+  const original = await getScheduleById(originalScheduleId);
+  const originalStartDate = original.start_date.split("T")[0];
 
-  // 2) 새 스케줄 생성
-  await createSchedule(newData);
+  if (fromDate <= originalStartDate) {
+    // fromDate가 시작일과 같거나 이전이면 원본 자체를 업데이트
+    await updateSchedule(originalScheduleId, {
+      title: newData.title,
+      category: newData.category,
+      memo: newData.memo ?? null,
+      start_date: newData.start_date,
+      end_date: newData.end_date ?? null,
+      is_all_day: newData.is_all_day,
+      is_completable: newData.is_completable,
+      reminder: newData.reminder,
+      is_recurring: newData.is_recurring,
+      rrule: newData.rrule ?? null,
+      recurrence_end_date: newData.recurrence_end_date ?? null,
+    });
+  } else {
+    // 중간 날짜부터 변경: 원본 종료 + 새 스케줄 생성
+    const dayBefore = dayjs(fromDate).subtract(1, "day").endOf("day");
+    await updateSchedule(originalScheduleId, {
+      recurrence_end_date: toLocalISOString(dayBefore),
+    });
+    await createSchedule(newData);
+  }
 }
 
 /** 반복 스케줄 - 이 일정만 삭제 (예외 등록) */

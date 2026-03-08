@@ -3,7 +3,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import dayjs, { formatISODate } from '@/utils/dayjs';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useMemo, useState } from 'react';
-import { Pressable, ScrollView, View } from 'react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
 
 import { DayScheduleList } from '@/components/calendar/DayScheduleList';
 import { DayTimeGrid } from '@/components/calendar/DayTimeGrid';
@@ -15,13 +15,17 @@ import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { usePets } from '@/contexts/PetContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useMonthSchedules } from '@/hooks/useSchedules';
+import { completeSchedule, uncompleteSchedule } from '@/services/schedule';
+import type { ScheduleInstance } from '@/types/schedule';
 
 type CalendarViewMode = 'month' | 'week';
 
 export default function CalendarScreen() {
   const router = useRouter();
   const { selectedPet } = usePets();
+  const { user } = useAuth();
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
@@ -32,7 +36,7 @@ export default function CalendarScreen() {
   );
   const [viewMode, setViewMode] = useState<CalendarViewMode>('month');
 
-  const { schedules, refresh } = useMonthSchedules(
+  const { schedules, refresh, updateCompletionStatus } = useMonthSchedules(
     selectedPet?.id,
     year,
     month
@@ -96,6 +100,29 @@ export default function CalendarScreen() {
     setYear(d.year());
     setMonth(d.month());
   };
+
+  const handleToggleComplete = useCallback(async (instance: ScheduleInstance) => {
+    if (!user) return;
+    const { schedule, occurrenceDate, completionStatus } = instance;
+    const wasCompleted = completionStatus === 'completed';
+    const newStatus = wasCompleted ? null : 'completed' as const;
+
+    // 낙관적 업데이트
+    updateCompletionStatus(schedule.id, occurrenceDate, newStatus);
+
+    try {
+      if (wasCompleted) {
+        await uncompleteSchedule(schedule.id, occurrenceDate);
+      } else {
+        await completeSchedule(schedule.id, occurrenceDate, user.uid);
+      }
+    } catch (err) {
+      // 실패 시 롤백
+      updateCompletionStatus(schedule.id, occurrenceDate, completionStatus ?? null);
+      console.error('[CalendarScreen] toggle complete failed:', err);
+      Alert.alert('오류', '완료 상태 변경에 실패했습니다.');
+    }
+  }, [user, updateCompletionStatus]);
 
   const handleAddSchedule = () => {
     router.push({ pathname: '/add-schedule', params: { date: selectedDate } });
@@ -210,6 +237,7 @@ export default function CalendarScreen() {
           schedules={daySchedules}
           onPressSchedule={handlePressSchedule}
           onPressAdd={handleAddSchedule}
+          onToggleComplete={handleToggleComplete}
         />
       </ScrollView>
 

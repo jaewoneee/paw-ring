@@ -134,7 +134,7 @@ export function expandRRule(
       if (weeksDiff > 1) weekStart = weekStart.add(weeksDiff - 1, "week");
     }
 
-    while (weekStart.isBefore(effectiveEnd.add(1, "day"))) {
+    while (!weekStart.isAfter(effectiveEnd, "day")) {
       for (const dow of targetDays) {
         const d = weekStart.day(dow);
         if (d.isBefore(start, "day")) continue;
@@ -165,15 +165,16 @@ export function expandRRule(
 
     let cursor = start;
 
-    // 최적화: rangeStart가 멀면 커서 점프
+    // 최적화: rangeStart가 멀면 커서 점프 (step 간격의 배수로 정렬 유지)
     if (rStart.isAfter(cursor)) {
       const diff = rStart.diff(cursor, step[1] as dayjs.ManipulateType);
-      if (diff > 1) {
-        cursor = cursor.add(diff - 1, step[1] as dayjs.ManipulateType);
+      const stepsToJump = Math.floor(diff / step[0]);
+      if (stepsToJump > 0) {
+        cursor = cursor.add(stepsToJump * step[0], step[1] as dayjs.ManipulateType);
       }
     }
 
-    while (cursor.isBefore(effectiveEnd.add(1, "day")) && cursor.isBefore(rEnd.add(1, "day"))) {
+    while (!cursor.isAfter(effectiveEnd, "day") && !cursor.isAfter(rEnd, "day")) {
       if (!cursor.isBefore(rStart, "day") && !cursor.isBefore(start, "day")) {
         results.push(cursor.format("YYYY-MM-DD"));
       }

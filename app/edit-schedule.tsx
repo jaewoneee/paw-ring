@@ -110,8 +110,15 @@ export default function EditScheduleScreen() {
       setSchedule(data);
       setTitle(data.title);
       setCategory(data.category);
-      setDate(dayjs(data.start_date).toDate());
-      setTime(dayjs(data.start_date).toDate());
+      // 'following' 모드에서는 occurrenceDate 기준으로 시작일 설정
+      const effectiveStartDate = editMode === 'following' && occurrenceDate
+        ? dayjs(occurrenceDate)
+            .hour(dayjs(data.start_date).hour())
+            .minute(dayjs(data.start_date).minute())
+            .second(dayjs(data.start_date).second())
+        : dayjs(data.start_date);
+      setDate(effectiveStartDate.toDate());
+      setTime(effectiveStartDate.toDate());
       setIsAllDay(data.is_all_day);
       setReminder(data.reminder);
       setIsCompletable(data.is_completable ?? false);
@@ -119,10 +126,21 @@ export default function EditScheduleScreen() {
 
       // Restore end date & end time
       if (data.end_date) {
-        setEndDate(dayjs(data.end_date).toDate());
-        setEndTime(dayjs(data.end_date).toDate());
+        if (editMode === 'following' && occurrenceDate) {
+          // 'following' 모드: 원본의 start→end 기간차를 유지하며 occurrenceDate 기준으로 이동
+          const dayDiff = dayjs(data.end_date).diff(dayjs(data.start_date), 'day');
+          const effectiveEndDate = dayjs(occurrenceDate).add(dayDiff, 'day')
+            .hour(dayjs(data.end_date).hour())
+            .minute(dayjs(data.end_date).minute())
+            .second(dayjs(data.end_date).second());
+          setEndDate(effectiveEndDate.toDate());
+          setEndTime(effectiveEndDate.toDate());
+        } else {
+          setEndDate(dayjs(data.end_date).toDate());
+          setEndTime(dayjs(data.end_date).toDate());
+        }
       } else {
-        setEndDate(dayjs(data.start_date).toDate());
+        setEndDate(effectiveStartDate.toDate());
       }
 
       // Restore recurrence
@@ -473,6 +491,11 @@ export default function EditScheduleScreen() {
                   onValueChange={v => {
                     setIsAllDay(v);
                     setReminder('none');
+                    if (!v) {
+                      const now = new Date();
+                      setTime(now);
+                      setEndTime(dayjs(now).add(1, 'hour').toDate());
+                    }
                   }}
                 />
               </View>
