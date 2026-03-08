@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/auth";
+import { initUserCategories } from "@/services/category";
 
 /** 사용자 프로필 생성 (회원가입 시) */
 export async function createUserProfile(
@@ -22,6 +23,9 @@ export async function createUserProfile(
   });
 
   if (error) throw error;
+
+  // 초기 카테고리 4개 생성 (산책, 식사, 병원, 목욕)
+  await initUserCategories(id);
 }
 
 /** 사용자 프로필 조회 */

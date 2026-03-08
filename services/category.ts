@@ -1,17 +1,55 @@
+import { randomUUID } from "expo-crypto";
 import { supabase } from "@/lib/supabase";
 import type { ScheduleCategoryItem } from "@/types/schedule";
 
 const TABLE = "schedule_categories";
 
-/** 사용자의 카테고리 목록 조회 (기본 + 커스텀) */
+/** 초기 카테고리 템플릿 (캘린더 생성 시 유저 소유로 복사) */
+const INITIAL_CATEGORIES = [
+  { name: "산책", color: "#F59E0B", icon: "paw", sort_order: 0 },
+  { name: "식사", color: "#22C55E", icon: "cutlery", sort_order: 1 },
+  { name: "병원", color: "#EF4444", icon: "hospital-o", sort_order: 2 },
+  { name: "목욕", color: "#3B82F6", icon: "tint", sort_order: 3 },
+];
+
+/** 유저의 카테고리가 없으면 초기 카테고리를 생성 */
+export async function initUserCategories(
+  ownerId: string
+): Promise<ScheduleCategoryItem[]> {
+  // 이미 유저 소유 카테고리가 있는지 확인
+  const { data: existing, error: checkError } = await supabase
+    .from(TABLE)
+    .select("id")
+    .eq("owner_id", ownerId)
+    .limit(1);
+
+  if (checkError) throw checkError;
+  if (existing && existing.length > 0) return [];
+
+  const rows = INITIAL_CATEGORIES.map((cat) => ({
+    id: randomUUID(),
+    owner_id: ownerId,
+    name: cat.name,
+    color: cat.color,
+    icon: cat.icon,
+    is_default: false,
+    sort_order: cat.sort_order,
+  }));
+
+  const { data, error } = await supabase.from(TABLE).insert(rows).select();
+
+  if (error) throw error;
+  return data as ScheduleCategoryItem[];
+}
+
+/** 사용자의 카테고리 목록 조회 (유저 소유만) */
 export async function getCategories(
   ownerId: string
 ): Promise<ScheduleCategoryItem[]> {
   const { data, error } = await supabase
     .from(TABLE)
     .select("*")
-    .or(`owner_id.eq.__system__,owner_id.eq.${ownerId}`)
-    .order("is_default", { ascending: false })
+    .eq("owner_id", ownerId)
     .order("sort_order", { ascending: true });
 
   if (error) throw error;
@@ -32,7 +70,7 @@ export async function getCategoryById(
   return data as ScheduleCategoryItem | null;
 }
 
-/** 커스텀 카테고리 생성 */
+/** 카테고리 생성 */
 export async function createCategory(input: {
   owner_id: string;
   name: string;
@@ -42,7 +80,7 @@ export async function createCategory(input: {
   const { data, error } = await supabase
     .from(TABLE)
     .insert({
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       owner_id: input.owner_id,
       name: input.name,
       color: input.color,
@@ -70,16 +108,8 @@ export async function updateCategory(
   if (error) throw error;
 }
 
-/** 커스텀 카테고리 삭제 + 해당 스케줄 카테고리를 'other'로 변경 */
+/** 카테고리 삭제 (해당 스케줄의 카테고리는 orphan 처리 — fallback 표시) */
 export async function deleteCategory(id: string): Promise<void> {
-  // 해당 카테고리를 사용 중인 스케줄을 'other'로 변경
-  const { error: updateError } = await supabase
-    .from("schedules")
-    .update({ category: "other" })
-    .eq("category", id);
-
-  if (updateError) throw updateError;
-
   const { error } = await supabase.from(TABLE).delete().eq("id", id);
 
   if (error) throw error;

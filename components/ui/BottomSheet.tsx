@@ -1,5 +1,5 @@
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { useEffect, useRef } from "react";
 import { Animated, Modal, Pressable, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
@@ -10,11 +10,14 @@ interface BottomSheetProps {
 }
 
 export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
+  // 닫기 애니메이션 완료 후에만 Modal을 언마운트
+  const [mounted, setMounted] = useState(false);
   const overlay = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(300)).current;
 
   useEffect(() => {
     if (visible) {
+      setMounted(true);
       translateY.setValue(300);
       overlay.setValue(0);
       Animated.parallel([
@@ -45,12 +48,17 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
         duration: 200,
         useNativeDriver: true,
       }),
-    ]).start(() => onClose());
+    ]).start(() => {
+      setMounted(false);
+      onClose();
+    });
   };
+
+  if (!mounted) return null;
 
   return (
     <Modal
-      visible={visible}
+      visible
       transparent
       animationType="none"
       onRequestClose={handleClose}

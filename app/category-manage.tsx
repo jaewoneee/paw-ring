@@ -28,9 +28,6 @@ export default function CategoryManageScreen() {
   );
   const [saving, setSaving] = useState(false);
 
-  const defaultCategories = categories.filter((c) => c.is_default);
-  const customCategories = categories.filter((c) => !c.is_default);
-
   const openAdd = () => {
     setEditingCategory(null);
     setName('');
@@ -83,7 +80,7 @@ export default function CategoryManageScreen() {
   const handleDelete = (cat: ScheduleCategoryItem) => {
     Alert.alert(
       '카테고리 삭제',
-      `"${cat.name}" 카테고리를 삭제할까요?\n이 카테고리를 사용 중인 스케줄은 "기타"로 변경됩니다.`,
+      `"${cat.name}" 카테고리를 삭제할까요?\n이 카테고리를 사용 중인 스케줄은 "기타"로 표시됩니다.`,
       [
         { text: '취소', style: 'cancel' },
         {
@@ -108,68 +105,23 @@ export default function CategoryManageScreen() {
         className="flex-1"
         contentContainerStyle={{ padding: 16, gap: 24 }}
       >
-        {/* 기본 카테고리 */}
+        {/* 카테고리 목록 */}
         <View style={{ gap: 8 }}>
           <Typography variant="body-sm" className="text-muted-foreground font-medium px-1">
-            기본 카테고리
+            카테고리
           </Typography>
-          <View
-            className="rounded-xl overflow-hidden"
-            style={{ backgroundColor: colors.surfaceElevated }}
-          >
-            {defaultCategories.map((cat, i) => (
-              <Pressable
-                key={cat.id}
-                onPress={() => openEdit(cat)}
-                className="flex-row items-center px-4 py-3"
-                style={
-                  i < defaultCategories.length - 1
-                    ? { borderBottomWidth: 0.5, borderBottomColor: colors.border }
-                    : undefined
-                }
-              >
-                <View
-                  className="w-6 h-6 rounded-full items-center justify-center mr-3"
-                  style={{ backgroundColor: cat.color + '20' }}
-                >
-                  <FontAwesome
-                    name={cat.icon as any}
-                    size={11}
-                    color={cat.color}
-                  />
-                </View>
-                <Typography variant="body-md" className="flex-1">
-                  {cat.name}
-                </Typography>
-                <View
-                  className="w-5 h-5 rounded-full"
-                  style={{ backgroundColor: cat.color }}
-                />
-              </Pressable>
-            ))}
-          </View>
-          <Typography variant="small" className="text-muted-foreground px-1">
-            기본 카테고리는 색상만 변경할 수 있습니다
-          </Typography>
-        </View>
-
-        {/* 내 카테고리 */}
-        <View style={{ gap: 8 }}>
-          <Typography variant="body-sm" className="text-muted-foreground font-medium px-1">
-            내 카테고리
-          </Typography>
-          {customCategories.length > 0 ? (
+          {categories.length > 0 ? (
             <View
               className="rounded-xl overflow-hidden"
               style={{ backgroundColor: colors.surfaceElevated }}
             >
-              {customCategories.map((cat, i) => (
+              {categories.map((cat, i) => (
                 <Pressable
                   key={cat.id}
                   onPress={() => openEdit(cat)}
                   className="flex-row items-center px-4 py-3"
                   style={
-                    i < customCategories.length - 1
+                    i < categories.length - 1
                       ? {
                           borderBottomWidth: 0.5,
                           borderBottomColor: colors.border,
@@ -214,7 +166,7 @@ export default function CategoryManageScreen() {
               style={{ backgroundColor: colors.surfaceElevated }}
             >
               <Typography variant="body-sm" className="text-muted-foreground">
-                아직 만든 카테고리가 없어요
+                카테고리가 없어요
               </Typography>
             </View>
           )}
@@ -248,7 +200,6 @@ export default function CategoryManageScreen() {
               onChangeText={setName}
               placeholder="카테고리 이름"
               placeholderTextColor={colors.mutedForeground}
-              editable={!editingCategory?.is_default}
               style={{
                 borderWidth: 1,
                 borderColor: colors.border,
@@ -258,21 +209,9 @@ export default function CategoryManageScreen() {
                 paddingVertical: 12,
                 fontSize: 16,
                 fontFamily: 'Pretendard',
-                color: editingCategory?.is_default
-                  ? colors.mutedForeground
-                  : colors.foreground,
+                color: colors.foreground,
               }}
             />
-            {editingCategory?.is_default && (
-              <Text
-                style={{
-                  fontSize: 12,
-                  color: colors.mutedForeground,
-                }}
-              >
-                기본 카테고리의 이름은 변경할 수 없습니다
-              </Text>
-            )}
           </View>
 
           {/* 색상 선택 */}

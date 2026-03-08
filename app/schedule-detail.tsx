@@ -39,15 +39,17 @@ export default function ScheduleDetailScreen() {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
 
-  const todayDateStr = formatISODate(dayjs());
+  // 반복 스케줄은 occurrenceDate 기준, 단건은 start_date 기준으로 완료 조회
+  const completionDate = occurrenceDate ?? formatISODate(dayjs());
 
   const fetchSchedule = useCallback(async () => {
     if (!id) return;
     try {
       const data = await getScheduleById(id);
       setSchedule(data);
+      const targetDate = occurrenceDate ?? data.start_date.split("T")[0];
       if (data.is_completable) {
-        const completion = await getScheduleCompletion(id, todayDateStr);
+        const completion = await getScheduleCompletion(id, targetDate);
         setIsCompleted(!!completion);
       }
     } catch (err) {
@@ -57,7 +59,7 @@ export default function ScheduleDetailScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [id, todayDateStr]);
+  }, [id, occurrenceDate]);
 
   useEffect(() => {
     fetchSchedule();
@@ -68,10 +70,10 @@ export default function ScheduleDetailScreen() {
     setIsToggling(true);
     try {
       if (isCompleted) {
-        await uncompleteSchedule(schedule.id, todayDateStr);
+        await uncompleteSchedule(schedule.id, completionDate);
         setIsCompleted(false);
       } else {
-        await completeSchedule(schedule.id, todayDateStr, user.uid);
+        await completeSchedule(schedule.id, completionDate, user.uid);
         setIsCompleted(true);
       }
     } catch (err) {
@@ -119,7 +121,7 @@ export default function ScheduleDetailScreen() {
           text: "이 일정만",
           onPress: async () => {
             try {
-              await deleteScheduleThisOnly(id!, occurrenceDate ?? todayDateStr);
+              await deleteScheduleThisOnly(id!, occurrenceDate ?? completionDate);
               router.back();
             } catch (err) {
               console.error("[ScheduleDetail] delete single failed:", err);
@@ -131,7 +133,7 @@ export default function ScheduleDetailScreen() {
           text: "이후 모든 일정",
           onPress: async () => {
             try {
-              await deleteScheduleThisAndFollowing(id!, occurrenceDate ?? todayDateStr);
+              await deleteScheduleThisAndFollowing(id!, occurrenceDate ?? completionDate);
               router.back();
             } catch (err) {
               console.error("[ScheduleDetail] delete following failed:", err);

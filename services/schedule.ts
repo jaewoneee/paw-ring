@@ -1,3 +1,4 @@
+import dayjs, { formatISODate } from "@/utils/dayjs";
 import { supabase } from "@/lib/supabase";
 import type {
   CreateScheduleInput,
@@ -46,40 +47,40 @@ export async function getSchedulesByRange(
   startDate: string,
   endDate: string
 ): Promise<Schedule[]> {
-  // 1) 범위 내 start_date를 가진 스케줄
-  const { data: inRange, error: err1 } = await supabase
-    .from("schedules")
-    .select("*")
-    .eq("pet_id", petId)
-    .gte("start_date", `${startDate}T00:00:00`)
-    .lte("start_date", `${endDate}T23:59:59`)
-    .order("start_date", { ascending: true });
+  const [inRangeRes, recurringBeforeRes, multiDayBeforeRes] = await Promise.all([
+    // 1) 범위 내 start_date를 가진 스케줄
+    supabase
+      .from("schedules")
+      .select("*")
+      .eq("pet_id", petId)
+      .gte("start_date", `${startDate}T00:00:00`)
+      .lte("start_date", `${endDate}T23:59:59`)
+      .order("start_date", { ascending: true }),
+    // 2) 범위 이전에 시작된 반복 스케줄 (아직 종료되지 않은 것)
+    supabase
+      .from("schedules")
+      .select("*")
+      .eq("pet_id", petId)
+      .eq("is_recurring", true)
+      .lt("start_date", `${startDate}T00:00:00`)
+      .or(`recurrence_end_date.gte.${startDate}T00:00:00,recurrence_end_date.is.null`),
+    // 3) 범위 이전에 시작되어 범위까지 이어지는 다일(multi-day) 스케줄
+    supabase
+      .from("schedules")
+      .select("*")
+      .eq("pet_id", petId)
+      .eq("is_recurring", false)
+      .lt("start_date", `${startDate}T00:00:00`)
+      .gte("end_date", `${startDate}T00:00:00`),
+  ]);
 
-  // 2) 범위 이전에 시작된 반복 스케줄 (아직 종료되지 않은 것)
-  const { data: recurringBefore, error: err2 } = await supabase
-    .from("schedules")
-    .select("*")
-    .eq("pet_id", petId)
-    .eq("is_recurring", true)
-    .lt("start_date", `${startDate}T00:00:00`)
-    .or(`recurrence_end_date.gte.${startDate}T00:00:00,recurrence_end_date.is.null`);
-
-  // 3) 범위 이전에 시작되어 범위까지 이어지는 다일(multi-day) 스케줄
-  const { data: multiDayBefore, error: err3 } = await supabase
-    .from("schedules")
-    .select("*")
-    .eq("pet_id", petId)
-    .eq("is_recurring", false)
-    .lt("start_date", `${startDate}T00:00:00`)
-    .gte("end_date", `${startDate}T00:00:00`);
-
-  if (err1) throw err1;
-  if (err2) throw err2;
-  if (err3) throw err3;
+  if (inRangeRes.error) throw inRangeRes.error;
+  if (recurringBeforeRes.error) throw recurringBeforeRes.error;
+  if (multiDayBeforeRes.error) throw multiDayBeforeRes.error;
 
   // id 기준 중복 제거 후 병합
   const map = new Map<string, Schedule>();
-  for (const s of [...(inRange ?? []), ...(recurringBefore ?? []), ...(multiDayBefore ?? [])]) {
+  for (const s of [...(inRangeRes.data ?? []), ...(recurringBeforeRes.data ?? []), ...(multiDayBeforeRes.data ?? [])]) {
     map.set(s.id, s as Schedule);
   }
   return Array.from(map.values());
@@ -89,13 +90,12 @@ export async function getSchedulesByRange(
 export async function getUpcomingSchedules(
   petId: string
 ): Promise<Schedule[]> {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const startOfToday = today.toISOString();
-  const todayDateStr = today.toISOString().split("T")[0];
-  const oneWeekLater = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-  const oneWeekLaterStr = oneWeekLater.toISOString();
-  const oneWeekLaterDateStr = oneWeekLaterStr.split("T")[0];
+  // dayjs로 로컬 타임존 기준 날짜 계산 (UTC 오프셋 문제 방지)
+  const todayDateStr = formatISODate(dayjs());
+  const oneWeekLater = dayjs().add(7, "day");
+  const oneWeekLaterDateStr = formatISODate(oneWeekLater);
+  const startOfToday = `${todayDateStr}T00:00:00`;
+  const endOfWeek = `${oneWeekLaterDateStr}T23:59:59`;
 
   const [schedulesRes, recurringRes, completionsRes] = await Promise.all([
     // 1) 범위 내 start_date를 가진 일반 스케줄
@@ -104,7 +104,7 @@ export async function getUpcomingSchedules(
       .select("*")
       .eq("pet_id", petId)
       .gte("start_date", startOfToday)
-      .lte("start_date", oneWeekLaterStr)
+      .lte("start_date", endOfWeek)
       .order("start_date", { ascending: true }),
     // 2) 오늘 이전에 시작된 반복 스케줄 (아직 종료되지 않은 것)
     supabase
@@ -130,9 +130,25 @@ export async function getUpcomingSchedules(
     (completionsRes.data ?? []).map((c) => `${c.schedule_id}_${c.completion_date}`)
   );
 
-  // 반복 스케줄 중 오늘~일주일 내에 발생하는 것만 필터
-  const recurringInRange = ((recurringRes.data ?? []) as Schedule[]).filter((s) => {
-    if (!s.rrule) return false;
+  // 반복 스케줄을 occurrence 단위로 확장하여 각 날짜별 완료 여부 체크
+  const recurringSchedules = (recurringRes.data ?? []) as Schedule[];
+  const result: Schedule[] = [];
+
+  // 일반 스케줄: 각 날짜별 완료 여부 체크
+  for (const s of (schedulesRes.data ?? []) as Schedule[]) {
+    if (!s.is_completable) {
+      result.push(s);
+      continue;
+    }
+    const scheduleDate = s.start_date.split("T")[0];
+    if (!completedSet.has(`${s.id}_${scheduleDate}`)) {
+      result.push(s);
+    }
+  }
+
+  // 반복 스케줄: 범위 내 occurrence 중 하나라도 미완료면 포함
+  for (const s of recurringSchedules) {
+    if (!s.rrule) continue;
     const occurrences = expandRRule(
       s.start_date,
       s.rrule,
@@ -140,25 +156,25 @@ export async function getUpcomingSchedules(
       oneWeekLaterDateStr,
       s.recurrence_end_date,
     );
-    return occurrences.length > 0;
-  });
+    if (occurrences.length === 0) continue;
 
-  // id 기준 중복 제거 후 병합
-  const map = new Map<string, Schedule>();
-  for (const s of [...(schedulesRes.data ?? []), ...recurringInRange]) {
-    map.set(s.id, s as Schedule);
-  }
-  const allSchedules = Array.from(map.values());
-
-  return allSchedules.filter((s) => {
-    if (!s.is_completable) return true;
-    // 반복 스케줄: 오늘 날짜의 완료 여부 확인
-    if (s.is_recurring) {
-      return !completedSet.has(`${s.id}_${todayDateStr}`);
+    if (!s.is_completable) {
+      result.push(s);
+      continue;
     }
-    const scheduleDate = s.start_date.split("T")[0];
-    return !completedSet.has(`${s.id}_${scheduleDate}`);
-  });
+    // 하나라도 미완료 occurrence가 있으면 표시
+    const hasIncomplete = occurrences.some(
+      (date) => !completedSet.has(`${s.id}_${date}`)
+    );
+    if (hasIncomplete) {
+      result.push(s);
+    }
+  }
+
+  // id 기준 중복 제거
+  const map = new Map<string, Schedule>();
+  for (const s of result) map.set(s.id, s);
+  return Array.from(map.values());
 }
 
 /** 특정 스케줄의 특정 날짜 완료 여부 조회 */
