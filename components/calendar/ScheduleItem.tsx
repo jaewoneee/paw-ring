@@ -11,6 +11,7 @@ import { formatISODate, formatTime12 } from '@/utils/dayjs';
 
 interface ScheduleItemProps {
   schedule: Schedule;
+  occurrenceDate?: string; // "YYYY-MM-DD" — 반복 스케줄의 실제 표시 날짜
   onPress: (schedule: Schedule) => void;
   onComplete?: (schedule: Schedule) => void;
   onToggleComplete?: () => void;
@@ -22,6 +23,7 @@ interface ScheduleItemProps {
 
 export function ScheduleItem({
   schedule,
+  occurrenceDate,
   onPress,
   onComplete,
   onToggleComplete,
@@ -143,7 +145,7 @@ export function ScheduleItem({
           <View className="flex-1" style={{ opacity: isCompleted ? 0.45 : 1 }}>
             {!schedule.is_all_day && (
               <Typography style={isStacked ? { color: textColor } : undefined}>
-                {`${formatISODate(schedule.start_date)} ${formatTime12(schedule.start_date)}`}
+                {`${occurrenceDate ?? formatISODate(schedule.start_date)} ${formatTime12(schedule.start_date)}`}
               </Typography>
             )}
             <Typography

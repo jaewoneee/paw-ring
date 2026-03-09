@@ -59,6 +59,7 @@ export function DayScheduleList({
             <ScheduleItem
               key={`${s.schedule.id}-${s.occurrenceDate}`}
               schedule={s.schedule}
+              occurrenceDate={s.occurrenceDate}
               completionStatus={s.completionStatus}
               onPress={() => onPressSchedule(s)}
               onToggleComplete={onToggleComplete ? () => onToggleComplete(s) : undefined}
