@@ -9,6 +9,7 @@ import { Alert, ScrollView, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Screen } from "@/components/ui/Screen";
+import { Switch } from "@/components/ui/Switch";
 import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
@@ -24,9 +25,11 @@ import {
   getScheduleCompletion,
   getScheduleExceptionByDate,
   uncompleteSchedule,
+  updateSchedule,
+  updateScheduleThisOnly,
 } from "@/services/schedule";
 import { isFirstOrLastOccurrence } from "@/utils/rrule";
-import type { Schedule } from "@/types/schedule";
+import type { ReminderType, Schedule } from "@/types/schedule";
 import { formatTime } from "@/utils/date";
 import { formatRRuleLabel } from "@/utils/rrule";
 
@@ -100,6 +103,38 @@ export default function ScheduleDetailScreen() {
       Alert.alert("오류", "완료 상태 변경에 실패했습니다.");
     } finally {
       setIsToggling(false);
+    }
+  };
+
+  const isNotificationOn = schedule ? schedule.reminder !== "none" : false;
+
+  const handleToggleNotification = async (enabled: boolean) => {
+    if (!schedule) return;
+
+    const newReminder: ReminderType = enabled
+      ? (schedule.is_all_day ? "same_day_9am" : "on_time")
+      : "none";
+
+    // 낙관적 업데이트
+    setSchedule((prev) => prev ? { ...prev, reminder: newReminder } : prev);
+
+    try {
+      if (schedule.is_recurring && occurrenceDate) {
+        // 반복 스케줄의 개별 occurrence: 예외로 저장
+        const exception = await getScheduleExceptionByDate(schedule.id, occurrenceDate);
+        const existingFields = exception?.modified_fields ?? {};
+        await updateScheduleThisOnly(schedule.id, occurrenceDate, {
+          ...existingFields,
+          reminder: newReminder,
+        });
+      } else {
+        await updateSchedule(schedule.id, { reminder: newReminder });
+      }
+    } catch (err) {
+      console.error("[ScheduleDetail] toggle notification failed:", err);
+      // 롤백
+      setSchedule((prev) => prev ? { ...prev, reminder: schedule.reminder } : prev);
+      Alert.alert("오류", "알림 설정 변경에 실패했습니다.");
     }
   };
 
@@ -281,12 +316,27 @@ export default function ScheduleDetailScreen() {
                 value={timeLabel}
                 colors={colors}
               />
-              <DetailRow
-                icon="bell-o"
-                label="알림"
-                value={reminderLabel}
-                colors={colors}
-              />
+              <View className="flex-row items-center gap-3">
+                <FontAwesome
+                  name="bell-o"
+                  size={16}
+                  color={colors.mutedForeground}
+                  style={{ width: 20, textAlign: "center" }}
+                />
+                <Text
+                  className="text-sm"
+                  style={{ color: colors.mutedForeground, width: 40 }}
+                >
+                  알림
+                </Text>
+                <Typography variant="body-md" className="flex-1">
+                  {reminderLabel}
+                </Typography>
+                <Switch
+                  value={isNotificationOn}
+                  onValueChange={handleToggleNotification}
+                />
+              </View>
 
               {endDateLabel && (
                 <DetailRow
