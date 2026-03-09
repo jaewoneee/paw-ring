@@ -1,6 +1,8 @@
 import { supabase } from "@/lib/supabase";
 import type { UserProfile } from "@/types/auth";
 import { initUserCategories } from "@/services/category";
+import * as FileSystem from "expo-file-system";
+import { decode } from "base64-arraybuffer";
 
 /** 사용자 프로필 생성 (회원가입 시) */
 export async function createUserProfile(
@@ -57,6 +59,48 @@ export async function updateUserProfile(
     .from("users")
     .update({ ...data, updated_at: new Date().toISOString() })
     .eq("id", id);
+
+  if (error) throw error;
+}
+
+/** 사용자 프로필 이미지 업로드 */
+export async function uploadUserProfileImage(
+  userId: string,
+  localUri: string
+): Promise<string> {
+  const ext = localUri.split(".").pop() ?? "jpg";
+  const fileName = `${userId}/${Date.now()}.${ext}`;
+
+  // eslint-disable-next-line deprecation/deprecation
+  const base64 = await FileSystem.readAsStringAsync(localUri, {
+    encoding: "base64",
+  });
+
+  const { error } = await supabase.storage
+    .from("user-profiles")
+    .upload(fileName, decode(base64), { contentType: `image/${ext}`, upsert: true });
+
+  if (error) throw error;
+
+  const {
+    data: { publicUrl },
+  } = supabase.storage.from("user-profiles").getPublicUrl(fileName);
+
+  return publicUrl;
+}
+
+/** 사용자 프로필 이미지 삭제 (Storage에서 제거) */
+export async function deleteUserProfileImage(
+  imageUrl: string
+): Promise<void> {
+  // publicUrl에서 파일 경로 추출: .../user-profiles/{userId}/{filename}
+  const match = imageUrl.match(/user-profiles\/(.+)$/);
+  if (!match) return;
+
+  const filePath = match[1];
+  const { error } = await supabase.storage
+    .from("user-profiles")
+    .remove([filePath]);
 
   if (error) throw error;
 }

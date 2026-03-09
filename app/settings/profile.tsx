@@ -1,28 +1,89 @@
 import { useState } from "react";
-import { Alert, Image, ScrollView, View } from "react-native";
+import { ActionSheetIOS, Alert, Image, Platform, Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
-import { Card, CardContent } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Typography } from "@/components/ui/Typography";
 import { Screen } from "@/components/ui/Screen";
 import { validateNickname, getFirebaseErrorMessage } from "@/utils/validation";
+import {
+  uploadUserProfileImage,
+  deleteUserProfileImage,
+} from "@/services/user";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { userProfile, updateProfile } = useAuth();
+  const { user, userProfile, updateProfile } = useAuth();
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
   const [nickname, setNickname] = useState(userProfile?.nickname ?? "");
+  const [profileImage, setProfileImage] = useState<string | null>(
+    userProfile?.profile_image ?? null
+  );
+  const [imageChanged, setImageChanged] = useState(false);
+  const [imageDeleted, setImageDeleted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [nicknameError, setNicknameError] = useState("");
+
+  const handlePickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setProfileImage(result.assets[0].uri);
+      setImageChanged(true);
+      setImageDeleted(false);
+    }
+  };
+
+  const handleDeleteImage = () => {
+    setProfileImage(null);
+    setImageChanged(true);
+    setImageDeleted(true);
+  };
+
+  const handleChangePhoto = () => {
+    const hasImage = !!profileImage;
+
+    if (Platform.OS === "ios") {
+      const options = hasImage
+        ? ["사진 선택", "사진 삭제", "취소"]
+        : ["사진 선택", "취소"];
+      const cancelIndex = hasImage ? 2 : 1;
+      const destructiveIndex = hasImage ? 1 : undefined;
+
+      ActionSheetIOS.showActionSheetWithOptions(
+        { options, cancelButtonIndex: cancelIndex, destructiveButtonIndex: destructiveIndex },
+        (index) => {
+          if (index === 0) handlePickImage();
+          else if (hasImage && index === 1) handleDeleteImage();
+        }
+      );
+    } else {
+      // Android
+      if (hasImage) {
+        Alert.alert("프로필 사진", undefined, [
+          { text: "사진 선택", onPress: handlePickImage },
+          { text: "사진 삭제", style: "destructive", onPress: handleDeleteImage },
+          { text: "취소", style: "cancel" },
+        ]);
+      } else {
+        handlePickImage();
+      }
+    }
+  };
 
   const handleSave = async () => {
     setError("");
@@ -36,7 +97,29 @@ export default function ProfileScreen() {
 
     setLoading(true);
     try {
-      await updateProfile({ nickname: nickname.trim() });
+      let newImageUrl: string | null = userProfile?.profile_image ?? null;
+
+      if (imageChanged) {
+        // 기존 이미지 Storage에서 삭제
+        if (userProfile?.profile_image) {
+          try {
+            await deleteUserProfileImage(userProfile.profile_image);
+          } catch {
+            // 기존 이미지 삭제 실패는 무시
+          }
+        }
+
+        if (imageDeleted) {
+          newImageUrl = null;
+        } else if (profileImage) {
+          newImageUrl = await uploadUserProfileImage(user!.uid, profileImage);
+        }
+      }
+
+      await updateProfile({
+        nickname: nickname.trim(),
+        profile_image: newImageUrl,
+      });
       router.back();
     } catch (err: any) {
       setError(getFirebaseErrorMessage(err?.code ?? ""));
@@ -54,30 +137,26 @@ export default function ProfileScreen() {
       >
         <View className="p-4 gap-6">
           {/* 프로필 이미지 */}
-          <View className="items-center gap-3 py-4">
-            {userProfile?.profile_image ? (
-              <Image
-                source={{ uri: userProfile.profile_image }}
-                className="w-24 h-24 rounded-full bg-surface"
-              />
-            ) : (
-              <View className="w-24 h-24 rounded-full bg-surface items-center justify-center">
-                <FontAwesome
-                  name="user"
-                  size={40}
-                  color={colors.mutedForeground}
+          <View className="items-center py-4">
+            <Pressable onPress={handleChangePhoto}>
+              {profileImage ? (
+                <Image
+                  source={{ uri: profileImage }}
+                  className="w-24 h-24 rounded-full bg-surface"
                 />
+              ) : (
+                <View className="w-24 h-24 rounded-full bg-surface items-center justify-center">
+                  <FontAwesome
+                    name="user"
+                    size={40}
+                    color={colors.mutedForeground}
+                  />
+                </View>
+              )}
+              <View className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary items-center justify-center border-2 border-background">
+                <FontAwesome name="camera" size={14} color="#fff" />
               </View>
-            )}
-            <Button
-              variant="ghost"
-              size="small"
-              onPress={() => {
-                Alert.alert("안내", "프로필 사진 변경은 준비중입니다.");
-              }}
-            >
-              사진 변경
-            </Button>
+            </Pressable>
           </View>
 
           {/* 에러 메시지 */}

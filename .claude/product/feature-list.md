@@ -96,7 +96,7 @@
 
 | # | 기능 | 상태 | 상세 문서 |
 |---|------|------|-----------|
-| 6.1 | 프로필 수정 (닉네임, 프로필 이미지) | 🔧 | [settings.md](./feature/settings.md) |
+| 6.1 | 프로필 수정 (닉네임, 프로필 이미지) | ✅ | [settings.md](./feature/settings.md) |
 | 6.2 | 알림 설정 (전체 ON/OFF) | ✅ | [settings.md](./feature/settings.md) |
 | 6.3 | 앱 정보 / 이용약관 / 개인정보 처리방침 | 🔧 | [settings.md](./feature/settings.md) |
 
