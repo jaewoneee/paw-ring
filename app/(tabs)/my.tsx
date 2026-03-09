@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import Constants from "expo-constants";
+import * as AuthSession from "expo-auth-session";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -80,7 +81,57 @@ export default function MyScreen() {
     userProfile?.notification_enabled ?? true
   );
   const [deleting, setDeleting] = useState(false);
+  const [pendingGoogleDelete, setPendingGoogleDelete] = useState(false);
   const appVersion = Constants.expoConfig?.version ?? "1.0.0";
+
+  // ─── 구글 재인증 (회원 탈퇴용) ───
+  const googleIosClientId = Constants.expoConfig?.extra?.googleIosClientId;
+  const googleRedirectUri = googleIosClientId
+    ? `${googleIosClientId.split(".").reverse().join(".")}:/oauthredirect`
+    : "";
+  const discovery = {
+    authorizationEndpoint: "https://accounts.google.com/o/oauth2/v2/auth",
+    tokenEndpoint: "https://oauth2.googleapis.com/token",
+  };
+  const [googleRequest, googleResponse, googlePromptAsync] = AuthSession.useAuthRequest(
+    {
+      clientId: googleIosClientId ?? "",
+      redirectUri: googleRedirectUri,
+      scopes: ["openid", "profile", "email"],
+      responseType: "code",
+      usePKCE: true,
+    },
+    discovery
+  );
+
+  useEffect(() => {
+    if (!pendingGoogleDelete || googleResponse?.type !== "success") return;
+    const code = googleResponse.params?.code;
+    if (!code || !googleRequest?.codeVerifier || !googleRedirectUri) return;
+
+    setPendingGoogleDelete(false);
+    setDeleting(true);
+
+    AuthSession.exchangeCodeAsync(
+      {
+        clientId: googleIosClientId!,
+        code,
+        redirectUri: googleRedirectUri,
+        extraParams: { code_verifier: googleRequest.codeVerifier },
+      },
+      discovery
+    )
+      .then((tokenResponse) => {
+        const idToken = tokenResponse.idToken;
+        if (!idToken) throw new Error("ID Token을 받지 못했습니다.");
+        return deleteAccount({ type: "google", idToken });
+      })
+      .catch((err: any) => {
+        const code = err?.code ?? "";
+        Alert.alert("탈퇴 실패", getFirebaseErrorMessage(code));
+      })
+      .finally(() => setDeleting(false));
+  }, [googleResponse, pendingGoogleDelete, googleRequest, googleRedirectUri, deleteAccount]);
 
   // ─── 알림 토글 ───
   const handleToggleNotification = async (value: boolean) => {
@@ -120,13 +171,7 @@ export default function MyScreen() {
   // ─── 회원 탈퇴 ───
   const handleDeleteAccount = () => {
     if (Platform.OS === "web") {
-      if (
-        window.confirm(
-          "모든 데이터가 삭제되며 복구할 수 없습니다. 정말 탈퇴하시겠습니까?"
-        )
-      ) {
-        performDeleteAccount();
-      }
+      // 웹은 네이티브 앱 전용이므로 간단 처리
       return;
     }
 
@@ -142,7 +187,8 @@ export default function MyScreen() {
             if (userProfile?.provider === "email") {
               promptPasswordForDeletion();
             } else {
-              performDeleteAccount();
+              setPendingGoogleDelete(true);
+              googlePromptAsync();
             }
           },
         },
@@ -175,10 +221,10 @@ export default function MyScreen() {
     }
   };
 
-  const performDeleteAccount = async (password?: string) => {
+  const performDeleteAccount = async (password: string) => {
     setDeleting(true);
     try {
-      await deleteAccount(password);
+      await deleteAccount({ type: "email", password });
     } catch (err: any) {
       const code = err?.code ?? "";
       const message = getFirebaseErrorMessage(code);

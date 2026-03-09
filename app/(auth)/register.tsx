@@ -5,6 +5,7 @@ import { Typography } from "@/components/ui/Typography";
 import { Input } from "@/components/ui/Input";
 import { Screen } from "@/components/ui/Screen";
 import { useAuth } from "@/hooks/useAuth";
+import { useGoogleAuth } from "@/hooks/useGoogleAuth";
 import {
   validateEmail,
   validatePassword,
@@ -15,6 +16,7 @@ import {
 
 export default function RegisterScreen() {
   const { register } = useAuth();
+  const google = useGoogleAuth();
 
   const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
@@ -66,10 +68,10 @@ export default function RegisterScreen() {
         contentContainerStyle={{ padding: 24, gap: 16 }}
         keyboardShouldPersistTaps="handled"
       >
-      {error ? (
+      {(error || google.error) ? (
         <View className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-3">
           <Typography variant="body-sm" className="text-error text-center">
-            {error}
+            {error || google.error}
           </Typography>
         </View>
       ) : null}
@@ -122,8 +124,13 @@ export default function RegisterScreen() {
         <View className="flex-1 h-px bg-border" />
       </View>
 
-        <Button variant="outline" disabled>
-          구글로 시작하기 (준비중)
+        <Button
+          variant="outline"
+          onPress={google.signIn}
+          loading={google.loading}
+          disabled={google.disabled || google.loading}
+        >
+          구글로 시작하기
         </Button>
       </ScrollView>
     </Screen>

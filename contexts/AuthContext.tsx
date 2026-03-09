@@ -16,6 +16,7 @@ import {
 } from "@/services/user";
 import {
   reauthenticateWithEmail,
+  reauthenticateWithGoogle,
   deleteAccount as deleteAccountService,
 } from "@/services/account";
 import type { UserProfile } from "@/types/auth";
@@ -35,7 +36,7 @@ interface AuthContextType {
       Pick<UserProfile, "nickname" | "profile_image" | "notification_enabled">
     >
   ) => Promise<void>;
-  deleteAccount: (password?: string) => Promise<void>;
+  deleteAccount: (credential?: { type: "email"; password: string } | { type: "google"; idToken: string }) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -137,10 +138,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const handleDeleteAccount = useCallback(
-    async (password?: string) => {
+    async (credential?: { type: "email"; password: string } | { type: "google"; idToken: string }) => {
       if (!user) throw new Error("Not authenticated");
-      if (password) {
-        await reauthenticateWithEmail(password);
+      if (credential?.type === "email") {
+        await reauthenticateWithEmail(credential.password);
+      } else if (credential?.type === "google") {
+        await reauthenticateWithGoogle(credential.idToken);
       }
       await deleteUserData(user.uid);
       await deleteAccountService();

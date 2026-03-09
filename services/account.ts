@@ -3,6 +3,7 @@ import {
   updatePassword as firebaseUpdatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
+  GoogleAuthProvider,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 
@@ -13,6 +14,16 @@ export async function reauthenticateWithEmail(
   const user = auth.currentUser;
   if (!user || !user.email) throw new Error("No authenticated user");
   const credential = EmailAuthProvider.credential(user.email, password);
+  await reauthenticateWithCredential(user, credential);
+}
+
+/** 구글 사용자 재인증 */
+export async function reauthenticateWithGoogle(
+  idToken: string
+): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("No authenticated user");
+  const credential = GoogleAuthProvider.credential(idToken);
   await reauthenticateWithCredential(user, credential);
 }
 
