@@ -31,7 +31,10 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
       setPets(result);
       // 선택된 펫이 없거나 목록에서 사라졌으면 첫 번째로 설정
       setSelectedPet((prev) => {
-        if (prev && result.find((p) => p.id === prev.id)) return prev;
+        if (prev) {
+          const updated = result.find((p) => p.id === prev.id);
+          if (updated) return updated;
+        }
         return result[0] ?? null;
       });
     } finally {
