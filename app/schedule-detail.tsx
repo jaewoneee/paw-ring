@@ -1,4 +1,5 @@
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import dayjs from "@/utils/dayjs";
 import { formatKoreanDate, formatKoreanDateNoDay } from "@/utils/dayjs";
 import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -16,7 +17,7 @@ import { useCategoryContext } from "@/contexts/CategoryContext";
 import { useAuth } from "@/hooks/useAuth";
 import {
   completeSchedule,
-  deleteSchedule,
+  deleteScheduleAll,
   deleteScheduleThisAndFollowing,
   deleteScheduleThisOnly,
   getScheduleById,
@@ -24,6 +25,7 @@ import {
   getScheduleExceptionByDate,
   uncompleteSchedule,
 } from "@/services/schedule";
+import { isFirstOrLastOccurrence } from "@/utils/rrule";
 import type { Schedule } from "@/types/schedule";
 import { formatTime } from "@/utils/date";
 import { formatRRuleLabel } from "@/utils/rrule";
@@ -112,14 +114,22 @@ export default function ScheduleDetailScreen() {
   };
 
   const handleDelete = () => {
-    if (schedule?.is_recurring) {
-      Alert.alert("반복 일정 삭제", "어떻게 삭제할까요?", [
+    if (schedule?.is_recurring && schedule.rrule) {
+      const date = occurrenceDate ?? completionDate;
+      const { isFirst, isLast } = isFirstOrLastOccurrence(
+        schedule.start_date,
+        schedule.rrule,
+        date,
+        schedule.recurrence_end_date,
+      );
+
+      const buttons: { text: string; style?: "cancel" | "destructive" | "default"; onPress?: () => void }[] = [
         { text: "취소", style: "cancel" },
         {
           text: "이 일정만",
           onPress: async () => {
             try {
-              await deleteScheduleThisOnly(id!, occurrenceDate ?? completionDate);
+              await deleteScheduleThisOnly(id!, date);
               router.back();
             } catch (err) {
               console.error("[ScheduleDetail] delete single failed:", err);
@@ -127,32 +137,41 @@ export default function ScheduleDetailScreen() {
             }
           },
         },
-        {
-          text: "이후 모든 일정",
-          onPress: async () => {
-            try {
-              await deleteScheduleThisAndFollowing(id!, occurrenceDate ?? completionDate);
-              router.back();
-            } catch (err) {
-              console.error("[ScheduleDetail] delete following failed:", err);
-              Alert.alert("오류", "일정 삭제에 실패했습니다.");
-            }
-          },
-        },
-        {
+      ];
+
+      if (isFirst || isLast) {
+        // 첫 번째 또는 마지막: "모든 일정 삭제"
+        buttons.push({
           text: "모든 일정 삭제",
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteSchedule(id!);
+              await deleteScheduleAll(id!);
               router.back();
             } catch (err) {
               console.error("[ScheduleDetail] delete all failed:", err);
               Alert.alert("오류", "일정 삭제에 실패했습니다.");
             }
           },
-        },
-      ]);
+        });
+      } else {
+        // 중간: "이후 모든 일정 삭제"
+        buttons.push({
+          text: "이후 모든 일정",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await deleteScheduleThisAndFollowing(id!, date);
+              router.back();
+            } catch (err) {
+              console.error("[ScheduleDetail] delete following failed:", err);
+              Alert.alert("오류", "일정 삭제에 실패했습니다.");
+            }
+          },
+        });
+      }
+
+      Alert.alert("반복 일정 삭제", "어떻게 삭제할까요?", buttons);
     } else {
       Alert.alert("일정 삭제", "이 일정을 삭제할까요?", [
         { text: "취소", style: "cancel" },
@@ -161,7 +180,7 @@ export default function ScheduleDetailScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              await deleteSchedule(id!);
+              await deleteScheduleAll(id!);
               router.back();
             } catch (err) {
               console.error("[ScheduleDetail] delete failed:", err);
@@ -184,7 +203,8 @@ export default function ScheduleDetailScreen() {
   }
 
   const meta = getCategoryMeta(schedule.category);
-  const dateLabel = formatKoreanDate(schedule.start_date);
+  const displayDate = occurrenceDate ?? schedule.start_date;
+  const dateLabel = formatKoreanDate(displayDate);
   const timeLabel = schedule.is_all_day
     ? "종일"
     : formatTime(schedule.start_date);
@@ -192,7 +212,13 @@ export default function ScheduleDetailScreen() {
     REMINDER_OPTIONS.find((r) => r.value === schedule.reminder)?.label ?? "없음";
 
   const endDateLabel = schedule.end_date
-    ? formatKoreanDate(schedule.end_date)
+    ? formatKoreanDate(
+        occurrenceDate && schedule.is_recurring
+          ? dayjs(occurrenceDate)
+              .add(dayjs(schedule.end_date).diff(dayjs(schedule.start_date), "day"), "day")
+              .format("YYYY-MM-DD")
+          : schedule.end_date,
+      )
     : null;
 
   const recurrenceLabel =

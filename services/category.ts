@@ -10,6 +10,7 @@ const INITIAL_CATEGORIES = [
   { name: "식사", color: "#22C55E", icon: "cutlery", sort_order: 1 },
   { name: "병원", color: "#EF4444", icon: "hospital-o", sort_order: 2 },
   { name: "목욕", color: "#3B82F6", icon: "tint", sort_order: 3 },
+  { name: "기타", color: "#6B7280", icon: "tag", sort_order: 4 },
 ];
 
 /** 유저의 카테고리가 없으면 초기 카테고리를 생성 */

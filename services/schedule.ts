@@ -371,11 +371,32 @@ export async function updateSchedule(
   }
 }
 
-/** 스케줄 삭제 (전체) */
+/** 스케줄 단건 삭제 */
 export async function deleteSchedule(id: string): Promise<void> {
   const { error } = await supabase.from("schedules").delete().eq("id", id);
 
   if (error) throw error;
+}
+
+/** 반복 스케줄 - 모든 일정 삭제 (원본 + 파생 체인 전체) */
+export async function deleteScheduleAll(id: string): Promise<void> {
+  const schedule = await getScheduleById(id);
+  // rootId: 원본이면 자기 자신, 파생이면 parent_schedule_id
+  const rootId = schedule.parent_schedule_id ?? id;
+
+  // 파생 스케줄 모두 삭제
+  const { error: childError } = await supabase
+    .from("schedules")
+    .delete()
+    .eq("parent_schedule_id", rootId);
+  if (childError) throw childError;
+
+  // 원본(root) 삭제
+  const { error: rootError } = await supabase
+    .from("schedules")
+    .delete()
+    .eq("id", rootId);
+  if (rootError) throw rootError;
 }
 
 // ─── 반복 스케줄 예외 처리 ───

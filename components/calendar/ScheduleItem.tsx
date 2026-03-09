@@ -56,8 +56,18 @@ export function ScheduleItem({
 
   const animStyle = slideAnim
     ? {
-        transform: [{ translateX: slideAnim.interpolate({ inputRange: [0, 1], outputRange: [0, -400] }) }],
-        opacity: slideAnim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [1, 0.5, 0] }),
+        transform: [
+          {
+            translateX: slideAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, -400],
+            }),
+          },
+        ],
+        opacity: slideAnim.interpolate({
+          inputRange: [0, 0.5, 1],
+          outputRange: [1, 0.5, 0],
+        }),
       }
     : undefined;
 
@@ -83,7 +93,9 @@ export function ScheduleItem({
             style={{
               width: 4,
               alignSelf: 'stretch',
-              backgroundColor: isCompleted ? colors.mutedForeground : meta.color,
+              backgroundColor: isCompleted
+                ? colors.mutedForeground
+                : meta.color,
               opacity: isCompleted ? 0.4 : 1,
             }}
           />
@@ -93,7 +105,7 @@ export function ScheduleItem({
           {/* 체크박스 (default variant + completable) */}
           {!isStacked && schedule.is_completable && onToggleComplete ? (
             <Pressable
-              onPress={(e) => {
+              onPress={e => {
                 e.stopPropagation?.();
                 onToggleComplete();
               }}
@@ -129,11 +141,11 @@ export function ScheduleItem({
 
           {/* 내용 */}
           <View className="flex-1" style={{ opacity: isCompleted ? 0.45 : 1 }}>
-            <Typography style={isStacked ? { color: textColor } : undefined}>
-              {schedule.is_all_day
-                ? formatISODate(schedule.start_date)
-                : `${formatISODate(schedule.start_date)} ${formatTime12(schedule.start_date)}`}
-            </Typography>
+            {!schedule.is_all_day && (
+              <Typography style={isStacked ? { color: textColor } : undefined}>
+                {`${formatISODate(schedule.start_date)} ${formatTime12(schedule.start_date)}`}
+              </Typography>
+            )}
             <Typography
               variant="body-xl"
               className="font-semibold"
@@ -149,7 +161,7 @@ export function ScheduleItem({
 
           {isStacked && schedule.is_completable && onComplete ? (
             <Pressable
-              onPress={(e) => {
+              onPress={e => {
                 e.stopPropagation?.();
                 handleComplete();
               }}

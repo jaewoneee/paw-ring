@@ -7,6 +7,9 @@ import {
   getCategories,
   updateCategory,
 } from "@/services/category";
+
+/** 카테고리가 1개뿐이면 삭제 불가 */
+export const MIN_CATEGORY_COUNT = 1;
 import type { ScheduleCategoryItem } from "@/types/schedule";
 
 export function useCategories() {
@@ -18,7 +21,20 @@ export function useCategories() {
     if (!user) return;
     setIsLoading(true);
     try {
-      const data = await getCategories(user.uid);
+      let data = await getCategories(user.uid);
+
+      // "기타" 카테고리가 없으면 자동 생성
+      const hasOther = data.some((c) => c.name === "기타");
+      if (!hasOther) {
+        const other = await createCategory({
+          owner_id: user.uid,
+          name: "기타",
+          color: "#6B7280",
+          icon: "tag",
+        });
+        data = [...data, other];
+      }
+
       setCategories(data);
     } catch (err) {
       console.error("[useCategories] fetch failed:", err);

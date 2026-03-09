@@ -11,6 +11,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { CATEGORY_COLOR_PRESETS } from '@/constants/Schedule';
 import { useCategoryContext } from '@/contexts/CategoryContext';
+import { MIN_CATEGORY_COUNT } from '@/hooks/useCategories';
 import type { ScheduleCategoryItem } from '@/types/schedule';
 
 export default function CategoryManageScreen() {
@@ -77,7 +78,14 @@ export default function CategoryManageScreen() {
     }
   };
 
+  const canDelete = categories.length > MIN_CATEGORY_COUNT;
+
   const handleDelete = (cat: ScheduleCategoryItem) => {
+    if (!canDelete) {
+      Alert.alert('삭제 불가', '카테고리는 최소 1개 이상 있어야 합니다.');
+      return;
+    }
+
     Alert.alert(
       '카테고리 삭제',
       `"${cat.name}" 카테고리를 삭제할까요?\n이 카테고리를 사용 중인 스케줄은 "기타"로 표시됩니다.`,
@@ -146,6 +154,7 @@ export default function CategoryManageScreen() {
                     onPress={() => handleDelete(cat)}
                     hitSlop={8}
                     className="mr-3"
+                    style={!canDelete ? { opacity: 0.3 } : undefined}
                   >
                     <FontAwesome
                       name="trash-o"

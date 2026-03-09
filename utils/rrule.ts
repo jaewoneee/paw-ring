@@ -193,6 +193,30 @@ export function expandRRule(
   return [...new Set(results)].sort();
 }
 
+/**
+ * 현재 occurrence가 첫 번째 또는 마지막인지 판별.
+ * 삭제 UI 분기용: 첫/마지막이면 "모든 일정 삭제", 중간이면 "이후 모든 일정 삭제"
+ */
+export function isFirstOrLastOccurrence(
+  startDate: string,
+  rrule: string,
+  occurrenceDate: string,
+  recurrenceEndDate?: string | null,
+): { isFirst: boolean; isLast: boolean } {
+  const occ = dayjs(occurrenceDate);
+  const start = dayjs(startDate);
+
+  const isFirst = occ.isSame(start, "day");
+
+  // 마지막 판별: occurrence 다음날~+1년 범위에 다른 occurrence가 없으면 마지막
+  const nextDay = occ.add(1, "day").format("YYYY-MM-DD");
+  const farFuture = occ.add(1, "year").format("YYYY-MM-DD");
+  const futureOccurrences = expandRRule(startDate, rrule, nextDay, farFuture, recurrenceEndDate);
+  const isLast = futureOccurrences.length === 0;
+
+  return { isFirst, isLast };
+}
+
 /** rrule → 사람이 읽을 수 있는 라벨 (상세 화면용) */
 export function formatRRuleLabel(rrule: string): string {
   const { frequency, selectedDays } = parseRRule(rrule);
