@@ -1,20 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import * as Notifications from "expo-notifications";
 import type { EventSubscription } from "expo-modules-core";
+import { useRouter } from "expo-router";
 import { useAuth } from "@/hooks/useAuth";
+import { usePets } from "@/contexts/PetContext";
 import {
   registerForPushNotifications,
   getNotificationPermissionStatus,
   removePushToken,
 } from "@/services/notification";
+import { getSchedulesByRange } from "@/services/schedule";
+import { refreshAllNotifications } from "@/utils/notificationScheduler";
+import dayjs, { formatISODate } from "@/utils/dayjs";
 
 /**
  * 알림 초기화 및 권한 상태 관리 훅
  * - 로그인된 사용자에 대해 자동으로 권한 요청 + 토큰 등록
  * - 알림 수신 리스너 등록
+ * - 알림 탭 시 딥링크 처리
+ * - 앱 실행 시 향후 알림 보충 등록
  */
 export function useNotification() {
   const { user, userProfile } = useAuth();
+  const { selectedPet } = usePets();
+  const router = useRouter();
   const [permissionStatus, setPermissionStatus] =
     useState<Notifications.PermissionStatus | null>(null);
   const [pushToken, setPushToken] = useState<string | null>(null);
@@ -40,7 +49,27 @@ export function useNotification() {
     })();
   }, [user, userProfile?.notification_enabled]);
 
-  // 알림 수신 리스너 (포그라운드)
+  // 앱 실행 시 향후 알림 보충 등록 (반복 스케줄의 7일치 알림 갱신)
+  useEffect(() => {
+    if (!user || !selectedPet || !userProfile?.notification_enabled) return;
+
+    (async () => {
+      try {
+        const today = formatISODate(dayjs());
+        const rangeEnd = formatISODate(dayjs().add(7, "day"));
+        const schedules = await getSchedulesByRange(
+          selectedPet.id,
+          today,
+          rangeEnd,
+        );
+        await refreshAllNotifications(schedules);
+      } catch (error) {
+        console.error("[Notification] 알림 보충 등록 실패:", error);
+      }
+    })();
+  }, [user, selectedPet?.id, userProfile?.notification_enabled]);
+
+  // 알림 수신 리스너 (포그라운드) + 딥링크 처리
   useEffect(() => {
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
@@ -50,7 +79,17 @@ export function useNotification() {
     responseListener.current =
       Notifications.addNotificationResponseReceivedListener((response) => {
         console.log("[Notification] 알림 탭:", response);
-        // TODO: 딥링크 처리 (스케줄 상세 화면으로 이동)
+
+        const data = response.notification.request.content.data as
+          | { scheduleId?: string; occurrenceDate?: string }
+          | undefined;
+        if (data?.scheduleId) {
+          const params: Record<string, string> = { id: data.scheduleId };
+          if (data.occurrenceDate) {
+            params.occurrenceDate = data.occurrenceDate;
+          }
+          router.push({ pathname: "/schedule-detail", params });
+        }
       });
 
     return () => {
@@ -61,7 +100,7 @@ export function useNotification() {
         responseListener.current.remove();
       }
     };
-  }, []);
+  }, [router]);
 
   // 로그아웃 시 토큰 제거
   useEffect(() => {

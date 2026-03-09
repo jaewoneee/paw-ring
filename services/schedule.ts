@@ -8,6 +8,12 @@ import type {
   UpdateScheduleInput,
 } from "@/types/schedule";
 import { expandRRule } from "@/utils/rrule";
+import {
+  scheduleNotifications,
+  scheduleNotificationForOccurrence,
+  cancelScheduleNotifications,
+  cancelNotificationForDate,
+} from "@/utils/notificationScheduler";
 
 /**
  * parent_schedule_id 기반 중복 제거
@@ -102,6 +108,10 @@ export async function createSchedule(
     .single();
 
   if (error) throw error;
+
+  // 알림 등록
+  scheduleNotifications(schedule as Schedule).catch(() => {});
+
   return schedule as Schedule;
 }
 
@@ -266,6 +276,9 @@ export async function completeSchedule(
   completionDate: string,
   userId: string
 ): Promise<ScheduleCompletion> {
+  // 완료된 스케줄의 알림 취소
+  cancelNotificationForDate(scheduleId, completionDate).catch(() => {});
+
   const { data, error } = await supabase
     .from("schedule_completions")
     .upsert(
@@ -356,6 +369,12 @@ export async function updateSchedule(
 
   if (error) throw error;
 
+  // 알림 재등록 (reminder, 시간 등이 변경되었을 수 있으므로)
+  cancelScheduleNotifications(id).catch(() => {});
+  getScheduleById(id)
+    .then((updated) => scheduleNotifications(updated))
+    .catch(() => {});
+
   // 원본(루트) 스케줄의 제목/카테고리 변경 시 파생 스케줄에도 전파
   if (data.title !== undefined || data.category !== undefined) {
     const cascadeFields: Record<string, unknown> = {
@@ -373,6 +392,8 @@ export async function updateSchedule(
 
 /** 스케줄 단건 삭제 */
 export async function deleteSchedule(id: string): Promise<void> {
+  cancelScheduleNotifications(id).catch(() => {});
+
   const { error } = await supabase.from("schedules").delete().eq("id", id);
 
   if (error) throw error;
@@ -383,6 +404,9 @@ export async function deleteScheduleAll(id: string): Promise<void> {
   const schedule = await getScheduleById(id);
   // rootId: 원본이면 자기 자신, 파생이면 parent_schedule_id
   const rootId = schedule.parent_schedule_id ?? id;
+
+  // 원본 + 파생 스케줄 알림 모두 취소
+  cancelScheduleNotifications(rootId).catch(() => {});
 
   // 파생 스케줄 모두 삭제
   const { error: childError } = await supabase
@@ -421,6 +445,9 @@ export async function updateScheduleThisOnly(
   exceptionDate: string,
   modifiedFields: ScheduleException["modified_fields"]
 ): Promise<void> {
+  // 기존 날짜 알림 취소 후 수정된 내용으로 재등록
+  cancelNotificationForDate(scheduleId, exceptionDate).catch(() => {});
+
   const { error } = await supabase.from("schedule_exceptions").upsert(
     {
       schedule_id: scheduleId,
@@ -432,6 +459,17 @@ export async function updateScheduleThisOnly(
   );
 
   if (error) throw error;
+
+  // 수정된 필드의 reminder로 해당 날짜 알림 재등록
+  const effectiveReminder = modifiedFields?.reminder;
+  if (effectiveReminder && effectiveReminder !== "none") {
+    getScheduleById(scheduleId)
+      .then((schedule) => {
+        const merged = { ...schedule, ...modifiedFields } as Schedule;
+        scheduleNotificationForOccurrence(merged, exceptionDate);
+      })
+      .catch(() => {});
+  }
 }
 
 /** 반복 스케줄 - 이후 모든 일정 수정 (원본 종료 + 새 스케줄 생성) */
@@ -493,6 +531,8 @@ export async function deleteScheduleThisOnly(
   scheduleId: string,
   exceptionDate: string
 ): Promise<void> {
+  cancelNotificationForDate(scheduleId, exceptionDate).catch(() => {});
+
   const { error } = await supabase.from("schedule_exceptions").upsert(
     {
       schedule_id: scheduleId,
