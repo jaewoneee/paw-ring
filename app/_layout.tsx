@@ -19,6 +19,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { CategoryProvider } from '@/contexts/CategoryContext';
 import { PetProvider } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
+import { useNotification } from '@/hooks/useNotification';
 import { View } from 'react-native';
 
 const LightTheme: Theme = {
@@ -89,6 +90,9 @@ function RootLayoutNav() {
   const { user, isLoading } = useAuth();
   const segments = useSegments();
   const router = useRouter();
+
+  // 알림 권한 요청 + 토큰 등록 (로그인 상태에서만 동작)
+  useNotification();
 
   useEffect(() => {
     if (!isLoading) {

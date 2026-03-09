@@ -50,9 +50,9 @@
 ## 주요 기능 요구사항
 
 ### 알림 기본
-- [ ] 알림 권한 요청 (expo-notifications)
-- [ ] FCM 토큰 발급 및 Firestore 저장
-- [ ] 토큰 갱신 처리
+- [x] 알림 권한 요청 (expo-notifications)
+- [x] Expo 푸시 토큰 발급 및 Supabase fcm_tokens 테이블 저장
+- [x] 토큰 갱신 처리 (앱 실행 시 자동 재등록)
 
 ### 알림 스케줄링
 - [ ] 단건 스케줄 알림 등록 (로컬 알림)

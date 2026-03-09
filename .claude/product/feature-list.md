@@ -71,7 +71,7 @@
 
 | # | 기능 | 상태 | 상세 문서 |
 |---|------|------|-----------|
-| 4.1 | 푸시 알림 권한 요청 및 토큰 등록 | ⬜ | [push-notification.md](./feature/push-notification.md) |
+| 4.1 | 푸시 알림 권한 요청 및 토큰 등록 | ✅ | [push-notification.md](./feature/push-notification.md) |
 | 4.2 | 스케줄별 알림 시간 설정 (N분 전/정시/커스텀) | ⬜ | [push-notification.md](./feature/push-notification.md) |
 | 4.3 | 반복 스케줄 알림 자동 생성 | ⬜ | [push-notification.md](./feature/push-notification.md) |
 | 4.4 | 알림 ON/OFF (스케줄 단위) | ⬜ | [push-notification.md](./feature/push-notification.md) |
