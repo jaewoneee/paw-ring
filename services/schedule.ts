@@ -14,6 +14,7 @@ import {
   cancelScheduleNotifications,
   cancelNotificationForDate,
 } from "@/utils/notificationScheduler";
+import { isPetNotificationEnabled } from "@/services/petNotification";
 
 /**
  * parent_schedule_id 기반 중복 제거
@@ -109,8 +110,12 @@ export async function createSchedule(
 
   if (error) throw error;
 
-  // 알림 등록
-  scheduleNotifications(schedule as Schedule).catch(() => {});
+  // 반려동물 단위 알림이 켜져 있을 때만 알림 등록
+  isPetNotificationEnabled(data.pet_id, data.owner_id)
+    .then((enabled) => {
+      if (enabled) scheduleNotifications(schedule as Schedule);
+    })
+    .catch(() => {});
 
   return schedule as Schedule;
 }
@@ -372,7 +377,10 @@ export async function updateSchedule(
   // 알림 재등록 (reminder, 시간 등이 변경되었을 수 있으므로)
   cancelScheduleNotifications(id).catch(() => {});
   getScheduleById(id)
-    .then((updated) => scheduleNotifications(updated))
+    .then(async (updated) => {
+      const enabled = await isPetNotificationEnabled(updated.pet_id, updated.owner_id);
+      if (enabled) await scheduleNotifications(updated);
+    })
     .catch(() => {});
 
   // 원본(루트) 스케줄의 제목/카테고리 변경 시 파생 스케줄에도 전파
@@ -464,7 +472,9 @@ export async function updateScheduleThisOnly(
   const effectiveReminder = modifiedFields?.reminder;
   if (effectiveReminder && effectiveReminder !== "none") {
     getScheduleById(scheduleId)
-      .then((schedule) => {
+      .then(async (schedule) => {
+        const enabled = await isPetNotificationEnabled(schedule.pet_id, schedule.owner_id);
+        if (!enabled) return;
         const merged = { ...schedule, ...modifiedFields } as Schedule;
         scheduleNotificationForOccurrence(merged, exceptionDate);
       })

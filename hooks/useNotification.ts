@@ -11,6 +11,7 @@ import {
 } from "@/services/notification";
 import { getSchedulesByRange } from "@/services/schedule";
 import { refreshAllNotifications } from "@/utils/notificationScheduler";
+import { isPetNotificationEnabled } from "@/services/petNotification";
 import dayjs, { formatISODate } from "@/utils/dayjs";
 
 /**
@@ -55,6 +56,10 @@ export function useNotification() {
 
     (async () => {
       try {
+        // 반려동물 단위 알림이 꺼져 있으면 해당 펫의 알림 등록하지 않음
+        const petEnabled = await isPetNotificationEnabled(selectedPet.id, user.uid);
+        if (!petEnabled) return;
+
         const today = formatISODate(dayjs());
         const rangeEnd = formatISODate(dayjs().add(7, "day"));
         const schedules = await getSchedulesByRange(

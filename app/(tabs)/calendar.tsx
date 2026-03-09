@@ -2,7 +2,7 @@ import dayjs, { formatISODate } from "@/utils/dayjs";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 
 import { DayScheduleList } from "@/components/calendar/DayScheduleList";
@@ -17,7 +17,19 @@ import Colors from "@/constants/Colors";
 import { usePets } from "@/contexts/PetContext";
 import { useAuth } from "@/hooks/useAuth";
 import { useMonthSchedules } from "@/hooks/useSchedules";
-import { completeSchedule, uncompleteSchedule } from "@/services/schedule";
+import {
+  completeSchedule,
+  uncompleteSchedule,
+  getSchedulesByRange,
+} from "@/services/schedule";
+import {
+  isPetNotificationEnabled,
+  upsertPetNotificationSetting,
+} from "@/services/petNotification";
+import {
+  cancelScheduleNotifications,
+  refreshAllNotifications,
+} from "@/utils/notificationScheduler";
 import type { ScheduleInstance } from "@/types/schedule";
 
 type CalendarViewMode = "month" | "week";
@@ -33,12 +45,44 @@ export default function CalendarScreen() {
   const [month, setMonth] = useState(dayjs().month());
   const [selectedDate, setSelectedDate] = useState(formatISODate(dayjs()));
   const [viewMode, setViewMode] = useState<CalendarViewMode>("month");
+  const [petNotificationEnabled, setPetNotificationEnabled] = useState(true);
 
   const { schedules, refresh, updateCompletionStatus } = useMonthSchedules(
     selectedPet?.id,
     year,
     month,
   );
+
+  // 반려동물 알림 설정 로드
+  const togglingRef = useRef(false);
+  useEffect(() => {
+    if (!selectedPet || !user || togglingRef.current) return;
+    isPetNotificationEnabled(selectedPet.id, user.uid)
+      .then(setPetNotificationEnabled)
+      .catch(() => {});
+  }, [selectedPet?.id, user?.uid]);
+
+  const handleTogglePetNotification = useCallback(async () => {
+    if (!selectedPet || !user) return;
+    const newValue = !petNotificationEnabled;
+    togglingRef.current = true;
+    setPetNotificationEnabled(newValue);
+    try {
+      await upsertPetNotificationSetting(selectedPet.id, user.uid, newValue);
+      const today = formatISODate(dayjs());
+      const rangeEnd = formatISODate(dayjs().add(7, "day"));
+      const schedules = await getSchedulesByRange(selectedPet.id, today, rangeEnd);
+      if (newValue) {
+        await refreshAllNotifications(schedules);
+      } else {
+        await Promise.all(schedules.map((s) => cancelScheduleNotifications(s.id)));
+      }
+    } catch {
+      setPetNotificationEnabled(!newValue);
+    } finally {
+      togglingRef.current = false;
+    }
+  }, [selectedPet, user, petNotificationEnabled]);
 
   // 화면 복귀 시 데이터 refresh
   useFocusEffect(
@@ -186,6 +230,8 @@ export default function CalendarScreen() {
             viewMode={viewMode}
             onChangeMode={setViewMode}
             onCategoryManage={() => router.push("/category-manage")}
+            onToggleNotification={handleTogglePetNotification}
+            notificationEnabled={petNotificationEnabled}
             colors={colors}
           />
 
@@ -223,6 +269,8 @@ export default function CalendarScreen() {
           viewMode={viewMode}
           onChangeMode={setViewMode}
           onCategoryManage={() => router.push("/category-manage")}
+          onToggleNotification={handleTogglePetNotification}
+          notificationEnabled={petNotificationEnabled}
           colors={colors}
         />
 
@@ -259,22 +307,39 @@ function ViewModeToggle({
   viewMode,
   onChangeMode,
   onCategoryManage,
+  onToggleNotification,
+  notificationEnabled,
   colors,
 }: {
   viewMode: CalendarViewMode;
   onChangeMode: (mode: CalendarViewMode) => void;
   onCategoryManage: () => void;
+  onToggleNotification: () => void;
+  notificationEnabled: boolean;
   colors: (typeof Colors)["light"] | (typeof Colors)["dark"];
 }) {
   return (
     <View className="flex-row justify-between items-center px-4 pt-2">
-      <Pressable
-        onPress={onCategoryManage}
-        className="w-8 h-8 items-center justify-center rounded-full"
-        style={{ backgroundColor: colors.surface }}
-      >
-        <FontAwesome name="tag" size={14} color={colors.mutedForeground} />
-      </Pressable>
+      <View className="flex-row gap-2">
+        <Pressable
+          onPress={onCategoryManage}
+          className="w-8 h-8 items-center justify-center rounded-full"
+          style={{ backgroundColor: colors.surface }}
+        >
+          <FontAwesome name="tag" size={14} color={colors.mutedForeground} />
+        </Pressable>
+        <Pressable
+          onPress={onToggleNotification}
+          className="w-8 h-8 items-center justify-center rounded-full"
+          style={{ backgroundColor: colors.surface }}
+        >
+          <FontAwesome
+            name={notificationEnabled ? "bell" : "bell-slash"}
+            size={14}
+            color={notificationEnabled ? colors.primary : colors.mutedForeground}
+          />
+        </Pressable>
+      </View>
       <View
         className="flex-row rounded-lg overflow-hidden"
         style={{ backgroundColor: colors.surface }}

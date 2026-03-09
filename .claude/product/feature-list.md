@@ -75,7 +75,7 @@
 | 4.2 | 스케줄별 알림 시간 설정 (N분 전/정시/커스텀) | ✅ | [push-notification.md](./feature/push-notification.md) |
 | 4.3 | 반복 스케줄 알림 자동 생성 | ✅ | [push-notification.md](./feature/push-notification.md) |
 | 4.4 | 알림 ON/OFF (스케줄 단위) | ✅ | [push-notification.md](./feature/push-notification.md) |
-| 4.5 | 알림 ON/OFF (캘린더 단위) | ⬜ | [push-notification.md](./feature/push-notification.md) |
+| 4.5 | 알림 ON/OFF (캘린더 단위) | ✅ | [push-notification.md](./feature/push-notification.md) |
 | 4.6 | 미실행 스케줄 리마인더 알림 (다음날 발송) | ⬜ | [push-notification.md](./feature/push-notification.md) |
 
 ---
