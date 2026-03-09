@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { Pet, PetSpecies } from "@/types/pet";
-import * as FileSystem from "expo-file-system";
 import { decode } from "base64-arraybuffer";
+import { File } from "expo-file-system/next";
 
 /** 반려동물 프로필 이미지 업로드 */
 export async function uploadPetImage(
@@ -11,9 +11,8 @@ export async function uploadPetImage(
   const ext = localUri.split(".").pop() ?? "jpg";
   const fileName = `${ownerId}/${Date.now()}.${ext}`;
 
-  const base64 = await FileSystem.readAsStringAsync(localUri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
+  const file = new File(localUri);
+  const base64 = await file.base64();
 
   const { error } = await supabase.storage
     .from("pet-profiles")
