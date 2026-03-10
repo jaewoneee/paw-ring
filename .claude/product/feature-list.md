@@ -87,8 +87,8 @@
 | 5.1 | 캘린더 공유 초대 (링크 / 이메일) | ✅ | [sharing.md](./feature/sharing.md) |
 | 5.2 | 공유 초대 수락 / 거절 | ✅ | [sharing.md](./feature/sharing.md) |
 | 5.3 | 공유 권한 설정 (열람만 / 편집 가능) | ✅ | [sharing.md](./feature/sharing.md) |
-| 5.4 | 공유 멤버 목록 조회 | ⬜ | [sharing.md](./feature/sharing.md) |
-| 5.5 | 공유 해제 (나가기 / 내보내기) | ⬜ | [sharing.md](./feature/sharing.md) |
+| 5.4 | 공유 멤버 목록 조회 | ✅ | [sharing.md](./feature/sharing.md) |
+| 5.5 | 공유 해제 (나가기 / 내보내기) | ✅ | [sharing.md](./feature/sharing.md) |
 
 ---
 
