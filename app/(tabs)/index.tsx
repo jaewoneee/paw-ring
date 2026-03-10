@@ -141,6 +141,8 @@ export default function HomeScreen() {
           <Pressable
             className="flex-row items-center gap-3 flex-1 mr-3"
             onPress={() => setSheetVisible(true)}
+            accessibilityLabel={`반려동물 선택: ${selectedPet?.name ?? '미등록'}`}
+            accessibilityRole="button"
           >
             {selectedPet?.profile_image ? (
               <Image
@@ -168,7 +170,9 @@ export default function HomeScreen() {
 
           <View className="flex-row items-center gap-1">
             <Pressable
-              className="w-9 h-9 rounded-full items-center justify-center"
+              className="w-11 h-11 rounded-full items-center justify-center"
+              accessibilityLabel="알림"
+              accessibilityRole="button"
               onPress={() => {
                 /* TODO: 알림 화면 이동 */
               }}
@@ -176,7 +180,9 @@ export default function HomeScreen() {
               <FontAwesome name="bell-o" size={20} color={colors.foreground} />
             </Pressable>
             <Pressable
-              className="w-9 h-9 rounded-full items-center justify-center"
+              className="w-11 h-11 rounded-full items-center justify-center"
+              accessibilityLabel={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
+              accessibilityRole="button"
               onPress={toggleColorScheme}
             >
               <FontAwesome

@@ -241,7 +241,9 @@ export default function CategoryManageScreen() {
                   <Pressable
                     key={color}
                     onPress={() => setSelectedColor(color)}
-                    className="w-9 h-9 rounded-full items-center justify-center"
+                    accessibilityLabel={`색상 ${color} ${isActive ? '선택됨' : '선택'}`}
+                    accessibilityRole="radio"
+                    className="w-10 h-10 rounded-full items-center justify-center"
                     style={{
                       backgroundColor: color,
                       borderWidth: isActive ? 3 : 0,

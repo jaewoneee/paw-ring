@@ -60,6 +60,8 @@ export function WeekCalendar({
         <Pressable
           onPress={onPrevWeek}
           className="flex-row items-center gap-1"
+          accessibilityLabel="이전 주"
+          accessibilityRole="button"
         >
           <FontAwesome
             name="chevron-left"
@@ -93,7 +95,9 @@ export function WeekCalendar({
           )}
           <Pressable
             onPress={onNextWeek}
-            className="w-9 h-9 items-center justify-center"
+            className="w-11 h-11 items-center justify-center"
+            accessibilityLabel="다음 주"
+            accessibilityRole="button"
           >
             <FontAwesome
               name="chevron-right"

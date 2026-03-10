@@ -62,7 +62,9 @@ export function MonthCalendar({
       <View className="flex-row items-center justify-between mb-3">
         <Pressable
           onPress={onPrevMonth}
-          className="w-9 h-9 items-center justify-center"
+          className="w-11 h-11 items-center justify-center"
+          accessibilityLabel="이전 달"
+          accessibilityRole="button"
         >
           <FontAwesome
             name="chevron-left"
@@ -73,6 +75,8 @@ export function MonthCalendar({
         <Pressable
           onPress={onGoToday}
           className="flex-row items-center gap-1.5"
+          accessibilityLabel="오늘로 이동"
+          accessibilityRole="button"
         >
           <Typography variant="body-xl" className="font-semibold">
             {monthLabel}
@@ -93,7 +97,9 @@ export function MonthCalendar({
         </Pressable>
         <Pressable
           onPress={onNextMonth}
-          className="w-9 h-9 items-center justify-center"
+          className="w-11 h-11 items-center justify-center"
+          accessibilityLabel="다음 달"
+          accessibilityRole="button"
         >
           <FontAwesome
             name="chevron-right"

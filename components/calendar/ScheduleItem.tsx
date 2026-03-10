@@ -112,11 +112,13 @@ export function ScheduleItem({
                 onToggleComplete();
               }}
               hitSlop={8}
-              className="w-7 h-7 rounded-md items-center justify-center border-2"
+              className="w-8 h-8 rounded-md items-center justify-center border-2"
               style={{
                 borderColor: isCompleted ? meta.color : colors.mutedForeground,
                 backgroundColor: isCompleted ? meta.color : 'transparent',
               }}
+              accessibilityLabel={isCompleted ? `${schedule.title} 완료 취소` : `${schedule.title} 완료`}
+              accessibilityRole="checkbox"
             >
               {isCompleted && (
                 <FontAwesome name="check" size={12} color="#fff" />
@@ -168,8 +170,10 @@ export function ScheduleItem({
                 handleComplete();
               }}
               hitSlop={8}
-              className="w-8 h-8 rounded-full items-center justify-center"
+              className="w-10 h-10 rounded-full items-center justify-center"
               style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+              accessibilityLabel={`${schedule.title} 완료`}
+              accessibilityRole="button"
             >
               <FontAwesome
                 name="check"

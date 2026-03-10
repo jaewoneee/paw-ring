@@ -549,7 +549,9 @@ export default function AddScheduleScreen() {
                         <Pressable
                           key={day.value}
                           onPress={() => toggleDayOfWeek(day.value)}
-                          className="w-9 h-9 rounded-full items-center justify-center border"
+                          accessibilityLabel={`${day.label}요일 ${isActive ? '선택됨' : '선택'}`}
+                          accessibilityRole="checkbox"
+                          className="w-10 h-10 rounded-full items-center justify-center border"
                           style={{
                             borderColor: isActive
                               ? colors.primary

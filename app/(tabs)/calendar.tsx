@@ -345,15 +345,19 @@ function ViewModeToggle({
       <View className="flex-row gap-2">
         <Pressable
           onPress={onCategoryManage}
-          className="w-8 h-8 items-center justify-center rounded-full"
+          className="w-10 h-10 items-center justify-center rounded-full"
           style={{ backgroundColor: colors.surface }}
+          accessibilityLabel="카테고리 관리"
+          accessibilityRole="button"
         >
           <FontAwesome name="tag" size={14} color={colors.mutedForeground} />
         </Pressable>
         <Pressable
           onPress={onToggleNotification}
-          className="w-8 h-8 items-center justify-center rounded-full"
+          className="w-10 h-10 items-center justify-center rounded-full"
           style={{ backgroundColor: colors.surface }}
+          accessibilityLabel={notificationEnabled ? "알림 끄기" : "알림 켜기"}
+          accessibilityRole="button"
         >
           <FontAwesome
             name={notificationEnabled ? "bell" : "bell-slash"}
@@ -364,8 +368,10 @@ function ViewModeToggle({
         {isOwner && (
           <Pressable
             onPress={onShareSettings}
-            className="w-8 h-8 items-center justify-center rounded-full"
+            className="w-10 h-10 items-center justify-center rounded-full"
             style={{ backgroundColor: colors.surface }}
+            accessibilityLabel="공유 설정"
+            accessibilityRole="button"
           >
             <FontAwesome name="share-alt" size={14} color={colors.mutedForeground} />
           </Pressable>
@@ -434,6 +440,8 @@ function FAB({
   return (
     <Pressable
       onPress={onPress}
+      accessibilityLabel="일정 추가"
+      accessibilityRole="button"
       className="absolute items-center justify-center rounded-full"
       style={{
         right: 20,
