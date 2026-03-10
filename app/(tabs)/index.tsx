@@ -174,16 +174,16 @@ export default function HomeScreen() {
           </Pressable>
 
           <View className="flex-row items-center gap-1">
+            {/* TODO: 원격 알림(Phase 2) 구현 시 알림 내역 화면과 함께 활성화
             <Pressable
               className="w-11 h-11 rounded-full items-center justify-center"
               accessibilityLabel="알림"
               accessibilityRole="button"
-              onPress={() => {
-                /* TODO: 알림 화면 이동 */
-              }}
+              onPress={() => router.push('/notifications')}
             >
               <FontAwesome name="bell-o" size={20} color={colors.foreground} />
             </Pressable>
+            */}
             <Pressable
               className="w-11 h-11 rounded-full items-center justify-center"
               accessibilityLabel={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}

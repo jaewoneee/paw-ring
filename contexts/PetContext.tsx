@@ -48,10 +48,22 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     }
     setIsLoading(true);
     try {
-      const [ownResult, sharedResult] = await Promise.all([
+      // 부분 실패 처리: 하나가 실패해도 나머지 결과는 유지
+      const [ownSettled, sharedSettled] = await Promise.allSettled([
         getUserPets(user.uid),
         getSharedPets(user.uid),
       ]);
+
+      const ownResult = ownSettled.status === "fulfilled" ? ownSettled.value : pets;
+      const sharedResult = sharedSettled.status === "fulfilled" ? sharedSettled.value : [];
+
+      if (ownSettled.status === "rejected") {
+        console.warn("[PetContext] 내 반려동물 로딩 실패:", ownSettled.reason);
+      }
+      if (sharedSettled.status === "rejected") {
+        console.warn("[PetContext] 공유 반려동물 로딩 실패:", sharedSettled.reason);
+      }
+
       setPets(ownResult);
 
       const shared: SharedPet[] = sharedResult.map((s) => ({

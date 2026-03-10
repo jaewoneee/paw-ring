@@ -4,8 +4,10 @@ import Constants from "expo-constants";
 const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
 const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
 
-console.log("[Supabase] URL:", JSON.stringify(supabaseUrl));
-console.log("[Supabase] Key:", supabaseAnonKey ? "exists" : "missing");
+if (__DEV__) {
+  console.log("[Supabase] URL:", supabaseUrl ? "configured" : "missing");
+  console.log("[Supabase] Key:", supabaseAnonKey ? "configured" : "missing");
+}
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
