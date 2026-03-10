@@ -14,8 +14,6 @@ import {
   ScrollView,
   View,
 } from 'react-native';
-import { Text } from '@/components/ui/Text';
-
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -257,15 +255,9 @@ export default function EditPetScreen() {
 
               {/* 생년월일 */}
               <View style={{ gap: 6 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: colors.foreground,
-                  }}
-                >
+                <Typography variant="body-sm" className="font-medium">
                   생년월일
-                </Text>
+                </Typography>
                 <Pressable
                   onPress={() => {
                     setTempDate(birthDate ?? new Date());
@@ -280,21 +272,20 @@ export default function EditPetScreen() {
                     paddingVertical: 12,
                   }}
                 >
-                  <Text
+                  <Typography
                     style={{
-                      fontSize: 16,
                       color: birthDate ? colors.foreground : colors.mutedForeground,
                     }}
                   >
                     {birthDate
                       ? formatDate(birthDate)
                       : '생년월일을 선택해주세요'}
-                  </Text>
+                  </Typography>
                 </Pressable>
                 {errors.birthDate ? (
-                  <Text style={{ fontSize: 12, color: colors.error, marginLeft: 4 }}>
+                  <Typography variant="small" style={{ color: colors.error, marginLeft: 4 }}>
                     {errors.birthDate}
-                  </Text>
+                  </Typography>
                 ) : null}
               </View>
 
@@ -323,9 +314,9 @@ export default function EditPetScreen() {
               {deleting ? (
                 <ActivityIndicator size="small" color={colors.error} />
               ) : (
-                <Text style={{ color: colors.error, fontWeight: '600', fontSize: 16 }}>
+                <Typography className="font-semibold" style={{ color: colors.error }}>
                   삭제하기
-                </Text>
+                </Typography>
               )}
             </Pressable>
           </CardContent>
@@ -336,16 +327,9 @@ export default function EditPetScreen() {
           onClose={() => setShowDatePicker(false)}
         >
           <View style={{ gap: 12 }}>
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '600',
-                color: colors.foreground,
-                textAlign: 'center',
-              }}
-            >
+            <Typography variant="body-lg" className="font-semibold text-center">
               생년월일 선택
-            </Text>
+            </Typography>
             <DateTimePicker
               value={tempDate}
               mode="date"

@@ -10,6 +10,7 @@ type Variant =
   | 'body-lg'
   | 'body-md'
   | 'body-sm'
+  | 'caption'
   | 'small';
 
 interface TypographyProps {
@@ -21,14 +22,15 @@ interface TypographyProps {
 }
 
 const variantStyles: Record<Variant, string> = {
-  h1: 'text-4xl font-bold',
-  h2: 'text-3xl font-bold',
-  h3: 'text-2xl font-semibold',
-  'body-xl': 'text-2xl',
-  'body-lg': 'text-xl',
-  'body-md': 'text-base',
-  'body-sm': 'text-sm',
-  small: 'text-xs',
+  h1: 'text-4xl font-bold',       // 36px
+  h2: 'text-3xl font-bold',       // 30px
+  h3: 'text-2xl font-semibold',   // 24px
+  'body-xl': 'text-xl',           // 20px
+  'body-lg': 'text-lg',           // 18px
+  'body-md': 'text-base',         // 16px
+  'body-sm': 'text-sm',           // 14px
+  caption: 'text-[13px]',         // 13px
+  small: 'text-xs',               // 12px
 };
 
 export function Typography({

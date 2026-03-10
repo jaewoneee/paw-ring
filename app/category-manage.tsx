@@ -7,7 +7,6 @@ import ColorPicker, { HueSlider, Panel1 } from 'reanimated-color-picker';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
-import { Text } from '@/components/ui/Text';
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
@@ -196,15 +195,9 @@ export default function CategoryManageScreen() {
 
           {/* 이름 입력 */}
           <View style={{ gap: 6 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '500',
-                color: colors.foreground,
-              }}
-            >
+            <Typography variant="body-sm" className="font-medium">
               이름
-            </Text>
+            </Typography>
             <TextInput
               value={name}
               onChangeText={setName}
@@ -226,15 +219,9 @@ export default function CategoryManageScreen() {
 
           {/* 색상 선택 */}
           <View style={{ gap: 6 }}>
-            <Text
-              style={{
-                fontSize: 14,
-                fontWeight: '500',
-                color: colors.foreground,
-              }}
-            >
+            <Typography variant="body-sm" className="font-medium">
               색상
-            </Text>
+            </Typography>
             <View className="flex-row flex-wrap gap-3">
               {CATEGORY_COLOR_PRESETS.map((color) => {
                 const isActive = selectedColor === color && !showCustomPicker;

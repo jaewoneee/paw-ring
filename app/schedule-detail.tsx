@@ -5,7 +5,7 @@ import { formatKoreanDate, formatKoreanDateNoDay } from "@/utils/dayjs";
 import { useIsFocused } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, ScrollView, Text, View } from "react-native";
+import { Alert, ScrollView, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -292,12 +292,13 @@ export default function ScheduleDetailScreen() {
                   <Typography variant="body-xl" className="font-semibold">
                     {schedule.title}
                   </Typography>
-                  <Text
-                    className="text-xs font-medium"
+                  <Typography
+                    variant="small"
+                    className="font-medium"
                     style={{ color: meta.color }}
                   >
                     {meta.name}
-                  </Text>
+                  </Typography>
                 </View>
               </View>
 
@@ -321,12 +322,12 @@ export default function ScheduleDetailScreen() {
                 <View style={{ width: 20, alignItems: "center" }}>
                   <Bell size={16} color={colors.mutedForeground} />
                 </View>
-                <Text
-                  className="text-sm"
+                <Typography
+                  variant="body-sm"
                   style={{ color: colors.mutedForeground, width: 40 }}
                 >
                   알림
-                </Text>
+                </Typography>
                 <Typography variant="body-md" className="flex-1">
                   {reminderLabel}
                 </Typography>
@@ -426,12 +427,12 @@ function DetailRow({
       <View style={{ width: 20, alignItems: "center" }}>
         <Icon size={16} color={colors.mutedForeground} />
       </View>
-      <Text
-        className="text-sm"
+      <Typography
+        variant="body-sm"
         style={{ color: colors.mutedForeground, width: 40 }}
       >
         {label}
-      </Text>
+      </Typography>
       <Typography variant="body-md" className="flex-1">
         {value}
       </Typography>

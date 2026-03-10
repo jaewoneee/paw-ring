@@ -2,7 +2,6 @@ import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Screen } from '@/components/ui/Screen';
-import { Text } from '@/components/ui/Text';
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
@@ -46,9 +45,9 @@ function SwipeAction({
         alignItems: 'center',
       }}
     >
-      <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14 }}>
+      <Typography variant="body-sm" className="font-semibold" style={{ color: '#fff' }}>
         {label}
-      </Text>
+      </Typography>
     </Pressable>
   );
 }

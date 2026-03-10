@@ -26,7 +26,7 @@
 
 | # | 항목 | 상태 |
 |---|------|------|
-| 2.1 | FontAwesome 아이콘 `as any` 타입 단언 제거 (5개 파일) | ⬜ |
+| 2.1 | FontAwesome 아이콘 `as any` 타입 단언 제거 (5개 파일) | ✅ (Lucide 마이그레이션으로 해소) |
 | 2.2 | PetContext 공유 반려동물 `species: "dog" as const` 하드코딩 해소 | ⬜ |
 | 2.3 | ScheduleCategory 타입을 union literal로 강화 | ⬜ |
 
@@ -72,3 +72,13 @@
 | # | 항목 | 상태 |
 |---|------|------|
 | 7.1 | PetContext `Promise.all` 부분 실패 처리 (하나 실패해도 나머지 유지) | ✅ |
+
+---
+
+## 8. 디자인 시스템
+
+| # | 항목 | 상태 |
+|---|------|------|
+| 8.1 | Typography 스케일 정리 (body-xl/body-lg 중복 해소, caption 추가) | ✅ |
+| 8.2 | 인라인 fontSize → Typography 마이그레이션 (7개 파일) | ✅ |
+| 8.3 | 미사용 Text import 정리 | ✅ |

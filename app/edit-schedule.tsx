@@ -1,4 +1,3 @@
-import { Text } from '@/components/ui/Text';
 import { CategoryIcon } from '@/utils/categoryIcon';
 import DateTimePicker, {
   type DateTimePickerEvent,
@@ -439,15 +438,9 @@ export default function EditScheduleScreen() {
 
               {/* 카테고리 */}
               <View style={{ gap: 6 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: colors.foreground,
-                  }}
-                >
+                <Typography variant="body-sm" className="font-medium">
                   카테고리
-                </Text>
+                </Typography>
                 <View className="flex-row flex-wrap gap-2">
                   {categories.map(cat => {
                     const isActive = category === cat.id;
@@ -468,9 +461,9 @@ export default function EditScheduleScreen() {
                           size={12}
                           color={isActive ? cat.color : colors.mutedForeground}
                         />
-                        <Text
+                        <Typography
+                          variant="caption"
                           style={{
-                            fontSize: 13,
                             color: isActive
                               ? cat.color
                               : colors.mutedForeground,
@@ -478,7 +471,7 @@ export default function EditScheduleScreen() {
                           }}
                         >
                           {cat.name}
-                        </Text>
+                        </Typography>
                       </Pressable>
                     );
                   })}
@@ -490,15 +483,9 @@ export default function EditScheduleScreen() {
 
               {/* 시작 날짜 */}
               <View style={{ gap: 6 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: colors.foreground,
-                  }}
-                >
+                <Typography variant="body-sm" className="font-medium">
                   시작 날짜
-                </Text>
+                </Typography>
                 <Pressable
                   onPress={() => {
                     setTempDate(date);
@@ -513,24 +500,16 @@ export default function EditScheduleScreen() {
                     paddingVertical: 12,
                   }}
                 >
-                  <Text style={{ fontSize: 16, color: colors.foreground }}>
-                    {formatDate(date)}
-                  </Text>
+                  <Typography>{formatDate(date)}</Typography>
                 </Pressable>
               </View>
 
               {/* 종료 날짜 (반복 일정이 아닐 때만 표시) */}
               {!isRecurring && (
               <View style={{ gap: 6 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: colors.foreground,
-                  }}
-                >
+                <Typography variant="body-sm" className="font-medium">
                   종료 날짜
-                </Text>
+                </Typography>
                 <Pressable
                   onPress={() => {
                     setTempEndDate(endDate);
@@ -545,14 +524,12 @@ export default function EditScheduleScreen() {
                     paddingVertical: 12,
                   }}
                 >
-                  <Text style={{ fontSize: 16, color: colors.foreground }}>
-                    {formatDate(endDate)}
-                  </Text>
+                  <Typography>{formatDate(endDate)}</Typography>
                 </Pressable>
                 {errors.endDate && (
-                  <Text style={{ fontSize: 12, color: '#EF4444' }}>
+                  <Typography variant="small" style={{ color: '#EF4444' }}>
                     {errors.endDate}
-                  </Text>
+                  </Typography>
                 )}
               </View>
               )}
@@ -577,15 +554,9 @@ export default function EditScheduleScreen() {
               {/* 시작 시간 / 종료 시간 */}
               {!isAllDay && (
                 <View style={{ gap: 6 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: colors.foreground,
-                    }}
-                  >
+                  <Typography variant="body-sm" className="font-medium">
                     시간
-                  </Text>
+                  </Typography>
                   <View className="flex-row gap-3">
                     <Pressable
                       onPress={() => {
@@ -602,18 +573,10 @@ export default function EditScheduleScreen() {
                         paddingVertical: 12,
                       }}
                     >
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: colors.mutedForeground,
-                          marginBottom: 2,
-                        }}
-                      >
+                      <Typography variant="small" className="text-muted-foreground" style={{ marginBottom: 2 }}>
                         시작
-                      </Text>
-                      <Text style={{ fontSize: 16, color: colors.foreground }}>
-                        {formatTime24(time)}
-                      </Text>
+                      </Typography>
+                      <Typography>{formatTime24(time)}</Typography>
                     </Pressable>
                     <Pressable
                       onPress={() => {
@@ -630,18 +593,10 @@ export default function EditScheduleScreen() {
                         paddingVertical: 12,
                       }}
                     >
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: colors.mutedForeground,
-                          marginBottom: 2,
-                        }}
-                      >
+                      <Typography variant="small" className="text-muted-foreground" style={{ marginBottom: 2 }}>
                         종료
-                      </Text>
-                      <Text style={{ fontSize: 16, color: colors.foreground }}>
-                        {formatTime24(endTime)}
-                      </Text>
+                      </Typography>
+                      <Typography>{formatTime24(endTime)}</Typography>
                     </Pressable>
                   </View>
                 </View>
@@ -669,15 +624,9 @@ export default function EditScheduleScreen() {
               {/* 반복 주기 */}
               {isRecurring && (
                 <View style={{ gap: 6 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: colors.foreground,
-                    }}
-                  >
+                  <Typography variant="body-sm" className="font-medium">
                     반복 주기
-                  </Text>
+                  </Typography>
                   <View className="flex-row flex-wrap gap-2">
                     {RECURRENCE_FREQUENCY_OPTIONS.map(opt => {
                       const isActive = recurrenceFrequency === opt.value;
@@ -698,9 +647,9 @@ export default function EditScheduleScreen() {
                               : 'transparent',
                           }}
                         >
-                          <Text
+                          <Typography
+                            variant="caption"
                             style={{
-                              fontSize: 13,
                               color: isActive
                                 ? colors.primary
                                 : colors.mutedForeground,
@@ -708,7 +657,7 @@ export default function EditScheduleScreen() {
                             }}
                           >
                             {opt.label}
-                          </Text>
+                          </Typography>
                         </Pressable>
                       );
                     })}
@@ -719,15 +668,9 @@ export default function EditScheduleScreen() {
               {/* 요일 선택 (매주일 때) */}
               {isRecurring && recurrenceFrequency === 'weekly' && (
                 <View style={{ gap: 6 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: colors.foreground,
-                    }}
-                  >
+                  <Typography variant="body-sm" className="font-medium">
                     요일 선택
-                  </Text>
+                  </Typography>
                   <View className="flex-row gap-2">
                     {DAY_OF_WEEK_OPTIONS.map(day => {
                       const isActive = selectedDays.includes(day.value);
@@ -747,9 +690,9 @@ export default function EditScheduleScreen() {
                               : 'transparent',
                           }}
                         >
-                          <Text
+                          <Typography
+                            variant="caption"
                             style={{
-                              fontSize: 13,
                               color: isActive
                                 ? colors.primary
                                 : colors.mutedForeground,
@@ -757,7 +700,7 @@ export default function EditScheduleScreen() {
                             }}
                           >
                             {day.label}
-                          </Text>
+                          </Typography>
                         </Pressable>
                       );
                     })}
@@ -768,15 +711,9 @@ export default function EditScheduleScreen() {
               {/* 반복 종료 */}
               {isRecurring && (
                 <View style={{ gap: 6 }}>
-                  <Text
-                    style={{
-                      fontSize: 14,
-                      fontWeight: '500',
-                      color: colors.foreground,
-                    }}
-                  >
+                  <Typography variant="body-sm" className="font-medium">
                     반복 종료
-                  </Text>
+                  </Typography>
                   <View className="flex-row flex-wrap gap-2">
                     {RECURRENCE_END_OPTIONS.map(opt => {
                       const isActive = recurrenceEndType === opt.value;
@@ -794,9 +731,9 @@ export default function EditScheduleScreen() {
                               : 'transparent',
                           }}
                         >
-                          <Text
+                          <Typography
+                            variant="caption"
                             style={{
-                              fontSize: 13,
                               color: isActive
                                 ? colors.primary
                                 : colors.mutedForeground,
@@ -804,7 +741,7 @@ export default function EditScheduleScreen() {
                             }}
                           >
                             {opt.label}
-                          </Text>
+                          </Typography>
                         </Pressable>
                       );
                     })}
@@ -825,15 +762,13 @@ export default function EditScheduleScreen() {
                         marginTop: 4,
                       }}
                     >
-                      <Text style={{ fontSize: 16, color: colors.foreground }}>
-                        {formatDate(recurrenceEndDate)}
-                      </Text>
+                      <Typography>{formatDate(recurrenceEndDate)}</Typography>
                     </Pressable>
                   )}
                   {errors.recurrenceEndDate && (
-                    <Text style={{ fontSize: 12, color: '#EF4444' }}>
+                    <Typography variant="small" style={{ color: '#EF4444' }}>
                       {errors.recurrenceEndDate}
-                    </Text>
+                    </Typography>
                   )}
                 </View>
               )}
@@ -887,9 +822,9 @@ export default function EditScheduleScreen() {
                               : 'transparent',
                           }}
                         >
-                          <Text
+                          <Typography
+                            variant="caption"
                             style={{
-                              fontSize: 13,
                               color: isActive
                                 ? colors.primary
                                 : colors.mutedForeground,
@@ -897,7 +832,7 @@ export default function EditScheduleScreen() {
                             }}
                           >
                             {opt.label}
-                          </Text>
+                          </Typography>
                         </Pressable>
                       );
                     })}
@@ -908,15 +843,9 @@ export default function EditScheduleScreen() {
               <View className="border-b border-border" />
 
               <View style={{ gap: 6 }}>
-                <Text
-                  style={{
-                    fontSize: 14,
-                    fontWeight: '500',
-                    color: colors.foreground,
-                  }}
-                >
+                <Typography variant="body-sm" className="font-medium">
                   메모
-                </Text>
+                </Typography>
                 <TextInput
                   value={memo}
                   onChangeText={setMemo}
@@ -953,16 +882,9 @@ export default function EditScheduleScreen() {
           onClose={() => setShowDatePicker(false)}
         >
           <View style={{ gap: 12 }}>
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '600',
-                color: colors.foreground,
-                textAlign: 'center',
-              }}
-            >
+            <Typography variant="body-lg" className="font-semibold text-center">
               시작 날짜 선택
-            </Text>
+            </Typography>
             <DateTimePicker
               value={tempDate}
               mode="date"
@@ -989,16 +911,9 @@ export default function EditScheduleScreen() {
           onClose={() => setShowEndDatePicker(false)}
         >
           <View style={{ gap: 12 }}>
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '600',
-                color: colors.foreground,
-                textAlign: 'center',
-              }}
-            >
+            <Typography variant="body-lg" className="font-semibold text-center">
               종료 날짜 선택
-            </Text>
+            </Typography>
             <DateTimePicker
               value={tempEndDate}
               mode="date"
@@ -1026,16 +941,9 @@ export default function EditScheduleScreen() {
           onClose={() => setShowStartTimePicker(false)}
         >
           <View style={{ gap: 12 }}>
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '600',
-                color: colors.foreground,
-                textAlign: 'center',
-              }}
-            >
+            <Typography variant="body-lg" className="font-semibold text-center">
               시작 시간 선택
-            </Text>
+            </Typography>
             <DateTimePicker
               value={tempTime}
               mode="time"
@@ -1069,16 +977,9 @@ export default function EditScheduleScreen() {
           onClose={() => setShowEndTimePicker(false)}
         >
           <View style={{ gap: 12 }}>
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '600',
-                color: colors.foreground,
-                textAlign: 'center',
-              }}
-            >
+            <Typography variant="body-lg" className="font-semibold text-center">
               종료 시간 선택
-            </Text>
+            </Typography>
             <DateTimePicker
               value={tempEndTime}
               mode="time"
@@ -1108,16 +1009,9 @@ export default function EditScheduleScreen() {
           onClose={() => setShowRecurrenceEndDatePicker(false)}
         >
           <View style={{ gap: 12 }}>
-            <Text
-              style={{
-                fontSize: 18,
-                fontWeight: '600',
-                color: colors.foreground,
-                textAlign: 'center',
-              }}
-            >
+            <Typography variant="body-lg" className="font-semibold text-center">
               반복 종료 날짜 선택
-            </Text>
+            </Typography>
             <DateTimePicker
               value={tempRecurrenceEndDate}
               mode="date"
