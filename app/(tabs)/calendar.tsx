@@ -22,7 +22,6 @@ import {
   uncompleteSchedule,
   getSchedulesByRange,
 } from "@/services/schedule";
-import { removeShare } from "@/services/sharing";
 import {
   isPetNotificationEnabled,
   upsertPetNotificationSetting,
@@ -37,7 +36,7 @@ type CalendarViewMode = "month" | "week";
 
 export default function CalendarScreen() {
   const router = useRouter();
-  const { selectedPet, refreshPets } = usePets();
+  const { selectedPet } = usePets();
   const { user } = useAuth();
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
@@ -185,28 +184,6 @@ export default function CalendarScreen() {
     });
   };
 
-  const handleLeaveSharedCalendar = () => {
-    if (!selectedPet || !isShared) return;
-    Alert.alert(
-      "공유 캘린더 나가기",
-      `${selectedPet.name} 캘린더에서 나가시겠습니까?`,
-      [
-        { text: "취소", style: "cancel" },
-        {
-          text: "나가기",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await removeShare(selectedPet.shareId);
-              refreshPets();
-            } catch {
-              Alert.alert("오류", "나가기에 실패했습니다");
-            }
-          },
-        },
-      ]
-    );
-  };
 
   const handleAddSchedule = () => {
     router.push({ pathname: "/add-schedule", params: { date: selectedDate } });
@@ -269,7 +246,6 @@ export default function CalendarScreen() {
             onCategoryManage={() => router.push("/category-manage")}
             onToggleNotification={handleTogglePetNotification}
             onShareSettings={handleShareSettings}
-            onLeaveShared={isShared ? handleLeaveSharedCalendar : undefined}
             notificationEnabled={petNotificationEnabled}
             isOwner={isOwner}
             colors={colors}
@@ -351,7 +327,6 @@ function ViewModeToggle({
   onCategoryManage,
   onToggleNotification,
   onShareSettings,
-  onLeaveShared,
   notificationEnabled,
   isOwner,
   colors,
@@ -361,7 +336,6 @@ function ViewModeToggle({
   onCategoryManage: () => void;
   onToggleNotification: () => void;
   onShareSettings: () => void;
-  onLeaveShared?: () => void;
   notificationEnabled: boolean;
   isOwner: boolean;
   colors: (typeof Colors)["light"] | (typeof Colors)["dark"];
@@ -387,7 +361,7 @@ function ViewModeToggle({
             color={notificationEnabled ? colors.primary : colors.mutedForeground}
           />
         </Pressable>
-        {isOwner ? (
+        {isOwner && (
           <Pressable
             onPress={onShareSettings}
             className="w-8 h-8 items-center justify-center rounded-full"
@@ -395,15 +369,7 @@ function ViewModeToggle({
           >
             <FontAwesome name="share-alt" size={14} color={colors.mutedForeground} />
           </Pressable>
-        ) : onLeaveShared ? (
-          <Pressable
-            onPress={onLeaveShared}
-            className="w-8 h-8 items-center justify-center rounded-full"
-            style={{ backgroundColor: colors.surface }}
-          >
-            <FontAwesome name="sign-out" size={14} color={colors.error} />
-          </Pressable>
-        ) : null}
+        )}
       </View>
       <View
         className="flex-row rounded-lg overflow-hidden"

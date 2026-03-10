@@ -11,7 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRouter } from 'expo-router';
 import React, { createRef, useCallback, useRef, useState } from 'react';
-import { Image, Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import { Alert, Image, Pressable, RefreshControl, ScrollView, View } from 'react-native';
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -21,6 +21,8 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import { StackedScheduleList } from '@/components/calendar/StackedScheduleList';
 import { completeSchedule, getUpcomingSchedules } from '@/services/schedule';
+import { removeShare } from '@/services/sharing';
+import type { SharedPet } from '@/contexts/PetContext';
 import type { Schedule } from '@/types/schedule';
 
 const ACTION_WIDTH = 72;
@@ -55,7 +57,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, userProfile } = useAuth();
-  const { pets, sharedPets, selectedPet, selectPet } = usePets();
+  const { pets, sharedPets, selectedPet, selectPet, refreshPets } = usePets();
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isLoggedIn = !!user;
   const isDark = colorScheme === 'dark';
@@ -389,41 +391,78 @@ export default function HomeScreen() {
                 공유받은 반려동물
               </Typography>
               {sharedPets.map(pet => (
-                <Pressable
+                <ReanimatedSwipeable
                   key={pet.id}
-                  className={`flex-row items-center gap-3 p-3 rounded-xl ${
-                    selectedPet?.id === pet.id ? 'bg-surface' : ''
-                  }`}
-                  style={{ backgroundColor: colors.surfaceElevated }}
-                  onPress={() => {
-                    selectPet(pet);
-                    setSheetVisible(false);
-                  }}
-                >
-                  {pet.profile_image ? (
-                    <Image
-                      source={{ uri: pet.profile_image }}
-                      className="w-10 h-10 rounded-full bg-surface"
+                  ref={getSwipeableRef(`shared_${pet.id}`)}
+                  friction={2}
+                  rightThreshold={40}
+                  overshootRight={false}
+                  onSwipeableWillOpen={() => closeOtherSwipeables(`shared_${pet.id}`)}
+                  renderRightActions={() => (
+                    <SwipeAction
+                      label="나가기"
+                      color={colors.error}
+                      onPress={() => {
+                        getSwipeableRef(`shared_${pet.id}`).current?.close();
+                        Alert.alert(
+                          '공유 캘린더 나가기',
+                          `${pet.name} 캘린더에서 나가시겠습니까?`,
+                          [
+                            { text: '취소', style: 'cancel' },
+                            {
+                              text: '나가기',
+                              style: 'destructive',
+                              onPress: async () => {
+                                try {
+                                  await removeShare(pet.shareId);
+                                  await refreshPets();
+                                  setSheetVisible(false);
+                                } catch {
+                                  Alert.alert('오류', '나가기에 실패했습니다');
+                                }
+                              },
+                            },
+                          ]
+                        );
+                      }}
                     />
-                  ) : (
-                    <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
-                      <FontAwesome
-                        name="paw"
-                        size={18}
-                        color={colors.mutedForeground}
+                  )}
+                >
+                  <Pressable
+                    className={`flex-row items-center gap-3 p-3 rounded-xl ${
+                      selectedPet?.id === pet.id ? 'bg-surface' : ''
+                    }`}
+                    style={{ backgroundColor: colors.surfaceElevated }}
+                    onPress={() => {
+                      selectPet(pet);
+                      setSheetVisible(false);
+                    }}
+                  >
+                    {pet.profile_image ? (
+                      <Image
+                        source={{ uri: pet.profile_image }}
+                        className="w-10 h-10 rounded-full bg-surface"
                       />
+                    ) : (
+                      <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
+                        <FontAwesome
+                          name="paw"
+                          size={18}
+                          color={colors.mutedForeground}
+                        />
+                      </View>
+                    )}
+                    <View className="flex-1">
+                      <Typography>{pet.name}</Typography>
+                      <Typography className="text-muted-foreground" variant="body-sm">
+                        {pet.ownerNickname}님의 캘린더
+                      </Typography>
                     </View>
-                  )}
-                  <View className="flex-1">
-                    <Typography>{pet.name}</Typography>
-                    <Typography className="text-muted-foreground" variant="body-sm">
-                      {pet.ownerNickname}님의 캘린더
-                    </Typography>
-                  </View>
-                  {selectedPet?.id === pet.id && (
-                    <FontAwesome name="check" size={16} color={colors.primary} />
-                  )}
-                </Pressable>
+                    {selectedPet?.id === pet.id && (
+                      <FontAwesome name="check" size={16} color={colors.primary} />
+                    )}
+                  </Pressable>
+                </ReanimatedSwipeable>
               ))}
             </>
           )}

@@ -328,6 +328,42 @@ export default function MyScreen() {
             </Card>
           </View>
 
+          {/* DEV: 초대 테스트 */}
+          {__DEV__ && (
+            <View className="gap-2">
+              <Typography variant="body-sm" className="text-muted-foreground ml-1">
+                개발 테스트
+              </Typography>
+              <Card>
+                <MenuItem
+                  label="초대 수락 테스트"
+                  showChevron
+                  onPress={() => {
+                    Alert.prompt(
+                      "초대 테스트",
+                      "invite ID를 입력하세요",
+                      [
+                        { text: "취소", style: "cancel" },
+                        {
+                          text: "이동",
+                          onPress: (id?: string) => {
+                            if (id?.trim()) {
+                              router.push({
+                                pathname: "/invite/[inviteId]",
+                                params: { inviteId: id.trim() },
+                              });
+                            }
+                          },
+                        },
+                      ],
+                      "plain-text"
+                    );
+                  }}
+                />
+              </Card>
+            </View>
+          )}
+
           {/* 정보 섹션 */}
           <View className="gap-2">
             <Typography variant="body-sm" className="text-muted-foreground ml-1">

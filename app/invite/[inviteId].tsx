@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 import { useAuth } from "@/hooks/useAuth";
+import { usePets } from "@/contexts/PetContext";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { Screen } from "@/components/ui/Screen";
@@ -17,6 +18,7 @@ export default function InviteAcceptScreen() {
   const { inviteId } = useLocalSearchParams<{ inviteId: string }>();
   const router = useRouter();
   const { user } = useAuth();
+  const { refreshPets } = usePets();
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
@@ -50,6 +52,7 @@ export default function InviteAcceptScreen() {
     setAcceptLoading(true);
     try {
       await acceptInviteLink(inviteId, user.uid);
+      await refreshPets();
       Alert.alert("수락 완료", `${invite?.pet.name} 캘린더에 참여했습니다!`, [
         { text: "확인", onPress: () => router.replace("/(tabs)") },
       ]);
