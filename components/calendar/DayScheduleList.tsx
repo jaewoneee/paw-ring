@@ -1,4 +1,4 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Calendar } from 'lucide-react-native';
 import { formatShortDate } from '@/utils/dayjs';
 import React from 'react';
 import { View } from 'react-native';
@@ -41,11 +41,7 @@ export function DayScheduleList({
       {/* 스케줄 리스트 */}
       {schedules.length === 0 ? (
         <View className="items-center py-8 gap-2">
-          <FontAwesome
-            name="calendar-o"
-            size={24}
-            color={colors.mutedForeground}
-          />
+          <Calendar size={24} color={colors.mutedForeground} />
           <Typography
             variant="body-sm"
             className="text-muted-foreground text-center"

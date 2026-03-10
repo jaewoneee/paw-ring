@@ -1,4 +1,5 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Bell, Calendar, Clock, RefreshCw, type LucideIcon } from 'lucide-react-native';
+import { CategoryIcon } from '@/utils/categoryIcon';
 import dayjs from "@/utils/dayjs";
 import { formatKoreanDate, formatKoreanDateNoDay } from "@/utils/dayjs";
 import { useIsFocused } from "@react-navigation/native";
@@ -281,8 +282,8 @@ export default function ScheduleDetailScreen() {
                   className="w-10 h-10 rounded-full items-center justify-center"
                   style={{ backgroundColor: meta.color + "20" }}
                 >
-                  <FontAwesome
-                    name={meta.icon as any}
+                  <CategoryIcon
+                    name={meta.icon}
                     size={18}
                     color={meta.color}
                   />
@@ -317,12 +318,9 @@ export default function ScheduleDetailScreen() {
                 colors={colors}
               />
               <View className="flex-row items-center gap-3">
-                <FontAwesome
-                  name="bell-o"
-                  size={16}
-                  color={colors.mutedForeground}
-                  style={{ width: 20, textAlign: "center" }}
-                />
+                <View style={{ width: 20, alignItems: "center" }}>
+                  <Bell size={16} color={colors.mutedForeground} />
+                </View>
                 <Text
                   className="text-sm"
                   style={{ color: colors.mutedForeground, width: 40 }}
@@ -404,6 +402,13 @@ export default function ScheduleDetailScreen() {
   );
 }
 
+const DETAIL_ROW_ICONS: Record<string, LucideIcon> = {
+  calendar: Calendar,
+  'clock-o': Clock,
+  'bell-o': Bell,
+  refresh: RefreshCw,
+};
+
 function DetailRow({
   icon,
   label,
@@ -415,14 +420,12 @@ function DetailRow({
   value: string;
   colors: (typeof Colors)["light"] | (typeof Colors)["dark"];
 }) {
+  const Icon = DETAIL_ROW_ICONS[icon] ?? Calendar;
   return (
     <View className="flex-row items-center gap-3">
-      <FontAwesome
-        name={icon as any}
-        size={16}
-        color={colors.mutedForeground}
-        style={{ width: 20, textAlign: "center" }}
-      />
+      <View style={{ width: 20, alignItems: "center" }}>
+        <Icon size={16} color={colors.mutedForeground} />
+      </View>
       <Text
         className="text-sm"
         style={{ color: colors.mutedForeground, width: 40 }}

@@ -1,5 +1,5 @@
 import dayjs, { formatISODate } from "@/utils/dayjs";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { AlertCircle, Bell, BellOff, Calendar, Plus, Share2, Tag } from "lucide-react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -212,11 +212,7 @@ export default function CalendarScreen() {
             <Card>
               <CardContent>
                 <View className="items-center py-8 gap-3">
-                  <FontAwesome
-                    name="calendar"
-                    size={32}
-                    color={colors.mutedForeground}
-                  />
+                  <Calendar size={32} color={colors.mutedForeground} />
                   <Typography
                     variant="body-sm"
                     className="text-muted-foreground text-center"
@@ -267,7 +263,7 @@ export default function CalendarScreen() {
               className="mx-4 mt-2 p-3 rounded-xl flex-row items-center gap-2"
               style={{ backgroundColor: colors.error + '15' }}
             >
-              <FontAwesome name="exclamation-circle" size={16} color={colors.error} />
+              <AlertCircle size={16} color={colors.error} />
               <Typography variant="body-sm" style={{ color: colors.error, flex: 1 }}>
                 {scheduleError}
               </Typography>
@@ -327,7 +323,7 @@ export default function CalendarScreen() {
             className="mx-4 mt-2 p-3 rounded-xl flex-row items-center gap-2"
             style={{ backgroundColor: colors.error + '15' }}
           >
-            <FontAwesome name="exclamation-circle" size={16} color={colors.error} />
+            <AlertCircle size={16} color={colors.error} />
             <Typography variant="body-sm" style={{ color: colors.error, flex: 1 }}>
               {scheduleError}
             </Typography>
@@ -384,7 +380,7 @@ function ViewModeToggle({
           accessibilityLabel="카테고리 관리"
           accessibilityRole="button"
         >
-          <FontAwesome name="tag" size={14} color={colors.mutedForeground} />
+          <Tag size={14} color={colors.mutedForeground} />
         </Pressable>
         <Pressable
           onPress={onToggleNotification}
@@ -393,11 +389,11 @@ function ViewModeToggle({
           accessibilityLabel={notificationEnabled ? "알림 끄기" : "알림 켜기"}
           accessibilityRole="button"
         >
-          <FontAwesome
-            name={notificationEnabled ? "bell" : "bell-slash"}
-            size={14}
-            color={notificationEnabled ? colors.primary : colors.mutedForeground}
-          />
+          {notificationEnabled ? (
+            <Bell size={14} color={colors.primary} />
+          ) : (
+            <BellOff size={14} color={colors.mutedForeground} />
+          )}
         </Pressable>
         {isOwner && (
           <Pressable
@@ -407,7 +403,7 @@ function ViewModeToggle({
             accessibilityLabel="공유 설정"
             accessibilityRole="button"
           >
-            <FontAwesome name="share-alt" size={14} color={colors.mutedForeground} />
+            <Share2 size={14} color={colors.mutedForeground} />
           </Pressable>
         )}
       </View>
@@ -490,7 +486,7 @@ function FAB({
         elevation: 5,
       }}
     >
-      <FontAwesome name="plus" size={20} color={colors.primaryForeground} />
+      <Plus size={20} color={colors.primaryForeground} />
     </Pressable>
   );
 }

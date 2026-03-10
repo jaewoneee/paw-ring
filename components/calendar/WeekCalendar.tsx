@@ -1,5 +1,5 @@
 import { Text } from '@/components/ui/Text';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import dayjs, { formatISODate, formatShortMonth } from '@/utils/dayjs';
 import React, { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
@@ -63,11 +63,7 @@ export function WeekCalendar({
           accessibilityLabel="이전 주"
           accessibilityRole="button"
         >
-          <FontAwesome
-            name="chevron-left"
-            size={13}
-            color={colors.primary}
-          />
+          <ChevronLeft size={13} color={colors.primary} />
           <Typography
             variant="body-lg"
             className="font-semibold"
@@ -99,11 +95,7 @@ export function WeekCalendar({
             accessibilityLabel="다음 주"
             accessibilityRole="button"
           >
-            <FontAwesome
-              name="chevron-right"
-              size={13}
-              color={colors.primary}
-            />
+            <ChevronRight size={13} color={colors.primary} />
           </Pressable>
         </View>
       </View>

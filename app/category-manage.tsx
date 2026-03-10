@@ -1,6 +1,8 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Check, Pipette, Trash2 } from 'lucide-react-native';
+import { CategoryIcon } from '@/utils/categoryIcon';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, TextInput, View } from 'react-native';
+import ColorPicker, { HueSlider, Panel1 } from 'reanimated-color-picker';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { Button } from '@/components/ui/Button';
@@ -28,11 +30,13 @@ export default function CategoryManageScreen() {
     CATEGORY_COLOR_PRESETS[0]
   );
   const [saving, setSaving] = useState(false);
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
 
   const openAdd = () => {
     setEditingCategory(null);
     setName('');
     setSelectedColor(CATEGORY_COLOR_PRESETS[0]);
+    setShowCustomPicker(false);
     setShowSheet(true);
   };
 
@@ -40,6 +44,7 @@ export default function CategoryManageScreen() {
     setEditingCategory(cat);
     setName(cat.name);
     setSelectedColor(cat.color);
+    setShowCustomPicker(!CATEGORY_COLOR_PRESETS.includes(cat.color));
     setShowSheet(true);
   };
 
@@ -141,8 +146,8 @@ export default function CategoryManageScreen() {
                     className="w-6 h-6 rounded-full items-center justify-center mr-3"
                     style={{ backgroundColor: cat.color + '20' }}
                   >
-                    <FontAwesome
-                      name={cat.icon as any}
+                    <CategoryIcon
+                      name={cat.icon}
                       size={11}
                       color={cat.color}
                     />
@@ -156,11 +161,7 @@ export default function CategoryManageScreen() {
                     className="mr-3"
                     style={!canDelete ? { opacity: 0.3 } : undefined}
                   >
-                    <FontAwesome
-                      name="trash-o"
-                      size={16}
-                      color={colors.mutedForeground}
-                    />
+                    <Trash2 size={16} color={colors.mutedForeground} />
                   </Pressable>
                   <View
                     className="w-5 h-5 rounded-full"
@@ -236,11 +237,14 @@ export default function CategoryManageScreen() {
             </Text>
             <View className="flex-row flex-wrap gap-3">
               {CATEGORY_COLOR_PRESETS.map((color) => {
-                const isActive = selectedColor === color;
+                const isActive = selectedColor === color && !showCustomPicker;
                 return (
                   <Pressable
                     key={color}
-                    onPress={() => setSelectedColor(color)}
+                    onPress={() => {
+                      setSelectedColor(color);
+                      setShowCustomPicker(false);
+                    }}
                     accessibilityLabel={`색상 ${color} ${isActive ? '선택됨' : '선택'}`}
                     accessibilityRole="radio"
                     className="w-10 h-10 rounded-full items-center justify-center"
@@ -251,12 +255,47 @@ export default function CategoryManageScreen() {
                     }}
                   >
                     {isActive && (
-                      <FontAwesome name="check" size={14} color="#FFFFFF" />
+                      <Check size={14} color="#FFFFFF" />
                     )}
                   </Pressable>
                 );
               })}
+              {/* 커스텀 색상 버튼 */}
+              <Pressable
+                onPress={() => setShowCustomPicker(true)}
+                accessibilityLabel="커스텀 색상 선택"
+                accessibilityRole="button"
+                className="w-10 h-10 rounded-full items-center justify-center overflow-hidden"
+                style={{
+                  borderWidth: showCustomPicker ? 3 : 2,
+                  borderColor: showCustomPicker ? colors.foreground : colors.border,
+                  backgroundColor: showCustomPicker ? selectedColor : colors.surface,
+                }}
+              >
+                {showCustomPicker ? (
+                  <Check size={14} color="#FFFFFF" />
+                ) : (
+                  <Pipette size={14} color={colors.mutedForeground} />
+                )}
+              </Pressable>
             </View>
+
+            {/* 커스텀 색상 피커 */}
+            {showCustomPicker && (
+              <View style={{ gap: 12, marginTop: 8 }}>
+                <ColorPicker
+                  value={selectedColor}
+                  onChangeJS={({ hex }) => setSelectedColor(hex)}
+                >
+                  <Panel1 style={{ height: 150, borderRadius: 12 }} />
+                  <HueSlider
+                    style={{ marginTop: 12, borderRadius: 8 }}
+                    thumbColor="#FFFFFF"
+                    thumbShape="pill"
+                  />
+                </ColorPicker>
+              </View>
+            )}
           </View>
 
           <Button onPress={handleSave} loading={saving}>

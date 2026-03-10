@@ -1,6 +1,6 @@
 import { Text } from '@/components/ui/Text';
 import dayjs, { formatTime12, toLocalISOString } from '@/utils/dayjs';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { CategoryIcon } from '@/utils/categoryIcon';
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
@@ -282,8 +282,8 @@ export default function AddScheduleScreen() {
                             : 'transparent',
                         }}
                       >
-                        <FontAwesome
-                          name={cat.icon as any}
+                        <CategoryIcon
+                          name={cat.icon}
                           size={12}
                           color={isActive ? cat.color : colors.mutedForeground}
                         />

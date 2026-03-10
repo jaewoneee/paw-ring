@@ -82,12 +82,9 @@ export const RECURRENCE_END_OPTIONS: {
   { label: '날짜 지정', value: 'date' },
 ];
 
-/** 카테고리 색상 프리셋 팔레트 (16색) */
+/** 카테고리 색상 프리셋 팔레트 (5색) */
 export const CATEGORY_COLOR_PRESETS: string[] = [
-  '#F59E0B', '#22C55E', '#EF4444', '#8B5CF6',
-  '#3B82F6', '#EC4899', '#F97316', '#14B8A6',
-  '#6366F1', '#84CC16', '#06B6D4', '#E11D48',
-  '#A855F7', '#10B981', '#F43F5E', '#6B7280',
+  '#F59E0B', '#22C55E', '#EF4444', '#3B82F6', '#8B5CF6',
 ];
 
 /** 카드 색상 순환 배열 (인덱스 기반) */

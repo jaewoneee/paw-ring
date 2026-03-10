@@ -1,4 +1,13 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import {
+  Check,
+  ChevronRight,
+  Droplets,
+  Hospital,
+  PawPrint,
+  Tag,
+  Utensils,
+  type LucideIcon,
+} from 'lucide-react-native';
 import React, { useCallback, useRef } from 'react';
 import { Animated, Pressable, View } from 'react-native';
 
@@ -8,6 +17,20 @@ import Colors from '@/constants/Colors';
 import { useCategoryContext } from '@/contexts/CategoryContext';
 import type { CompletionStatus, Schedule } from '@/types/schedule';
 import { formatISODate, formatTime12 } from '@/utils/dayjs';
+
+/** FontAwesome icon name → Lucide component mapping for category icons */
+const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
+  paw: PawPrint,
+  cutlery: Utensils,
+  'hospital-o': Hospital,
+  medkit: Hospital,
+  tint: Droplets,
+  tag: Tag,
+};
+
+function getCategoryIcon(iconName: string): LucideIcon {
+  return CATEGORY_ICON_MAP[iconName] ?? Tag;
+}
 
 interface ScheduleItemProps {
   schedule: Schedule;
@@ -121,7 +144,7 @@ export const ScheduleItem = React.memo(function ScheduleItem({
               accessibilityRole="checkbox"
             >
               {isCompleted && (
-                <FontAwesome name="check" size={12} color="#fff" />
+                <Check size={12} color="#fff" />
               )}
             </Pressable>
           ) : (
@@ -135,11 +158,10 @@ export const ScheduleItem = React.memo(function ScheduleItem({
                 opacity: isCompleted ? 0.4 : 1,
               }}
             >
-              <FontAwesome
-                name={meta.icon as any}
-                size={14}
-                color={isStacked ? (textColor ?? meta.color) : meta.color}
-              />
+              {React.createElement(getCategoryIcon(meta.icon), {
+                size: 14,
+                color: isStacked ? (textColor ?? meta.color) : meta.color,
+              })}
             </View>
           )}
 
@@ -175,18 +197,10 @@ export const ScheduleItem = React.memo(function ScheduleItem({
               accessibilityLabel={`${schedule.title} 완료`}
               accessibilityRole="button"
             >
-              <FontAwesome
-                name="check"
-                size={14}
-                color={textColor ?? colors.mutedForeground}
-              />
+              <Check size={14} color={textColor ?? colors.mutedForeground} />
             </Pressable>
           ) : !isStacked ? (
-            <FontAwesome
-              name="chevron-right"
-              size={12}
-              color={colors.mutedForeground}
-            />
+            <ChevronRight size={12} color={colors.mutedForeground} />
           ) : null}
         </View>
       </Pressable>

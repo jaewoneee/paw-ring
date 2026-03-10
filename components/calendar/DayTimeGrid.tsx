@@ -9,7 +9,7 @@ import dayjs, {
   formatKoreanDateFull,
   formatTime24,
 } from '@/utils/dayjs';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ChevronDown, ChevronUp } from 'lucide-react-native';
 import {
   useCallback,
   useEffect,
@@ -386,11 +386,11 @@ function AllDaySection({
               ? '접기'
               : `+${schedules.length - MAX_COLLAPSED}개 더보기`}
           </Typography>
-          <FontAwesome
-            name={expanded ? 'chevron-up' : 'chevron-down'}
-            size={10}
-            color={colors.primary}
-          />
+          {expanded ? (
+            <ChevronUp size={10} color={colors.primary} />
+          ) : (
+            <ChevronDown size={10} color={colors.primary} />
+          )}
         </Pressable>
       )}
 

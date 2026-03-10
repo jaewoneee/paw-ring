@@ -8,7 +8,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { usePets } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { AlertCircle, Bell, Calendar, Check, ChevronDown, Moon, PawPrint, Plus, Sun } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import React, { createRef, useCallback, useRef, useState } from 'react';
 import { Alert, Image, Pressable, RefreshControl, ScrollView, View } from 'react-native';
@@ -156,21 +156,13 @@ export default function HomeScreen() {
               />
             ) : (
               <View className="w-9 h-9 rounded-full bg-surface items-center justify-center">
-                <FontAwesome
-                  name="paw"
-                  size={18}
-                  color={colors.mutedForeground}
-                />
+                <PawPrint size={18} color={colors.mutedForeground} />
               </View>
             )}
             <Typography className="font-semibold">
               {selectedPet?.name ?? '반려동물을 등록해주세요'}
             </Typography>
-            <FontAwesome
-              name="chevron-down"
-              size={12}
-              color={colors.mutedForeground}
-            />
+            <ChevronDown size={12} color={colors.mutedForeground} />
           </Pressable>
 
           <View className="flex-row items-center gap-1">
@@ -181,7 +173,7 @@ export default function HomeScreen() {
               accessibilityRole="button"
               onPress={() => router.push('/notifications')}
             >
-              <FontAwesome name="bell-o" size={20} color={colors.foreground} />
+              <Bell size={20} color={colors.foreground} />
             </Pressable>
             */}
             <Pressable
@@ -190,11 +182,11 @@ export default function HomeScreen() {
               accessibilityRole="button"
               onPress={toggleColorScheme}
             >
-              <FontAwesome
-                name={isDark ? 'sun-o' : 'moon-o'}
-                size={20}
-                color={colors.foreground}
-              />
+              {isDark ? (
+                <Sun size={20} color={colors.foreground} />
+              ) : (
+                <Moon size={20} color={colors.foreground} />
+              )}
             </Pressable>
           </View>
         </View>
@@ -252,11 +244,7 @@ export default function HomeScreen() {
                 <Card>
                   <CardContent>
                     <View className="items-center py-4 gap-2">
-                      <FontAwesome
-                        name="exclamation-circle"
-                        size={24}
-                        color={colors.error}
-                      />
+                      <AlertCircle size={24} color={colors.error} />
                       <Typography
                         variant="body-sm"
                         className="text-center"
@@ -278,11 +266,7 @@ export default function HomeScreen() {
               <Card>
                 <CardContent>
                   <View className="items-center py-4 gap-2">
-                    <FontAwesome
-                      name="calendar"
-                      size={24}
-                      color={colors.mutedForeground}
-                    />
+                    <Calendar size={24} color={colors.mutedForeground} />
                     <Typography
                       variant="body-sm"
                       className="text-muted-foreground text-center"
@@ -316,7 +300,7 @@ export default function HomeScreen() {
             <Card>
               <CardContent>
                 <View className="items-center py-4 gap-3">
-                  <FontAwesome name="paw" size={24} color={colors.mutedForeground} />
+                  <PawPrint size={24} color={colors.mutedForeground} />
                   <Typography variant="body-sm" className="text-muted-foreground text-center">
                     {isLoggedIn
                       ? "아직 등록된 반려동물이 없어요"
@@ -387,16 +371,12 @@ export default function HomeScreen() {
                   />
                 ) : (
                   <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
-                    <FontAwesome
-                      name="paw"
-                      size={18}
-                      color={colors.mutedForeground}
-                    />
+                    <PawPrint size={18} color={colors.mutedForeground} />
                   </View>
                 )}
                 <Typography className="flex-1">{pet.name}</Typography>
                 {selectedPet?.id === pet.id && (
-                  <FontAwesome name="check" size={16} color={colors.primary} />
+                  <Check size={16} color={colors.primary} />
                 )}
               </Pressable>
             </ReanimatedSwipeable>
@@ -410,11 +390,7 @@ export default function HomeScreen() {
             }}
           >
             <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
-              <FontAwesome
-                name="plus"
-                size={16}
-                color={colors.mutedForeground}
-              />
+              <Plus size={16} color={colors.mutedForeground} />
             </View>
             <Typography className="text-muted-foreground">
               반려동물 추가하기
@@ -483,11 +459,7 @@ export default function HomeScreen() {
                       />
                     ) : (
                       <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
-                        <FontAwesome
-                          name="paw"
-                          size={18}
-                          color={colors.mutedForeground}
-                        />
+                        <PawPrint size={18} color={colors.mutedForeground} />
                       </View>
                     )}
                     <View className="flex-1">
@@ -497,7 +469,7 @@ export default function HomeScreen() {
                       </Typography>
                     </View>
                     {selectedPet?.id === pet.id && (
-                      <FontAwesome name="check" size={16} color={colors.primary} />
+                      <Check size={16} color={colors.primary} />
                     )}
                   </Pressable>
                 </ReanimatedSwipeable>

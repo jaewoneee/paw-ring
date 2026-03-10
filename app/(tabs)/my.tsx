@@ -11,7 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import Constants from "expo-constants";
 import * as AuthSession from "expo-auth-session";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { ChevronRight, User } from "lucide-react-native";
 
 import { useAuth } from "@/hooks/useAuth";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -54,8 +54,7 @@ function MenuItem({
       </Typography>
       {rightElement ??
         (showChevron && (
-          <FontAwesome
-            name="chevron-right"
+          <ChevronRight
             size={14}
             color={colors.mutedForeground}
           />
@@ -257,8 +256,7 @@ export default function MyScreen() {
                 />
               ) : (
                 <View className="w-14 h-14 rounded-full bg-surface items-center justify-center">
-                  <FontAwesome
-                    name="user"
+                  <User
                     size={24}
                     color={colors.mutedForeground}
                   />
@@ -272,8 +270,7 @@ export default function MyScreen() {
                   {user?.email ?? ""}
                 </Typography>
               </View>
-              <FontAwesome
-                name="chevron-right"
+              <ChevronRight
                 size={14}
                 color={colors.mutedForeground}
               />

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Image, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { AlertTriangle, PawPrint } from 'lucide-react-native';
 
 import { useAuth } from "@/hooks/useAuth";
 import { usePets } from "@/contexts/PetContext";
@@ -81,7 +81,7 @@ export default function InviteAcceptScreen() {
     return (
       <Screen>
         <View className="flex-1 items-center justify-center p-6 gap-4">
-          <FontAwesome name="warning" size={48} color={colors.mutedForeground} />
+          <AlertTriangle size={48} color={colors.mutedForeground} />
           <Typography className="text-muted-foreground text-center text-lg">
             {error}
           </Typography>
@@ -106,7 +106,7 @@ export default function InviteAcceptScreen() {
           />
         ) : (
           <View className="w-24 h-24 rounded-full bg-surface items-center justify-center">
-            <FontAwesome name="paw" size={40} color={colors.primary} />
+            <PawPrint size={40} color={colors.primary} />
           </View>
         )}
 

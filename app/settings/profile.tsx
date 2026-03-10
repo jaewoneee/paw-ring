@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ActionSheetIOS, Alert, Image, Platform, Pressable, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Camera, User } from 'lucide-react-native';
 
 import { useAuth } from "@/hooks/useAuth";
 import { useColorScheme } from "@/components/useColorScheme";
@@ -146,15 +146,11 @@ export default function ProfileScreen() {
                 />
               ) : (
                 <View className="w-24 h-24 rounded-full bg-surface items-center justify-center">
-                  <FontAwesome
-                    name="user"
-                    size={40}
-                    color={colors.mutedForeground}
-                  />
+                  <User size={40} color={colors.mutedForeground} />
                 </View>
               )}
               <View className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary items-center justify-center border-2 border-background">
-                <FontAwesome name="camera" size={14} color="#fff" />
+                <Camera size={14} color="#fff" />
               </View>
             </Pressable>
           </View>

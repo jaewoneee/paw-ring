@@ -1,5 +1,5 @@
 import { Text } from '@/components/ui/Text';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import dayjs, { formatISODate, formatMonthLabel } from '@/utils/dayjs';
 import React, { useMemo } from 'react';
 import { Pressable, View } from 'react-native';
@@ -66,11 +66,7 @@ export function MonthCalendar({
           accessibilityLabel="이전 달"
           accessibilityRole="button"
         >
-          <FontAwesome
-            name="chevron-left"
-            size={14}
-            color={colors.foreground}
-          />
+          <ChevronLeft size={14} color={colors.foreground} />
         </Pressable>
         <Pressable
           onPress={onGoToday}
@@ -101,11 +97,7 @@ export function MonthCalendar({
           accessibilityLabel="다음 달"
           accessibilityRole="button"
         >
-          <FontAwesome
-            name="chevron-right"
-            size={14}
-            color={colors.foreground}
-          />
+          <ChevronRight size={14} color={colors.foreground} />
         </Pressable>
       </View>
 

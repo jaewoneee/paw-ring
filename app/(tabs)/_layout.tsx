@@ -1,19 +1,11 @@
 import React from "react";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs, useRouter } from "expo-router";
+import { Home, Calendar, User } from "lucide-react-native";
 
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import { useAuth } from "@/hooks/useAuth";
 import TabBar from "@/components/ui/TabBar";
-
-function TabBarIcon(props: {
-  name: React.ComponentProps<typeof FontAwesome>["name"];
-  color: string;
-  size?: number;
-}) {
-  return <FontAwesome size={props.size ?? 24} style={{ marginBottom: -3 }} {...props} />;
-}
 
 export default function TabLayout() {
   const { colorScheme } = useColorScheme();
@@ -43,16 +35,14 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "홈",
-          tabBarIcon: ({ color, size }) => <TabBarIcon name="home" color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Home color={color} size={size ?? 24} />,
         }}
       />
       <Tabs.Screen
         name="calendar"
         options={{
           title: "캘린더",
-          tabBarIcon: ({ color, size }) => (
-            <TabBarIcon name="calendar" color={color} size={size} />
-          ),
+          tabBarIcon: ({ color, size }) => <Calendar color={color} size={size ?? 24} />,
         }}
         listeners={requireAuth}
       />
@@ -60,7 +50,7 @@ export default function TabLayout() {
         name="my"
         options={{
           title: "마이",
-          tabBarIcon: ({ color, size }) => <TabBarIcon name="user" color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <User color={color} size={size ?? 24} />,
         }}
         listeners={requireAuth}
       />

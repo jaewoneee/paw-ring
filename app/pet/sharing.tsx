@@ -9,7 +9,7 @@ import {
   View,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { User, X } from 'lucide-react-native';
 
 import { useAuth } from "@/hooks/useAuth";
 import { useCalendarMembers } from "@/hooks/useCalendarMembers";
@@ -120,7 +120,7 @@ export default function SharingScreen() {
           />
         ) : (
           <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
-            <FontAwesome name="user" size={18} color={colors.mutedForeground} />
+            <User size={18} color={colors.mutedForeground} />
           </View>
         )}
 
@@ -144,7 +144,7 @@ export default function SharingScreen() {
 
         {/* 내보내기 버튼 */}
         <Pressable onPress={() => handleRemoveMember(member)}>
-          <FontAwesome name="times" size={18} color={colors.mutedForeground} />
+          <X size={18} color={colors.mutedForeground} />
         </Pressable>
       </View>
     );
@@ -172,11 +172,7 @@ export default function SharingScreen() {
                     />
                   ) : (
                     <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
-                      <FontAwesome
-                        name="user"
-                        size={18}
-                        color={colors.mutedForeground}
-                      />
+                      <User size={18} color={colors.mutedForeground} />
                     </View>
                   )}
                   <View className="flex-1 ml-3">

@@ -1,4 +1,4 @@
-import { FontAwesome } from '@expo/vector-icons';
+import { Camera } from 'lucide-react-native';
 import DateTimePicker, {
   DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
@@ -161,7 +161,7 @@ export default function AddPetScreen() {
                   />
                 ) : (
                   <View className="items-center gap-1">
-                    <FontAwesome name="camera" size={24} color={colors.mutedForeground} />
+                    <Camera size={24} color={colors.mutedForeground} />
                   </View>
                 )}
               </Pressable>
