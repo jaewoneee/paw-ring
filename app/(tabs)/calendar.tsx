@@ -173,6 +173,16 @@ export default function CalendarScreen() {
     [user, updateCompletionStatus],
   );
 
+  const isOwner = !selectedPet || !('isShared' in selectedPet && selectedPet.isShared);
+
+  const handleShareSettings = () => {
+    if (!selectedPet) return;
+    router.push({
+      pathname: "/pet/sharing",
+      params: { petId: selectedPet.id, petName: selectedPet.name },
+    });
+  };
+
   const handleAddSchedule = () => {
     router.push({ pathname: "/add-schedule", params: { date: selectedDate } });
   };
@@ -220,6 +230,8 @@ export default function CalendarScreen() {
     );
   }
 
+  const canEdit = isOwner || ('isShared' in selectedPet && selectedPet.isShared && selectedPet.shareRole === 'editor');
+
   // 주간 뷰: WeekCalendar(고정) + DayTimeGrid(스크롤)
   if (viewMode === "week") {
     return (
@@ -231,7 +243,9 @@ export default function CalendarScreen() {
             onChangeMode={setViewMode}
             onCategoryManage={() => router.push("/category-manage")}
             onToggleNotification={handleTogglePetNotification}
+            onShareSettings={handleShareSettings}
             notificationEnabled={petNotificationEnabled}
+            isOwner={isOwner}
             colors={colors}
           />
 
@@ -251,8 +265,8 @@ export default function CalendarScreen() {
           />
         </View>
 
-        {/* FAB */}
-        <FAB onPress={handleAddSchedule} colors={colors} />
+        {/* FAB - 편집 권한 있을 때만 */}
+        {canEdit && <FAB onPress={handleAddSchedule} colors={colors} />}
       </Screen>
     );
   }
@@ -270,7 +284,9 @@ export default function CalendarScreen() {
           onChangeMode={setViewMode}
           onCategoryManage={() => router.push("/category-manage")}
           onToggleNotification={handleTogglePetNotification}
+          onShareSettings={handleShareSettings}
           notificationEnabled={petNotificationEnabled}
+          isOwner={isOwner}
           colors={colors}
         />
 
@@ -297,8 +313,8 @@ export default function CalendarScreen() {
         />
       </ScrollView>
 
-      {/* FAB */}
-      <FAB onPress={handleAddSchedule} colors={colors} />
+      {/* FAB - 편집 권한 있을 때만 */}
+      {canEdit && <FAB onPress={handleAddSchedule} colors={colors} />}
     </Screen>
   );
 }
@@ -308,14 +324,18 @@ function ViewModeToggle({
   onChangeMode,
   onCategoryManage,
   onToggleNotification,
+  onShareSettings,
   notificationEnabled,
+  isOwner,
   colors,
 }: {
   viewMode: CalendarViewMode;
   onChangeMode: (mode: CalendarViewMode) => void;
   onCategoryManage: () => void;
   onToggleNotification: () => void;
+  onShareSettings: () => void;
   notificationEnabled: boolean;
+  isOwner: boolean;
   colors: (typeof Colors)["light"] | (typeof Colors)["dark"];
 }) {
   return (
@@ -339,6 +359,15 @@ function ViewModeToggle({
             color={notificationEnabled ? colors.primary : colors.mutedForeground}
           />
         </Pressable>
+        {isOwner && (
+          <Pressable
+            onPress={onShareSettings}
+            className="w-8 h-8 items-center justify-center rounded-full"
+            style={{ backgroundColor: colors.surface }}
+          >
+            <FontAwesome name="share-alt" size={14} color={colors.mutedForeground} />
+          </Pressable>
+        )}
       </View>
       <View
         className="flex-row rounded-lg overflow-hidden"

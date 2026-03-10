@@ -55,7 +55,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { user, userProfile } = useAuth();
-  const { pets, selectedPet, selectPet } = usePets();
+  const { pets, sharedPets, selectedPet, selectPet } = usePets();
   const { colorScheme, toggleColorScheme } = useColorScheme();
   const isLoggedIn = !!user;
   const isDark = colorScheme === 'dark';
@@ -380,6 +380,53 @@ export default function HomeScreen() {
               반려동물 추가하기
             </Typography>
           </Pressable>
+
+          {/* 공유받은 반려동물 */}
+          {sharedPets.length > 0 && (
+            <>
+              <View className="h-px bg-border my-1" />
+              <Typography className="text-muted-foreground ml-1" variant="body-sm">
+                공유받은 반려동물
+              </Typography>
+              {sharedPets.map(pet => (
+                <Pressable
+                  key={pet.id}
+                  className={`flex-row items-center gap-3 p-3 rounded-xl ${
+                    selectedPet?.id === pet.id ? 'bg-surface' : ''
+                  }`}
+                  style={{ backgroundColor: colors.surfaceElevated }}
+                  onPress={() => {
+                    selectPet(pet);
+                    setSheetVisible(false);
+                  }}
+                >
+                  {pet.profile_image ? (
+                    <Image
+                      source={{ uri: pet.profile_image }}
+                      className="w-10 h-10 rounded-full bg-surface"
+                    />
+                  ) : (
+                    <View className="w-10 h-10 rounded-full bg-surface items-center justify-center">
+                      <FontAwesome
+                        name="paw"
+                        size={18}
+                        color={colors.mutedForeground}
+                      />
+                    </View>
+                  )}
+                  <View className="flex-1">
+                    <Typography>{pet.name}</Typography>
+                    <Typography className="text-muted-foreground" variant="body-sm">
+                      {pet.ownerNickname}님의 캘린더
+                    </Typography>
+                  </View>
+                  {selectedPet?.id === pet.id && (
+                    <FontAwesome name="check" size={16} color={colors.primary} />
+                  )}
+                </Pressable>
+              ))}
+            </>
+          )}
         </View>
       </BottomSheet>
     </Screen>

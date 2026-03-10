@@ -183,6 +183,20 @@ function RootLayoutNav() {
               headerBackButtonDisplayMode: 'minimal',
             }}
           />
+          <Stack.Screen
+            name="pet/sharing"
+            options={{
+              title: '캘린더 공유',
+              headerBackButtonDisplayMode: 'minimal',
+            }}
+          />
+          <Stack.Screen
+            name="invite/[inviteId]"
+            options={{
+              title: '초대',
+              headerBackButtonDisplayMode: 'minimal',
+            }}
+          />
         </Stack>
       </View>
     </ThemeProvider>
