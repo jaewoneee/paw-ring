@@ -14,13 +14,16 @@ export function useMonthSchedules(
 ) {
   const [schedules, setSchedules] = useState<ScheduleInstance[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     if (!petId) {
       setSchedules([]);
+      setError(null);
       return;
     }
     setIsLoading(true);
+    setError(null);
     try {
       const { start, end } = getMonthRange(year, month);
       const rawSchedules = await getSchedulesByRange(petId, start, end);
@@ -127,6 +130,7 @@ export function useMonthSchedules(
       setSchedules(instances);
     } catch (err) {
       console.error("[useMonthSchedules] fetch failed:", err);
+      setError("일정을 불러오지 못했습니다");
     } finally {
       setIsLoading(false);
     }
@@ -150,5 +154,5 @@ export function useMonthSchedules(
     []
   );
 
-  return { schedules, isLoading, refresh, updateCompletionStatus };
+  return { schedules, isLoading, error, refresh, updateCompletionStatus };
 }

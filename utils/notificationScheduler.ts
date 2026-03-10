@@ -138,7 +138,7 @@ async function scheduleOneNotification(
   if (!triggerDate) return null;
 
   // 기존 알림 취소 후 재등록
-  await Notifications.cancelScheduledNotificationAsync(notificationId).catch(() => {});
+  await Notifications.cancelScheduledNotificationAsync(notificationId).catch((err) => console.warn("[notification] 기존 알림 취소 실패:", err));
 
   await Notifications.scheduleNotificationAsync({
     identifier: notificationId,
@@ -238,7 +238,7 @@ export async function cancelNotificationForDate(
 ): Promise<void> {
   try {
     const notificationId = buildNotificationId(scheduleId, occurrenceDate);
-    await Notifications.cancelScheduledNotificationAsync(notificationId).catch(() => {});
+    await Notifications.cancelScheduledNotificationAsync(notificationId).catch((err) => console.warn("[notification] 알림 취소 실패:", err));
   } catch (error) {
     console.error("[NotificationScheduler] 알림 취소 실패:", error);
   }

@@ -47,7 +47,7 @@ export default function CalendarScreen() {
   const [viewMode, setViewMode] = useState<CalendarViewMode>("month");
   const [petNotificationEnabled, setPetNotificationEnabled] = useState(true);
 
-  const { schedules, refresh, updateCompletionStatus } = useMonthSchedules(
+  const { schedules, error: scheduleError, refresh, updateCompletionStatus } = useMonthSchedules(
     selectedPet?.id,
     year,
     month,
@@ -59,7 +59,7 @@ export default function CalendarScreen() {
     if (!selectedPet || !user || togglingRef.current) return;
     isPetNotificationEnabled(selectedPet.id, user.uid)
       .then(setPetNotificationEnabled)
-      .catch(() => {});
+      .catch((err) => console.warn("[calendar] 알림 설정 로드 실패:", err));
   }, [selectedPet?.id, user?.uid]);
 
   const handleTogglePetNotification = useCallback(async () => {
@@ -260,6 +260,23 @@ export default function CalendarScreen() {
             onGoToday={handleGoToday}
           />
 
+          {/* 에러 배너 */}
+          {scheduleError && (
+            <Pressable
+              onPress={refresh}
+              className="mx-4 mt-2 p-3 rounded-xl flex-row items-center gap-2"
+              style={{ backgroundColor: colors.error + '15' }}
+            >
+              <FontAwesome name="exclamation-circle" size={16} color={colors.error} />
+              <Typography variant="body-sm" style={{ color: colors.error, flex: 1 }}>
+                {scheduleError}
+              </Typography>
+              <Typography variant="body-sm" style={{ color: colors.error }} className="font-medium">
+                다시 시도
+              </Typography>
+            </Pressable>
+          )}
+
           <DayTimeGrid
             date={selectedDate}
             schedules={daySchedules}
@@ -302,6 +319,23 @@ export default function CalendarScreen() {
           onNextMonth={handleNextMonth}
           onGoToday={handleGoToday}
         />
+
+        {/* 에러 배너 */}
+        {scheduleError && (
+          <Pressable
+            onPress={refresh}
+            className="mx-4 mt-2 p-3 rounded-xl flex-row items-center gap-2"
+            style={{ backgroundColor: colors.error + '15' }}
+          >
+            <FontAwesome name="exclamation-circle" size={16} color={colors.error} />
+            <Typography variant="body-sm" style={{ color: colors.error, flex: 1 }}>
+              {scheduleError}
+            </Typography>
+            <Typography variant="body-sm" style={{ color: colors.error }} className="font-medium">
+              다시 시도
+            </Typography>
+          </Pressable>
+        )}
 
         {/* 구분선 */}
         <View className="mx-4 border-b border-border" />

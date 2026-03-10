@@ -64,18 +64,23 @@ export default function HomeScreen() {
   const colors = Colors[isDark ? 'dark' : 'light'];
 
   const [upcomingSchedules, setUpcomingSchedules] = useState<Schedule[]>([]);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchUpcomingSchedules = useCallback(async () => {
     if (!selectedPet?.id) {
       setUpcomingSchedules([]);
+      setScheduleError(null);
       return;
     }
+    setScheduleError(null);
     try {
       const schedules = await getUpcomingSchedules(selectedPet.id);
       setUpcomingSchedules(schedules);
-    } catch {
+    } catch (err) {
+      console.warn("[home] 일정 로딩 실패:", err);
       setUpcomingSchedules([]);
+      setScheduleError("일정을 불러오지 못했습니다");
     }
   }, [selectedPet?.id]);
 
@@ -242,7 +247,34 @@ export default function HomeScreen() {
             <Typography variant="body-xl" className="font-semibold">
               다가오는 일정
             </Typography>
-            {!isLoggedIn || !selectedPet || upcomingSchedules.length === 0 ? (
+            {scheduleError ? (
+              <Pressable onPress={fetchUpcomingSchedules}>
+                <Card>
+                  <CardContent>
+                    <View className="items-center py-4 gap-2">
+                      <FontAwesome
+                        name="exclamation-circle"
+                        size={24}
+                        color={colors.error}
+                      />
+                      <Typography
+                        variant="body-sm"
+                        className="text-center"
+                        style={{ color: colors.error }}
+                      >
+                        {scheduleError}
+                      </Typography>
+                      <Typography
+                        variant="body-sm"
+                        className="text-muted-foreground"
+                      >
+                        탭하여 다시 시도
+                      </Typography>
+                    </View>
+                  </CardContent>
+                </Card>
+              </Pressable>
+            ) : !isLoggedIn || !selectedPet || upcomingSchedules.length === 0 ? (
               <Card>
                 <CardContent>
                   <View className="items-center py-4 gap-2">

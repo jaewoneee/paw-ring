@@ -115,7 +115,7 @@ export async function createSchedule(
     .then((enabled) => {
       if (enabled) scheduleNotifications(schedule as Schedule);
     })
-    .catch(() => {});
+    .catch((err) => console.warn("[schedule] 알림 등록 실패:", err));
 
   return schedule as Schedule;
 }
@@ -282,7 +282,7 @@ export async function completeSchedule(
   userId: string
 ): Promise<ScheduleCompletion> {
   // 완료된 스케줄의 알림 취소
-  cancelNotificationForDate(scheduleId, completionDate).catch(() => {});
+  cancelNotificationForDate(scheduleId, completionDate).catch((err) => console.warn("[schedule] 완료 알림 취소 실패:", err));
 
   const { data, error } = await supabase
     .from("schedule_completions")
@@ -375,13 +375,13 @@ export async function updateSchedule(
   if (error) throw error;
 
   // 알림 재등록 (reminder, 시간 등이 변경되었을 수 있으므로)
-  cancelScheduleNotifications(id).catch(() => {});
+  cancelScheduleNotifications(id).catch((err) => console.warn("[schedule] 수정 시 알림 취소 실패:", err));
   getScheduleById(id)
     .then(async (updated) => {
       const enabled = await isPetNotificationEnabled(updated.pet_id, updated.owner_id);
       if (enabled) await scheduleNotifications(updated);
     })
-    .catch(() => {});
+    .catch((err) => console.warn("[schedule] 수정 후 알림 재등록 실패:", err));
 
   // 원본(루트) 스케줄의 제목/카테고리 변경 시 파생 스케줄에도 전파
   if (data.title !== undefined || data.category !== undefined) {
@@ -400,7 +400,7 @@ export async function updateSchedule(
 
 /** 스케줄 단건 삭제 */
 export async function deleteSchedule(id: string): Promise<void> {
-  cancelScheduleNotifications(id).catch(() => {});
+  cancelScheduleNotifications(id).catch((err) => console.warn("[schedule] 삭제 시 알림 취소 실패:", err));
 
   const { error } = await supabase.from("schedules").delete().eq("id", id);
 
@@ -414,7 +414,7 @@ export async function deleteScheduleAll(id: string): Promise<void> {
   const rootId = schedule.parent_schedule_id ?? id;
 
   // 원본 + 파생 스케줄 알림 모두 취소
-  cancelScheduleNotifications(rootId).catch(() => {});
+  cancelScheduleNotifications(rootId).catch((err) => console.warn("[schedule] 전체 삭제 시 알림 취소 실패:", err));
 
   // 파생 스케줄 모두 삭제
   const { error: childError } = await supabase
@@ -454,7 +454,7 @@ export async function updateScheduleThisOnly(
   modifiedFields: ScheduleException["modified_fields"]
 ): Promise<void> {
   // 기존 날짜 알림 취소 후 수정된 내용으로 재등록
-  cancelNotificationForDate(scheduleId, exceptionDate).catch(() => {});
+  cancelNotificationForDate(scheduleId, exceptionDate).catch((err) => console.warn("[schedule] 예외 수정 시 알림 취소 실패:", err));
 
   const { error } = await supabase.from("schedule_exceptions").upsert(
     {
@@ -478,7 +478,7 @@ export async function updateScheduleThisOnly(
         const merged = { ...schedule, ...modifiedFields } as Schedule;
         scheduleNotificationForOccurrence(merged, exceptionDate);
       })
-      .catch(() => {});
+      .catch((err) => console.warn("[schedule] 예외 수정 후 알림 재등록 실패:", err));
   }
 }
 
@@ -541,7 +541,7 @@ export async function deleteScheduleThisOnly(
   scheduleId: string,
   exceptionDate: string
 ): Promise<void> {
-  cancelNotificationForDate(scheduleId, exceptionDate).catch(() => {});
+  cancelNotificationForDate(scheduleId, exceptionDate).catch((err) => console.warn("[schedule] 단건 삭제 시 알림 취소 실패:", err));
 
   const { error } = await supabase.from("schedule_exceptions").upsert(
     {

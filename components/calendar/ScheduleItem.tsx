@@ -1,5 +1,5 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { useCallback, useRef } from 'react';
+import React, { useCallback, useRef } from 'react';
 import { Animated, Pressable, View } from 'react-native';
 
 import { Typography } from '@/components/ui/Typography';
@@ -21,7 +21,7 @@ interface ScheduleItemProps {
   textColor?: string;
 }
 
-export function ScheduleItem({
+export const ScheduleItem = React.memo(function ScheduleItem({
   schedule,
   occurrenceDate,
   onPress,
@@ -192,4 +192,4 @@ export function ScheduleItem({
       </Pressable>
     </Animated.View>
   );
-}
+});
