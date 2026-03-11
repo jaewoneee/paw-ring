@@ -50,8 +50,26 @@ export function useCategories() {
   /** 카테고리 ID로 메타 정보 조회 (캘린더 렌더링용) */
   const getCategoryMeta = useCallback(
     (categoryId: string) => {
+      // 1. ID 기준 조회
       const found = categories.find((c) => c.id === categoryId);
-      return found ?? { id: categoryId, name: "기타", color: "#6B7280", icon: "tag" };
+      if (found) return found;
+
+      // 2. 레거시 slug 기반 fallback (slug → 카테고리 이름 매핑)
+      const SLUG_TO_NAME: Record<string, string> = {
+        walk: "산책",
+        meal: "식사",
+        hospital: "병원",
+        medicine: "약",
+        bath: "목욕",
+        other: "기타",
+      };
+      const name = SLUG_TO_NAME[categoryId];
+      if (name) {
+        const byName = categories.find((c) => c.name === name);
+        if (byName) return byName;
+      }
+
+      return { id: categoryId, name: "기타", color: "#6B7280", icon: "tag" };
     },
     [categories]
   );

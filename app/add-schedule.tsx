@@ -4,7 +4,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Alert,
   Platform,
@@ -53,7 +53,14 @@ export default function AddScheduleScreen() {
   const initialDate = params.date ? dayjs(params.date).toDate() : new Date();
 
   const [title, setTitle] = useState('');
-  const [category, setCategory] = useState('other');
+  const [category, setCategory] = useState(() => categories[0]?.id ?? '');
+
+  // 카테고리 로드 후 기본값 설정
+  useEffect(() => {
+    if (!category && categories.length > 0) {
+      setCategory(categories[0].id);
+    }
+  }, [categories, category]);
   const [date, setDate] = useState<Date>(initialDate);
   const [time, setTime] = useState<Date>(new Date());
   const [isAllDay, setIsAllDay] = useState(true);
