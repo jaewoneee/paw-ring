@@ -1,5 +1,4 @@
 import { Check, Pipette, Trash2 } from 'lucide-react-native';
-import { CategoryIcon } from '@/utils/categoryIcon';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, TextInput, View } from 'react-native';
 import ColorPicker, { HueSlider, Panel1 } from 'reanimated-color-picker';
@@ -25,9 +24,7 @@ export default function CategoryManageScreen() {
   const [editingCategory, setEditingCategory] =
     useState<ScheduleCategoryItem | null>(null);
   const [name, setName] = useState('');
-  const [selectedColor, setSelectedColor] = useState(
-    CATEGORY_COLOR_PRESETS[0]
-  );
+  const [selectedColor, setSelectedColor] = useState(CATEGORY_COLOR_PRESETS[0]);
   const [saving, setSaving] = useState(false);
   const [showCustomPicker, setShowCustomPicker] = useState(false);
 
@@ -55,8 +52,7 @@ export default function CategoryManageScreen() {
     }
 
     const isDuplicate = categories.some(
-      (c) =>
-        c.name === trimmed && c.id !== editingCategory?.id
+      c => c.name === trimmed && c.id !== editingCategory?.id
     );
     if (isDuplicate) {
       Alert.alert('오류', '이미 같은 이름의 카테고리가 있습니다');
@@ -119,7 +115,10 @@ export default function CategoryManageScreen() {
       >
         {/* 카테고리 목록 */}
         <View style={{ gap: 8 }}>
-          <Typography variant="body-sm" className="text-muted-foreground font-medium px-1">
+          <Typography
+            variant="body-sm"
+            className="text-muted-foreground font-medium px-1"
+          >
             카테고리
           </Typography>
           {categories.length > 0 ? (
@@ -142,15 +141,10 @@ export default function CategoryManageScreen() {
                   }
                 >
                   <View
-                    className="w-6 h-6 rounded-full items-center justify-center mr-3"
-                    style={{ backgroundColor: cat.color + '20' }}
-                  >
-                    <CategoryIcon
-                      name={cat.icon}
-                      size={11}
-                      color={cat.color}
-                    />
-                  </View>
+                    className="size-3 rounded-full mr-3"
+                    style={{ backgroundColor: cat.color }}
+                  />
+
                   <Typography variant="body-md" className="flex-1">
                     {cat.name}
                   </Typography>
@@ -162,10 +156,6 @@ export default function CategoryManageScreen() {
                   >
                     <Trash2 size={16} color={colors.mutedForeground} />
                   </Pressable>
-                  <View
-                    className="w-5 h-5 rounded-full"
-                    style={{ backgroundColor: cat.color }}
-                  />
                 </Pressable>
               ))}
             </View>
@@ -181,14 +171,12 @@ export default function CategoryManageScreen() {
           )}
         </View>
 
-        <Button onPress={openAdd}>
-          + 카테고리 추가
-        </Button>
+        <Button onPress={openAdd}>+ 카테고리 추가</Button>
       </ScrollView>
 
       {/* 추가/수정 바텀시트 */}
       <BottomSheet visible={showSheet} onClose={() => setShowSheet(false)}>
-        <View style={{ gap: 16 }}>
+        <View style={{ gap: 24 }}>
           <Typography variant="body-lg" className="font-semibold text-center">
             {editingCategory ? '카테고리 수정' : '카테고리 추가'}
           </Typography>
@@ -222,8 +210,8 @@ export default function CategoryManageScreen() {
             <Typography variant="body-sm" className="font-medium">
               색상
             </Typography>
-            <View className="flex-row flex-wrap gap-3">
-              {CATEGORY_COLOR_PRESETS.map((color) => {
+            <View className="flex-row flex-wrap gap-4">
+              {CATEGORY_COLOR_PRESETS.map(color => {
                 const isActive = selectedColor === color && !showCustomPicker;
                 return (
                   <Pressable
@@ -234,16 +222,14 @@ export default function CategoryManageScreen() {
                     }}
                     accessibilityLabel={`색상 ${color} ${isActive ? '선택됨' : '선택'}`}
                     accessibilityRole="radio"
-                    className="w-10 h-10 rounded-full items-center justify-center"
+                    className="size-8 p-2 rounded-full items-center justify-center"
                     style={{
                       backgroundColor: color,
                       borderWidth: isActive ? 3 : 0,
                       borderColor: colors.foreground,
                     }}
                   >
-                    {isActive && (
-                      <Check size={14} color="#FFFFFF" />
-                    )}
+                    {isActive && <Check size={14} color="#FFFFFF" />}
                   </Pressable>
                 );
               })}
@@ -252,11 +238,15 @@ export default function CategoryManageScreen() {
                 onPress={() => setShowCustomPicker(true)}
                 accessibilityLabel="커스텀 색상 선택"
                 accessibilityRole="button"
-                className="w-10 h-10 rounded-full items-center justify-center overflow-hidden"
+                className="size-8 p-2  rounded-full items-center justify-center overflow-hidden"
                 style={{
                   borderWidth: showCustomPicker ? 3 : 2,
-                  borderColor: showCustomPicker ? colors.foreground : colors.border,
-                  backgroundColor: showCustomPicker ? selectedColor : colors.surface,
+                  borderColor: showCustomPicker
+                    ? colors.foreground
+                    : colors.border,
+                  backgroundColor: showCustomPicker
+                    ? selectedColor
+                    : colors.surface,
                 }}
               >
                 {showCustomPicker ? (
@@ -266,25 +256,23 @@ export default function CategoryManageScreen() {
                 )}
               </Pressable>
             </View>
-
-            {/* 커스텀 색상 피커 */}
-            {showCustomPicker && (
-              <View style={{ gap: 12, marginTop: 8 }}>
-                <ColorPicker
-                  value={selectedColor}
-                  onChangeJS={({ hex }) => setSelectedColor(hex)}
-                >
-                  <Panel1 style={{ height: 150, borderRadius: 12 }} />
-                  <HueSlider
-                    style={{ marginTop: 12, borderRadius: 8 }}
-                    thumbColor="#FFFFFF"
-                    thumbShape="pill"
-                  />
-                </ColorPicker>
-              </View>
-            )}
           </View>
-
+          {/* 커스텀 색상 피커 */}
+          {showCustomPicker && (
+            <View style={{ gap: 12 }}>
+              <ColorPicker
+                value={selectedColor}
+                onChangeJS={({ hex }) => setSelectedColor(hex)}
+              >
+                <Panel1 style={{ height: 150, borderRadius: 12 }} />
+                <HueSlider
+                  style={{ marginTop: 12, borderRadius: 8 }}
+                  thumbColor="#FFFFFF"
+                  thumbShape="pill"
+                />
+              </ColorPicker>
+            </View>
+          )}
           <Button onPress={handleSave} loading={saving}>
             저장
           </Button>

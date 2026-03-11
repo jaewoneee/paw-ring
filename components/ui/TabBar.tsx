@@ -17,10 +17,8 @@ export default function TabBar({
   const isDark = colorScheme === 'dark';
   const theme = Colors[isDark ? 'dark' : 'light'];
 
-  const bottomOffset = Math.max(insets.bottom, 12);
-
   return (
-    <View style={[styles.wrapper, { bottom: bottomOffset }]}>
+    <View style={styles.wrapper}>
       <BlurView
         intensity={80}
         tint={isDark ? 'dark' : 'light'}
@@ -30,12 +28,13 @@ export default function TabBar({
           style={[
             styles.container,
             {
+              paddingBottom: Math.max(insets.bottom, 12),
               backgroundColor: isDark
-                ? 'rgba(255, 255, 255, 0.1)'
-                : 'rgba(255, 255, 255, 0.1)',
+                ? 'rgba(23, 23, 23, 0.85)'
+                : 'rgba(255, 255, 255, 0.85)',
               borderColor: isDark
-                ? 'rgba(255, 255, 255, 0.15)'
-                : 'rgba(255, 255, 255, 0.3)',
+                ? 'rgba(255, 255, 255, 0.1)'
+                : 'rgba(0, 0, 0, 0.06)',
             },
           ]}
         >
@@ -90,14 +89,15 @@ export default function TabBar({
 const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    left: 20,
-    right: 20,
+    left: 0,
+    right: 0,
+    bottom: 0,
     ...Platform.select({
       ios: {
         shadowColor: '#000',
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.12,
-        shadowRadius: 24,
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.08,
+        shadowRadius: 16,
       },
       android: {
         elevation: 12,
@@ -105,21 +105,22 @@ const styles = StyleSheet.create({
     }),
   },
   blur: {
-    borderRadius: 28,
+    borderTopLeftRadius: 40,
+    borderTopRightRadius: 40,
     overflow: 'hidden',
   },
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
-    paddingVertical: 5,
-    borderWidth: 1,
-    borderRadius: 28,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.06)',
   },
   tab: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 48,
+    minHeight: 42,
   },
 });

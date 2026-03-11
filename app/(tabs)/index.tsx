@@ -7,10 +7,26 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { usePets } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
-import { AlertCircle, Bell, Calendar, Check, ChevronDown, Moon, PawPrint, Plus, Sun } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import {
+  AlertCircle,
+  Calendar,
+  Check,
+  ChevronDown,
+  Moon,
+  PawPrint,
+  Plus,
+  Sun,
+} from 'lucide-react-native';
 import React, { createRef, useCallback, useRef, useState } from 'react';
-import { Alert, Image, Pressable, RefreshControl, ScrollView, View } from 'react-native';
+import {
+  Alert,
+  Image,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  View,
+} from 'react-native';
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -21,7 +37,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { StackedScheduleList } from '@/components/calendar/StackedScheduleList';
 import { completeSchedule, getUpcomingSchedules } from '@/services/schedule';
 import { removeShare } from '@/services/sharing';
-import type { SharedPet } from '@/contexts/PetContext';
 import type { Schedule } from '@/types/schedule';
 
 const ACTION_WIDTH = 72;
@@ -45,7 +60,11 @@ function SwipeAction({
         alignItems: 'center',
       }}
     >
-      <Typography variant="body-sm" className="font-semibold" style={{ color: '#fff' }}>
+      <Typography
+        variant="body-sm"
+        className="font-semibold"
+        style={{ color: '#fff' }}
+      >
         {label}
       </Typography>
     </Pressable>
@@ -77,9 +96,9 @@ export default function HomeScreen() {
       const schedules = await getUpcomingSchedules(selectedPet.id);
       setUpcomingSchedules(schedules);
     } catch (err) {
-      console.warn("[home] 일정 로딩 실패:", err);
+      console.warn('[home] 일정 로딩 실패:', err);
       setUpcomingSchedules([]);
-      setScheduleError("일정을 불러오지 못했습니다");
+      setScheduleError('일정을 불러오지 못했습니다');
     }
   }, [selectedPet?.id]);
 
@@ -143,7 +162,7 @@ export default function HomeScreen() {
       <View className="px-4 pb-3" style={{ paddingTop: insets.top + 8 }}>
         <View className="flex-row items-center justify-between">
           <Pressable
-            className="flex-row items-center gap-3 flex-1 mr-3"
+            className="flex-row items-center gap-3 w-fit mr-3"
             onPress={() => setSheetVisible(true)}
             accessibilityLabel={`반려동물 선택: ${selectedPet?.name ?? '미등록'}`}
             accessibilityRole="button"
@@ -158,7 +177,7 @@ export default function HomeScreen() {
                 <PawPrint size={18} color={colors.mutedForeground} />
               </View>
             )}
-            <Typography className="font-semibold">
+            <Typography className="font-semibold" variant="body-lg">
               {selectedPet?.name ?? '반려동물을 등록해주세요'}
             </Typography>
             <ChevronDown size={12} color={colors.mutedForeground} />
@@ -177,7 +196,9 @@ export default function HomeScreen() {
             */}
             <Pressable
               className="w-11 h-11 rounded-full items-center justify-center"
-              accessibilityLabel={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
+              accessibilityLabel={
+                isDark ? '라이트 모드로 전환' : '다크 모드로 전환'
+              }
               accessibilityRole="button"
               onPress={toggleColorScheme}
             >
@@ -261,7 +282,9 @@ export default function HomeScreen() {
                   </CardContent>
                 </Card>
               </Pressable>
-            ) : !isLoggedIn || !selectedPet || upcomingSchedules.length === 0 ? (
+            ) : !isLoggedIn ||
+              !selectedPet ||
+              upcomingSchedules.length === 0 ? (
               <Card>
                 <CardContent>
                   <View className="items-center py-4 gap-2">
@@ -400,7 +423,10 @@ export default function HomeScreen() {
           {sharedPets.length > 0 && (
             <>
               <View className="h-px bg-border my-1" />
-              <Typography className="text-muted-foreground ml-1" variant="body-sm">
+              <Typography
+                className="text-muted-foreground ml-1"
+                variant="body-sm"
+              >
                 공유받은 반려동물
               </Typography>
               {sharedPets.map(pet => (
@@ -410,7 +436,9 @@ export default function HomeScreen() {
                   friction={2}
                   rightThreshold={40}
                   overshootRight={false}
-                  onSwipeableWillOpen={() => closeOtherSwipeables(`shared_${pet.id}`)}
+                  onSwipeableWillOpen={() =>
+                    closeOtherSwipeables(`shared_${pet.id}`)
+                  }
                   renderRightActions={() => (
                     <SwipeAction
                       label="나가기"
@@ -463,7 +491,10 @@ export default function HomeScreen() {
                     )}
                     <View className="flex-1">
                       <Typography>{pet.name}</Typography>
-                      <Typography className="text-muted-foreground" variant="body-sm">
+                      <Typography
+                        className="text-muted-foreground"
+                        variant="body-sm"
+                      >
                         {pet.ownerNickname}님의 캘린더
                       </Typography>
                     </View>
