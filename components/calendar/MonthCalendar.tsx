@@ -1,8 +1,14 @@
 import { Text } from '@/components/ui/Text';
-import { ChevronLeft, ChevronRight } from 'lucide-react-native';
 import dayjs, { formatISODate, formatMonthLabel } from '@/utils/dayjs';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  runOnJS,
+} from 'react-native-reanimated';
 
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -13,6 +19,9 @@ import { getMonthGrid } from '@/utils/date';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const MAX_DOTS = 3;
+const SWIPE_THRESHOLD = 50;
+const VELOCITY_THRESHOLD = 500;
+const SLIDE_DISTANCE = 280;
 
 interface MonthCalendarProps {
   year: number;
@@ -56,18 +65,79 @@ export function MonthCalendar({
     return map;
   }, [schedules]);
 
+  // 수직 스와이프 제스처
+  const translateY = useSharedValue(0);
+  const gridOpacity = useSharedValue(1);
+
+  const callbacksRef = React.useRef({ onNextMonth, onPrevMonth });
+  callbacksRef.current = { onNextMonth, onPrevMonth };
+
+  const changeMonth = useCallback((direction: 'next' | 'prev') => {
+    if (direction === 'next') {
+      callbacksRef.current.onNextMonth();
+    } else {
+      callbacksRef.current.onPrevMonth();
+    }
+  }, []);
+
+  const panGesture = useMemo(
+    () =>
+      Gesture.Pan()
+        .activeOffsetY([-15, 15])
+        .failOffsetX([-15, 15])
+        .onUpdate(e => {
+          'worklet';
+          translateY.value = e.translationY * 0.3;
+          gridOpacity.value =
+            1 - Math.min(Math.abs(e.translationY) / 400, 0.3);
+        })
+        .onEnd(e => {
+          'worklet';
+          const shouldChange =
+            Math.abs(e.translationY) > SWIPE_THRESHOLD ||
+            Math.abs(e.velocityY) > VELOCITY_THRESHOLD;
+
+          if (shouldChange) {
+            const isNext =
+              e.translationY < 0 ||
+              (e.velocityY < -VELOCITY_THRESHOLD && e.translationY <= 0);
+            const direction = isNext ? 'next' : 'prev';
+            const exitY = isNext
+              ? -SLIDE_DISTANCE * 0.4
+              : SLIDE_DISTANCE * 0.4;
+            const enterY = isNext
+              ? SLIDE_DISTANCE * 0.3
+              : -SLIDE_DISTANCE * 0.3;
+
+            // 나가는 애니메이션
+            translateY.value = withTiming(exitY, { duration: 150 }, () => {
+              'worklet';
+              runOnJS(changeMonth)(direction);
+              // 들어오는 애니메이션 시작 위치
+              translateY.value = enterY;
+              gridOpacity.value = 0.6;
+              translateY.value = withTiming(0, { duration: 200 });
+              gridOpacity.value = withTiming(1, { duration: 200 });
+            });
+            gridOpacity.value = withTiming(0.6, { duration: 150 });
+          } else {
+            // 원위치
+            translateY.value = withTiming(0, { duration: 200 });
+            gridOpacity.value = withTiming(1, { duration: 200 });
+          }
+        }),
+    [translateY, gridOpacity, changeMonth],
+  );
+
+  const animatedGridStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
+    opacity: gridOpacity.value,
+  }));
+
   return (
     <View className="px-4 pt-2 pb-1">
       {/* 월 헤더 */}
-      <View className="flex-row items-center justify-between mb-3">
-        <Pressable
-          onPress={onPrevMonth}
-          className="w-11 h-11 items-center justify-center"
-          accessibilityLabel="이전 달"
-          accessibilityRole="button"
-        >
-          <ChevronLeft size={14} color={colors.foreground} />
-        </Pressable>
+      <View className="flex-row items-center justify-center mb-3">
         <Pressable
           onPress={onGoToday}
           className="flex-row items-center gap-1.5"
@@ -91,23 +161,18 @@ export function MonthCalendar({
             </View>
           )}
         </Pressable>
-        <Pressable
-          onPress={onNextMonth}
-          className="w-11 h-11 items-center justify-center"
-          accessibilityLabel="다음 달"
-          accessibilityRole="button"
-        >
-          <ChevronRight size={14} color={colors.foreground} />
-        </Pressable>
       </View>
 
       {/* 요일 헤더 */}
-      <View className="flex-row mb-1">
+      <View
+        className="flex-row mb-1 rounded-lg"
+        style={{ backgroundColor: colors.background }}
+      >
         {WEEKDAYS.map((day, i) => (
           <View
             key={day}
             style={{ width: '14.28%' }}
-            className="items-center py-1"
+            className="items-center py-1.5"
           >
             <Text
               className="text-xs font-medium"
@@ -126,81 +191,87 @@ export function MonthCalendar({
         ))}
       </View>
 
-      {/* 날짜 그리드 */}
-      <View className="flex-row flex-wrap">
-        {grid.map(day => {
-          const dateStr = formatISODate(day);
-          const isCurrentMonth = day.month() === month;
-          const isToday = dateStr === today;
-          const isSelected = dateStr === selectedDate;
-          const daySchedules = schedulesByDate.get(dateStr);
-          const dayOfWeek = day.day();
+      {/* 날짜 그리드 (스와이프 영역) */}
+      <View style={{ overflow: 'hidden' }}>
+      <GestureDetector gesture={panGesture}>
+        <Animated.View style={animatedGridStyle}>
+          <View className="flex-row flex-wrap">
+            {grid.map(day => {
+              const dateStr = formatISODate(day);
+              const isCurrentMonth = day.month() === month;
+              const isToday = dateStr === today;
+              const isSelected = dateStr === selectedDate;
+              const daySchedules = schedulesByDate.get(dateStr);
+              const dayOfWeek = day.day();
 
-          // 카테고리별 고유 dot 색상 (최대 3개)
-          const dotColors = daySchedules
-            ? [
-                ...new Set(
-                  daySchedules.map(
-                    s => getCategoryMeta(s.schedule.category).color,
-                  ),
-                ),
-              ].slice(0, MAX_DOTS)
-            : [];
+              // 카테고리별 고유 dot 색상 (최대 3개)
+              const dotColors = daySchedules
+                ? [
+                    ...new Set(
+                      daySchedules.map(
+                        s => getCategoryMeta(s.schedule.category).color,
+                      ),
+                    ),
+                  ].slice(0, MAX_DOTS)
+                : [];
 
-          return (
-            <Pressable
-              key={dateStr}
-              onPress={() => onSelectDate(dateStr)}
-              style={{ width: '14.28%', aspectRatio: 1 }}
-              className="items-center justify-center"
-            >
-              <View
-                className="items-center justify-center rounded-full"
-                style={[
-                  { width: 24, height: 24 },
-                  isSelected && { backgroundColor: colors.primary },
-                  isToday &&
-                    !isSelected && {
-                      borderWidth: 1.5,
-                      borderColor: colors.primary,
-                    },
-                ]}
-              >
-                <Text
-                  className="text-xl"
-                  style={{
-                    color: isSelected
-                      ? colors.primaryForeground
-                      : !isCurrentMonth
-                        ? colors.border
-                        : dayOfWeek === 0
-                          ? colors.error
-                          : dayOfWeek === 6
-                            ? colors.primary
-                            : colors.foreground,
-                  }}
+              return (
+                <Pressable
+                  key={dateStr}
+                  onPress={() => onSelectDate(dateStr)}
+                  style={{ width: '14.28%', aspectRatio: 1 }}
+                  className="items-center justify-center"
                 >
-                  {day.date()}
-                </Text>
-              </View>
-
-              {/* Dot 마커 */}
-              <View className="flex-row gap-0.5 mt-0.5" style={{ height: 5 }}>
-                {dotColors.map(c => (
                   <View
-                    key={c}
-                    style={{
-                      width: 4,
-                      height: 4,
-                      borderRadius: 2,
-                      backgroundColor: c,
-                    }}
-                  />
-                ))}
-              </View>
-            </Pressable>
-          );
-        })}
+                    className="items-center justify-center rounded-full"
+                    style={[
+                      { width: 24, height: 24 },
+                      isSelected && { backgroundColor: colors.primary },
+                      isToday &&
+                        !isSelected && {
+                          borderWidth: 1.5,
+                          borderColor: colors.primary,
+                        },
+                    ]}
+                  >
+                    <Text
+                      className="text-xl"
+                      style={{
+                        color: isSelected
+                          ? colors.primaryForeground
+                          : !isCurrentMonth
+                            ? colors.border
+                            : dayOfWeek === 0
+                              ? colors.error
+                              : dayOfWeek === 6
+                                ? colors.primary
+                                : colors.foreground,
+                      }}
+                    >
+                      {day.date()}
+                    </Text>
+                  </View>
+
+                  {/* Dot 마커 */}
+                  <View className="flex-row gap-0.5 mt-0.5" style={{ height: 5 }}>
+                    {dotColors.map(c => (
+                      <View
+                        key={c}
+                        style={{
+                          width: 4,
+                          height: 4,
+                          borderRadius: 2,
+                          backgroundColor: c,
+                        }}
+                      />
+                    ))}
+                  </View>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Animated.View>
+      </GestureDetector>
       </View>
     </View>
   );

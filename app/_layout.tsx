@@ -20,6 +20,7 @@ import { PetProvider } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotification } from '@/hooks/useNotification';
 import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const LightTheme: Theme = {
   ...DefaultTheme,
@@ -117,6 +118,7 @@ function RootLayoutNav() {
   }
 
   return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
     <ThemeProvider value={colorScheme === 'dark' ? DarkNavTheme : LightTheme}>
       <View style={{ flex: 1 }}>
         <Stack screenOptions={{ headerTitleStyle: { fontFamily: 'Pretendard-SemiBold' } }}>
@@ -198,5 +200,6 @@ function RootLayoutNav() {
         </Stack>
       </View>
     </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

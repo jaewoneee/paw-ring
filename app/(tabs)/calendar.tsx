@@ -286,13 +286,10 @@ export default function CalendarScreen() {
     );
   }
 
-  // 월간 뷰: MonthCalendar + DayScheduleList (기존)
+  // 월간 뷰: MonthCalendar(고정, 수직 스와이프) + DayScheduleList(스크롤)
   return (
     <Screen edges={["top", "bottom"]}>
-      <ScrollView
-        className="flex-1"
-        contentContainerStyle={{ paddingBottom: 100 }}
-      >
+      <View className="flex-1">
         {/* 뷰 모드 토글 */}
         <ViewModeToggle
           viewMode={viewMode}
@@ -336,14 +333,19 @@ export default function CalendarScreen() {
         {/* 구분선 */}
         <View className="mx-4 border-b border-border" />
 
-        <DayScheduleList
-          date={selectedDate}
-          schedules={daySchedules}
-          onPressSchedule={handlePressSchedule}
-          onPressAdd={handleAddSchedule}
-          onToggleComplete={handleToggleComplete}
-        />
-      </ScrollView>
+        <ScrollView
+          className="flex-1"
+          contentContainerStyle={{ paddingBottom: 100 }}
+        >
+          <DayScheduleList
+            date={selectedDate}
+            schedules={daySchedules}
+            onPressSchedule={handlePressSchedule}
+            onPressAdd={handleAddSchedule}
+            onToggleComplete={handleToggleComplete}
+          />
+        </ScrollView>
+      </View>
 
       {/* FAB - 편집 권한 있을 때만 */}
       {canEdit && <FAB onPress={handleAddSchedule} colors={colors} />}
