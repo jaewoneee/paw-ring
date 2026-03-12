@@ -11,6 +11,7 @@ import { MonthCalendar } from "@/components/calendar/MonthCalendar";
 import { WeekCalendar } from "@/components/calendar/WeekCalendar";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Screen } from "@/components/ui/Screen";
+import { DayScheduleSkeleton } from "@/components/ui/Skeleton";
 import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
@@ -47,7 +48,7 @@ export default function CalendarScreen() {
   const [viewMode, setViewMode] = useState<CalendarViewMode>("month");
   const [petNotificationEnabled, setPetNotificationEnabled] = useState(true);
 
-  const { schedules, error: scheduleError, refresh, updateCompletionStatus } = useMonthSchedules(
+  const { schedules, isLoading: isScheduleLoading, error: scheduleError, refresh, updateCompletionStatus } = useMonthSchedules(
     selectedPet?.id,
     year,
     month,
@@ -273,11 +274,15 @@ export default function CalendarScreen() {
             </Pressable>
           )}
 
-          <DayTimeGrid
-            date={selectedDate}
-            schedules={daySchedules}
-            onPressSchedule={handlePressSchedule}
-          />
+          {isScheduleLoading ? (
+            <DayScheduleSkeleton />
+          ) : (
+            <DayTimeGrid
+              date={selectedDate}
+              schedules={daySchedules}
+              onPressSchedule={handlePressSchedule}
+            />
+          )}
         </View>
 
         {/* FAB - 편집 권한 있을 때만 */}
@@ -337,13 +342,17 @@ export default function CalendarScreen() {
           className="flex-1"
           contentContainerStyle={{ paddingBottom: 100 }}
         >
-          <DayScheduleList
-            date={selectedDate}
-            schedules={daySchedules}
-            onPressSchedule={handlePressSchedule}
-            onPressAdd={handleAddSchedule}
-            onToggleComplete={handleToggleComplete}
-          />
+          {isScheduleLoading ? (
+            <DayScheduleSkeleton />
+          ) : (
+            <DayScheduleList
+              date={selectedDate}
+              schedules={daySchedules}
+              onPressSchedule={handlePressSchedule}
+              onPressAdd={handleAddSchedule}
+              onToggleComplete={handleToggleComplete}
+            />
+          )}
         </ScrollView>
       </View>
 

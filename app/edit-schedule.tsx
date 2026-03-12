@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Screen } from '@/components/ui/Screen';
+import { EditScheduleSkeleton } from '@/components/ui/Skeleton';
 import { Switch } from '@/components/ui/Switch';
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -405,9 +406,7 @@ export default function EditScheduleScreen() {
   if (isLoading) {
     return (
       <Screen>
-        <View className="flex-1 items-center justify-center">
-          <Typography className="text-muted-foreground">로딩 중...</Typography>
-        </View>
+        <EditScheduleSkeleton />
       </Screen>
     );
   }

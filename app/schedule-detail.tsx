@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Screen } from "@/components/ui/Screen";
 
+import { ScheduleDetailSkeleton } from "@/components/ui/Skeleton";
 import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
@@ -200,9 +201,7 @@ export default function ScheduleDetailScreen() {
   if (isLoading || !schedule) {
     return (
       <Screen>
-        <View className="flex-1 items-center justify-center">
-          <Typography className="text-muted-foreground">로딩 중...</Typography>
-        </View>
+        <ScheduleDetailSkeleton />
       </Screen>
     );
   }

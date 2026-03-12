@@ -35,6 +35,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 
 import { StackedScheduleList } from '@/components/calendar/StackedScheduleList';
+import { HomeScheduleSkeleton } from '@/components/ui/Skeleton';
 import { completeSchedule, getUpcomingSchedules } from '@/services/schedule';
 import { removeShare } from '@/services/sharing';
 import type { Schedule } from '@/types/schedule';
@@ -84,14 +85,17 @@ export default function HomeScreen() {
   const [upcomingSchedules, setUpcomingSchedules] = useState<Schedule[]>([]);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [isScheduleLoading, setIsScheduleLoading] = useState(true);
 
   const fetchUpcomingSchedules = useCallback(async () => {
     if (!selectedPet?.id) {
       setUpcomingSchedules([]);
       setScheduleError(null);
+      setIsScheduleLoading(false);
       return;
     }
     setScheduleError(null);
+    setIsScheduleLoading(true);
     try {
       const schedules = await getUpcomingSchedules(selectedPet.id);
       setUpcomingSchedules(schedules);
@@ -99,6 +103,8 @@ export default function HomeScreen() {
       console.warn('[home] 일정 로딩 실패:', err);
       setUpcomingSchedules([]);
       setScheduleError('일정을 불러오지 못했습니다');
+    } finally {
+      setIsScheduleLoading(false);
     }
   }, [selectedPet?.id]);
 
@@ -259,7 +265,9 @@ export default function HomeScreen() {
             <Typography variant="body-xl" className="font-semibold">
               다가오는 일정
             </Typography>
-            {scheduleError ? (
+            {isScheduleLoading && !refreshing ? (
+              <HomeScheduleSkeleton />
+            ) : scheduleError ? (
               <Pressable onPress={fetchUpcomingSchedules}>
                 <Card>
                   <CardContent>
