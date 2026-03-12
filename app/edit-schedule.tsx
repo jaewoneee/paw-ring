@@ -3,6 +3,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import dayjs, { formatTime24, toLocalISOString } from '@/utils/dayjs';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -32,6 +33,7 @@ import {
   TIMED_REMINDER_OPTIONS,
 } from '@/constants/Schedule';
 import { useCategoryContext } from '@/contexts/CategoryContext';
+import { queryKeys } from '@/hooks/queryKeys';
 import {
   getScheduleById,
   updateSchedule,
@@ -48,6 +50,7 @@ import { buildRRule, parseRRule } from '@/utils/rrule';
 
 export default function EditScheduleScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { id, occurrenceDate } = useLocalSearchParams<{
     id: string;
     occurrenceDate?: string;
@@ -331,6 +334,8 @@ export default function EditScheduleScreen() {
         recurrence_end_date: recEndDate,
       });
     }
+
+    queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
   };
 
   const handleSubmit = async () => {

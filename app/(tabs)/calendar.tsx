@@ -1,6 +1,6 @@
 import dayjs, { formatISODate } from "@/utils/dayjs";
 import { AlertCircle, Bell, BellOff, Calendar, Plus, Share2, Tag } from "lucide-react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
@@ -17,6 +17,7 @@ import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { usePets } from "@/contexts/PetContext";
 import { useAuth } from "@/hooks/useAuth";
+import { queryKeys } from "@/hooks/queryKeys";
 import { useMonthSchedules } from "@/hooks/useSchedules";
 import {
   completeSchedule,
@@ -85,12 +86,7 @@ export default function CalendarScreen() {
     }
   }, [selectedPet, user, petNotificationEnabled]);
 
-  // 화면 복귀 시 데이터 refresh
-  useFocusEffect(
-    useCallback(() => {
-      refresh();
-    }, [refresh]),
-  );
+  const queryClient = useQueryClient();
 
   // 선택 날짜의 스케줄 (월간 데이터에서 필터링)
   const daySchedules = useMemo(
@@ -160,6 +156,8 @@ export default function CalendarScreen() {
         } else {
           await completeSchedule(schedule.id, occurrenceDate, user.uid);
         }
+        // 홈 화면 upcoming도 갱신
+        queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
       } catch (err) {
         // 실패 시 롤백
         updateCompletionStatus(

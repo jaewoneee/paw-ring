@@ -2,9 +2,9 @@ import { Bell, Calendar, Clock, RefreshCw, type LucideIcon } from 'lucide-react-
 import { CategoryIcon } from '@/utils/categoryIcon';
 import dayjs from "@/utils/dayjs";
 import { formatKoreanDate, formatKoreanDateNoDay } from "@/utils/dayjs";
-import { useIsFocused } from "@react-navigation/native";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Alert, ScrollView, View } from "react-native";
 
 import { Button } from "@/components/ui/Button";
@@ -18,6 +18,7 @@ import Colors from "@/constants/Colors";
 import { REMINDER_OPTIONS } from "@/constants/Schedule";
 import { useCategoryContext } from "@/contexts/CategoryContext";
 import { useAuth } from "@/hooks/useAuth";
+import { queryKeys } from "@/hooks/queryKeys";
 import {
   completeSchedule,
   deleteScheduleAll,
@@ -43,51 +44,47 @@ export default function ScheduleDetailScreen() {
 
   const { user } = useAuth();
   const { getCategoryMeta } = useCategoryContext();
-  const [schedule, setSchedule] = useState<Schedule | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [isCompleted, setIsCompleted] = useState(false);
   const [isToggling, setIsToggling] = useState(false);
-  const [completionDate, setCompletionDate] = useState<string>('');
 
-  const fetchSchedule = useCallback(async () => {
-    if (!id) return;
-    setIsLoading(true);
-    setIsCompleted(false);
-    try {
-      const data = await getScheduleById(id);
-      // 반복 스케줄은 occurrenceDate 기준, 단건은 start_date 기준
+  const { data: scheduleData, isPending: isLoading } = useQuery({
+    queryKey: queryKeys.schedules.detail(id ?? ''),
+    queryFn: async () => {
+      const data = await getScheduleById(id!);
       const targetDate = occurrenceDate ?? data.start_date.split("T")[0];
 
-      // 반복 스케줄 + occurrenceDate가 있으면 예외(이 일정만 수정) 데이터 병합
       if (data.is_recurring && occurrenceDate) {
-        const exception = await getScheduleExceptionByDate(id, occurrenceDate);
+        const exception = await getScheduleExceptionByDate(id!, occurrenceDate);
         if (exception?.modified_fields) {
           Object.assign(data, exception.modified_fields);
         }
       }
 
-      setSchedule(data);
-      setCompletionDate(targetDate);
+      let completed = false;
       if (data.is_completable) {
-        const completion = await getScheduleCompletion(id, targetDate);
-        setIsCompleted(!!completion);
+        const completion = await getScheduleCompletion(id!, targetDate);
+        completed = !!completion;
       }
-    } catch (err) {
-      console.error("[ScheduleDetail] fetch failed:", err);
+
+      return { schedule: data, completionDate: targetDate, completed };
+    },
+    enabled: !!id,
+    staleTime: 60 * 1000,
+    meta: { onError: () => {
       Alert.alert("오류", "일정을 불러올 수 없습니다.");
       router.back();
-    } finally {
-      setIsLoading(false);
-    }
-  }, [id, occurrenceDate]);
+    }},
+  });
 
-  const isFocused = useIsFocused();
+  const schedule = scheduleData?.schedule ?? null;
+  const completionDate = scheduleData?.completionDate ?? '';
 
-  useEffect(() => {
-    if (isFocused) {
-      fetchSchedule();
-    }
-  }, [isFocused, fetchSchedule]);
+  // 서버에서 받아온 완료 상태로 초기화
+  const serverCompleted = scheduleData?.completed ?? false;
+  if (isCompleted !== serverCompleted && !isToggling) {
+    setIsCompleted(serverCompleted);
+  }
 
   const handleToggleComplete = async () => {
     if (!schedule || !user || isToggling) return;
@@ -100,6 +97,7 @@ export default function ScheduleDetailScreen() {
         await completeSchedule(schedule.id, completionDate, user.uid);
         setIsCompleted(true);
       }
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
     } catch (err) {
       console.error("[ScheduleDetail] toggle complete failed:", err);
       Alert.alert("오류", "완료 상태 변경에 실패했습니다.");
@@ -136,6 +134,7 @@ export default function ScheduleDetailScreen() {
           onPress: async () => {
             try {
               await deleteScheduleThisOnly(id!, date);
+              queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
               router.back();
             } catch (err) {
               console.error("[ScheduleDetail] delete single failed:", err);
@@ -146,13 +145,13 @@ export default function ScheduleDetailScreen() {
       ];
 
       if (isFirst || isLast) {
-        // 첫 번째 또는 마지막: "모든 일정 삭제"
         buttons.push({
           text: "모든 일정 삭제",
           style: "destructive",
           onPress: async () => {
             try {
               await deleteScheduleAll(id!);
+              queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
               router.back();
             } catch (err) {
               console.error("[ScheduleDetail] delete all failed:", err);
@@ -161,13 +160,13 @@ export default function ScheduleDetailScreen() {
           },
         });
       } else {
-        // 중간: "이후 모든 일정 삭제"
         buttons.push({
           text: "이후 모든 일정",
           style: "destructive",
           onPress: async () => {
             try {
               await deleteScheduleThisAndFollowing(id!, date);
+              queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
               router.back();
             } catch (err) {
               console.error("[ScheduleDetail] delete following failed:", err);
@@ -187,6 +186,7 @@ export default function ScheduleDetailScreen() {
           onPress: async () => {
             try {
               await deleteScheduleAll(id!);
+              queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
               router.back();
             } catch (err) {
               console.error("[ScheduleDetail] delete failed:", err);

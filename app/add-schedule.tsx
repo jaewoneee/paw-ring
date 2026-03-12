@@ -3,6 +3,7 @@ import { CategoryIcon } from '@/utils/categoryIcon';
 import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
+import { useQueryClient } from '@tanstack/react-query';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
@@ -33,6 +34,7 @@ import {
 import { useCategoryContext } from '@/contexts/CategoryContext';
 import { usePets } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
+import { queryKeys } from '@/hooks/queryKeys';
 import { createSchedule } from '@/services/schedule';
 import type {
   RecurrenceFrequency,
@@ -43,6 +45,7 @@ import { buildRRule } from '@/utils/rrule';
 
 export default function AddScheduleScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const params = useLocalSearchParams<{ date?: string }>();
   const { user } = useAuth();
   const { selectedPet } = usePets();
@@ -225,6 +228,7 @@ export default function AddScheduleScreen() {
             : undefined,
       });
 
+      queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
       router.back();
     } catch (err) {
       console.error('[AddSchedule] failed:', err);

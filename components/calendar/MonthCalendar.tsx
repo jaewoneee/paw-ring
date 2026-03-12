@@ -4,10 +4,10 @@ import React, { useCallback, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
   runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 
 import { Typography } from '@/components/ui/Typography';
@@ -88,8 +88,7 @@ export function MonthCalendar({
         .onUpdate(e => {
           'worklet';
           translateY.value = e.translationY * 0.3;
-          gridOpacity.value =
-            1 - Math.min(Math.abs(e.translationY) / 400, 0.3);
+          gridOpacity.value = 1 - Math.min(Math.abs(e.translationY) / 400, 0.3);
         })
         .onEnd(e => {
           'worklet';
@@ -102,9 +101,7 @@ export function MonthCalendar({
               e.translationY < 0 ||
               (e.velocityY < -VELOCITY_THRESHOLD && e.translationY <= 0);
             const direction = isNext ? 'next' : 'prev';
-            const exitY = isNext
-              ? -SLIDE_DISTANCE * 0.4
-              : SLIDE_DISTANCE * 0.4;
+            const exitY = isNext ? -SLIDE_DISTANCE * 0.4 : SLIDE_DISTANCE * 0.4;
             const enterY = isNext
               ? SLIDE_DISTANCE * 0.3
               : -SLIDE_DISTANCE * 0.3;
@@ -126,7 +123,7 @@ export function MonthCalendar({
             gridOpacity.value = withTiming(1, { duration: 200 });
           }
         }),
-    [translateY, gridOpacity, changeMonth],
+    [translateY, gridOpacity, changeMonth]
   );
 
   const animatedGridStyle = useAnimatedStyle(() => ({
@@ -175,7 +172,7 @@ export function MonthCalendar({
             className="items-center py-1.5"
           >
             <Text
-              className="text-xs font-medium"
+              className=" font-medium"
               style={{
                 color:
                   i === 0
@@ -193,85 +190,88 @@ export function MonthCalendar({
 
       {/* 날짜 그리드 (스와이프 영역) */}
       <View style={{ overflow: 'hidden' }}>
-      <GestureDetector gesture={panGesture}>
-        <Animated.View style={animatedGridStyle}>
-          <View className="flex-row flex-wrap">
-            {grid.map(day => {
-              const dateStr = formatISODate(day);
-              const isCurrentMonth = day.month() === month;
-              const isToday = dateStr === today;
-              const isSelected = dateStr === selectedDate;
-              const daySchedules = schedulesByDate.get(dateStr);
-              const dayOfWeek = day.day();
+        <GestureDetector gesture={panGesture}>
+          <Animated.View style={animatedGridStyle}>
+            <View className="flex-row flex-wrap ">
+              {grid.map(day => {
+                const dateStr = formatISODate(day);
+                const isCurrentMonth = day.month() === month;
+                const isToday = dateStr === today;
+                const isSelected = dateStr === selectedDate;
+                const daySchedules = schedulesByDate.get(dateStr);
+                const dayOfWeek = day.day();
 
-              // 카테고리별 고유 dot 색상 (최대 3개)
-              const dotColors = daySchedules
-                ? [
-                    ...new Set(
-                      daySchedules.map(
-                        s => getCategoryMeta(s.schedule.category).color,
+                // 카테고리별 고유 dot 색상 (최대 3개)
+                const dotColors = daySchedules
+                  ? [
+                      ...new Set(
+                        daySchedules.map(
+                          s => getCategoryMeta(s.schedule.category).color
+                        )
                       ),
-                    ),
-                  ].slice(0, MAX_DOTS)
-                : [];
+                    ].slice(0, MAX_DOTS)
+                  : [];
 
-              return (
-                <Pressable
-                  key={dateStr}
-                  onPress={() => onSelectDate(dateStr)}
-                  style={{ width: '14.28%', aspectRatio: 1 }}
-                  className="items-center justify-center"
-                >
-                  <View
-                    className="items-center justify-center rounded-full"
-                    style={[
-                      { width: 24, height: 24 },
-                      isSelected && { backgroundColor: colors.primary },
-                      isToday &&
-                        !isSelected && {
-                          borderWidth: 1.5,
-                          borderColor: colors.primary,
-                        },
-                    ]}
+                return (
+                  <Pressable
+                    key={dateStr}
+                    onPress={() => onSelectDate(dateStr)}
+                    style={{ width: '14.28%', aspectRatio: 1 }}
+                    className="items-center justify-center"
                   >
-                    <Text
-                      className="text-xl"
-                      style={{
-                        color: isSelected
-                          ? colors.primaryForeground
-                          : !isCurrentMonth
-                            ? colors.border
-                            : dayOfWeek === 0
-                              ? colors.error
-                              : dayOfWeek === 6
-                                ? colors.primary
-                                : colors.foreground,
-                      }}
+                    <View
+                      className="items-center justify-center rounded-full"
+                      style={[
+                        { width: 30, height: 30 },
+                        isSelected && { backgroundColor: colors.primary },
+                        isToday &&
+                          !isSelected && {
+                            borderWidth: 1.5,
+                            borderColor: colors.primary,
+                          },
+                      ]}
                     >
-                      {day.date()}
-                    </Text>
-                  </View>
-
-                  {/* Dot 마커 */}
-                  <View className="flex-row gap-0.5 mt-0.5" style={{ height: 5 }}>
-                    {dotColors.map(c => (
-                      <View
-                        key={c}
+                      <Text
+                        className="text-2xl"
                         style={{
-                          width: 4,
-                          height: 4,
-                          borderRadius: 2,
-                          backgroundColor: c,
+                          color: isSelected
+                            ? colors.primaryForeground
+                            : !isCurrentMonth
+                              ? colors.border
+                              : dayOfWeek === 0
+                                ? colors.error
+                                : dayOfWeek === 6
+                                  ? colors.primary
+                                  : colors.foreground,
                         }}
-                      />
-                    ))}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </View>
-        </Animated.View>
-      </GestureDetector>
+                      >
+                        {day.date()}
+                      </Text>
+                    </View>
+
+                    {/* Dot 마커 */}
+                    <View
+                      className="flex-row gap-0.5 mt-1"
+                      style={{ height: 5 }}
+                    >
+                      {dotColors.map(c => (
+                        <View
+                          key={c}
+                          style={{
+                            width: 4,
+                            height: 4,
+                            borderRadius: 2,
+                            backgroundColor: c,
+                          }}
+                        />
+                      ))}
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </Animated.View>
+        </GestureDetector>
       </View>
     </View>
   );

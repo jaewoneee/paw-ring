@@ -6,10 +6,13 @@ import {
   ThemeProvider,
   type Theme,
 } from '@react-navigation/native';
+import { focusManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { AppState, type AppStateStatus, Platform, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
@@ -19,8 +22,24 @@ import { CategoryProvider } from '@/contexts/CategoryContext';
 import { PetProvider } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotification } from '@/hooks/useNotification';
-import { View } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+// React Navigation focus 연동: 앱이 포그라운드로 돌아올 때 stale 쿼리 자동 refetch
+function onAppStateChange(status: AppStateStatus) {
+  if (Platform.OS !== 'web') {
+    focusManager.setFocused(status === 'active');
+  }
+}
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30 * 1000,       // 30초간 fresh
+      gcTime: 5 * 60 * 1000,      // 5분간 캐시 유지
+      retry: 1,
+      refetchOnWindowFocus: true,  // focusManager 연동
+    },
+  },
+});
 
 const LightTheme: Theme = {
   ...DefaultTheme,
@@ -74,13 +93,15 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <PetProvider>
-        <CategoryProvider>
-          <RootLayoutNav />
-        </CategoryProvider>
-      </PetProvider>
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <PetProvider>
+          <CategoryProvider>
+            <RootLayoutNav />
+          </CategoryProvider>
+        </PetProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 
@@ -92,6 +113,16 @@ function RootLayoutNav() {
 
   // 알림 권한 요청 + 토큰 등록 (로그인 상태에서만 동작)
   useNotification();
+
+  // AppState 변경 시 focusManager에 알림 → stale 쿼리 자동 refetch
+  const appState = useRef(AppState.currentState);
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (status) => {
+      appState.current = status;
+      onAppStateChange(status);
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     if (!isLoading) {

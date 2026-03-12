@@ -1,7 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { useAuth } from "@/hooks/useAuth";
+import { queryKeys } from "@/hooks/queryKeys";
 import {
   createCategory,
   deleteCategory,
@@ -18,38 +20,40 @@ export function useCategories() {
   const { user } = useAuth();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const [categories, setCategories] = useState<ScheduleCategoryItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const queryKey = user ? queryKeys.categories.byUser(user.uid) : ['categories', 'disabled'];
+
+  const { data: categories = [], isPending } = useQuery({
+    queryKey,
+    queryFn: () => getCategories(user!.uid),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // "기타" 카테고리가 없으면 자동 생성 (queryFn 외부에서 side effect 분리)
+  useEffect(() => {
+    if (!user || isPending || categories.length === 0) return;
+    const hasOther = categories.some((c) => c.name === "기타");
+    if (!hasOther) {
+      createCategory({
+        owner_id: user.uid,
+        name: "기타",
+        color: "#6B7280",
+        icon: "tag",
+      }).then((created) => {
+        queryClient.setQueryData<ScheduleCategoryItem[]>(queryKey, (prev) =>
+          prev ? [...prev, created] : [created]
+        );
+      });
+    }
+  }, [user, isPending, categories, queryClient, queryKey]);
+
+  const isLoading = isPending && !!user;
 
   const refresh = useCallback(async () => {
-    if (!user) return;
-    setIsLoading(true);
-    try {
-      let data = await getCategories(user.uid);
-
-      // "기타" 카테고리가 없으면 자동 생성
-      const hasOther = data.some((c) => c.name === "기타");
-      if (!hasOther) {
-        const other = await createCategory({
-          owner_id: user.uid,
-          name: "기타",
-          color: "#6B7280",
-          icon: "tag",
-        });
-        data = [...data, other];
-      }
-
-      setCategories(data);
-    } catch (err) {
-      console.error("[useCategories] fetch failed:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+    await queryClient.invalidateQueries({ queryKey });
+  }, [queryClient, queryKey]);
 
   /** 카테고리 ID로 메타 정보 조회 (캘린더 렌더링용) */
   const getCategoryMeta = useCallback(
@@ -87,10 +91,12 @@ export function useCategories() {
     async (input: { name: string; color: string; icon?: string }) => {
       if (!user) return;
       const created = await createCategory({ ...input, owner_id: user.uid });
-      setCategories((prev) => [...prev, created]);
+      queryClient.setQueryData<ScheduleCategoryItem[]>(queryKey, (prev) =>
+        prev ? [...prev, created] : [created]
+      );
       return created;
     },
-    [user]
+    [user, queryClient, queryKey]
   );
 
   const editCategory = useCallback(
@@ -99,17 +105,22 @@ export function useCategories() {
       input: { name?: string; color?: string; icon?: string }
     ) => {
       await updateCategory(id, input);
-      setCategories((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, ...input } : c))
+      queryClient.setQueryData<ScheduleCategoryItem[]>(queryKey, (prev) =>
+        prev?.map((c) => (c.id === id ? { ...c, ...input } : c))
       );
     },
-    []
+    [queryClient, queryKey]
   );
 
-  const removeCategory = useCallback(async (id: string) => {
-    await deleteCategory(id);
-    setCategories((prev) => prev.filter((c) => c.id !== id));
-  }, []);
+  const removeCategory = useCallback(
+    async (id: string) => {
+      await deleteCategory(id);
+      queryClient.setQueryData<ScheduleCategoryItem[]>(queryKey, (prev) =>
+        prev?.filter((c) => c.id !== id)
+      );
+    },
+    [queryClient, queryKey]
+  );
 
   return {
     categories,

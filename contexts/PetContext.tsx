@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useCallback, useState, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
+import { queryKeys } from "@/hooks/queryKeys";
 import { getUserPets } from "@/services/pet";
 import { getSharedPets } from "@/services/sharing";
 import type { Pet } from "@/types/pet";
@@ -34,78 +36,68 @@ const PetContext = createContext<PetContextType | null>(null);
 
 export function PetProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [sharedPets, setSharedPets] = useState<SharedPet[]>([]);
+  const queryClient = useQueryClient();
   const [selectedPet, setSelectedPet] = useState<PetOrShared | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const refreshPets = useCallback(async () => {
-    if (!user) {
-      setPets([]);
-      setSharedPets([]);
-      setSelectedPet(null);
-      return;
-    }
-    setIsLoading(true);
-    try {
-      // 부분 실패 처리: 하나가 실패해도 나머지 결과는 유지
-      const [ownSettled, sharedSettled] = await Promise.allSettled([
-        getUserPets(user.uid),
-        getSharedPets(user.uid),
-      ]);
+  const { data: pets = [], isPending: isPetsLoading } = useQuery({
+    queryKey: user ? queryKeys.pets.own(user.uid) : ['pets', 'disabled'],
+    queryFn: () => getUserPets(user!.uid),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
 
-      const ownResult = ownSettled.status === "fulfilled" ? ownSettled.value : pets;
-      const sharedResult = sharedSettled.status === "fulfilled" ? sharedSettled.value : [];
+  const { data: rawSharedPets = [], isPending: isSharedLoading } = useQuery({
+    queryKey: user ? queryKeys.pets.shared(user.uid) : ['pets', 'shared', 'disabled'],
+    queryFn: () => getSharedPets(user!.uid),
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000,
+  });
 
-      if (ownSettled.status === "rejected") {
-        console.warn("[PetContext] 내 반려동물 로딩 실패:", ownSettled.reason);
-      }
-      if (sharedSettled.status === "rejected") {
-        console.warn("[PetContext] 공유 반려동물 로딩 실패:", sharedSettled.reason);
-      }
+  const sharedPets: SharedPet[] = rawSharedPets.map((s) => ({
+    id: s.pet_id,
+    owner_id: s.owner_id,
+    name: s.pet.name,
+    species: "dog" as const,
+    birth_date: "",
+    profile_image: s.pet.profile_image,
+    created_at: s.created_at,
+    updated_at: s.updated_at,
+    isShared: true as const,
+    shareId: s.id,
+    shareRole: s.role,
+    ownerNickname: s.owner.nickname,
+  }));
 
-      setPets(ownResult);
+  const allPets: PetOrShared[] = [...pets, ...sharedPets];
+  const isLoading = (isPetsLoading || isSharedLoading) && !!user;
 
-      const shared: SharedPet[] = sharedResult.map((s) => ({
-        id: s.pet_id,
-        owner_id: s.owner_id,
-        name: s.pet.name,
-        species: "dog" as const, // JOIN에서 species는 가져오지 않으므로 기본값
-        birth_date: "",
-        profile_image: s.pet.profile_image,
-        created_at: s.created_at,
-        updated_at: s.updated_at,
-        isShared: true as const,
-        shareId: s.id,
-        shareRole: s.role,
-        ownerNickname: s.owner.nickname,
-      }));
-      setSharedPets(shared);
-
-      const all: PetOrShared[] = [...ownResult, ...shared];
-
-      // 선택된 펫이 없거나 목록에서 사라졌으면 첫 번째로 설정
-      setSelectedPet((prev) => {
-        if (prev) {
-          const updated = all.find((p) => p.id === prev.id);
-          if (updated) return updated;
-        }
-        return all[0] ?? null;
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
-
+  // 선택된 펫이 없거나 목록에서 사라졌으면 첫 번째로 설정
   useEffect(() => {
-    refreshPets();
-  }, [refreshPets]);
+    setSelectedPet((prev) => {
+      if (prev) {
+        const updated = allPets.find((p) => p.id === prev.id);
+        if (updated) return updated;
+      }
+      return allPets[0] ?? null;
+    });
+  }, [pets, rawSharedPets]);
+
+  // 로그아웃 시 초기화
+  useEffect(() => {
+    if (!user) setSelectedPet(null);
+  }, [user]);
 
   const selectPet = useCallback((pet: PetOrShared) => {
     setSelectedPet(pet);
   }, []);
 
-  const allPets: PetOrShared[] = [...pets, ...sharedPets];
+  const refreshPets = useCallback(async () => {
+    if (!user) return;
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.pets.own(user.uid) }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.pets.shared(user.uid) }),
+    ]);
+  }, [user, queryClient]);
 
   return (
     <PetContext.Provider

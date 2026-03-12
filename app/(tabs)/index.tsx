@@ -18,6 +18,7 @@ import {
   Plus,
   Sun,
 } from 'lucide-react-native';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { createRef, useCallback, useRef, useState } from 'react';
 import {
   Alert,
@@ -32,10 +33,9 @@ import ReanimatedSwipeable, {
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { useFocusEffect } from '@react-navigation/native';
-
 import { StackedScheduleList } from '@/components/calendar/StackedScheduleList';
 import { HomeScheduleSkeleton } from '@/components/ui/Skeleton';
+import { queryKeys } from '@/hooks/queryKeys';
 import { completeSchedule, getUpcomingSchedules } from '@/services/schedule';
 import { removeShare } from '@/services/sharing';
 import type { Schedule } from '@/types/schedule';
@@ -82,62 +82,55 @@ export default function HomeScreen() {
   const isDark = colorScheme === 'dark';
   const colors = Colors[isDark ? 'dark' : 'light'];
 
-  const [upcomingSchedules, setUpcomingSchedules] = useState<Schedule[]>([]);
-  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const upcomingQueryKey = selectedPet?.id
+    ? queryKeys.schedules.upcoming(selectedPet.id)
+    : ['schedules', 'upcoming', 'disabled'] as const;
+
+  const {
+    data: upcomingSchedules = [],
+    isPending,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: upcomingQueryKey,
+    queryFn: () => getUpcomingSchedules(selectedPet!.id),
+    enabled: !!selectedPet?.id,
+    staleTime: 30 * 1000,
+  });
+
+  const isScheduleLoading = isPending && !!selectedPet?.id;
+  const scheduleError = queryError ? '일정을 불러오지 못했습니다' : null;
   const [refreshing, setRefreshing] = useState(false);
-  const [isScheduleLoading, setIsScheduleLoading] = useState(true);
-
-  const fetchUpcomingSchedules = useCallback(async () => {
-    if (!selectedPet?.id) {
-      setUpcomingSchedules([]);
-      setScheduleError(null);
-      setIsScheduleLoading(false);
-      return;
-    }
-    setScheduleError(null);
-    setIsScheduleLoading(true);
-    try {
-      const schedules = await getUpcomingSchedules(selectedPet.id);
-      setUpcomingSchedules(schedules);
-    } catch (err) {
-      console.warn('[home] 일정 로딩 실패:', err);
-      setUpcomingSchedules([]);
-      setScheduleError('일정을 불러오지 못했습니다');
-    } finally {
-      setIsScheduleLoading(false);
-    }
-  }, [selectedPet?.id]);
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchUpcomingSchedules();
-    }, [fetchUpcomingSchedules])
-  );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchUpcomingSchedules();
+    await refetch();
     setRefreshing(false);
-  }, [fetchUpcomingSchedules]);
+  }, [refetch]);
 
   const handleCompleteSchedule = useCallback(
     async (schedule: Schedule) => {
       if (!user) return;
       const scheduleDate = schedule.start_date.split('T')[0];
       // Optimistic: remove from list immediately
-      setUpcomingSchedules(prev => prev.filter(s => s.id !== schedule.id));
+      queryClient.setQueryData<Schedule[]>(upcomingQueryKey, (prev) =>
+        prev?.filter(s => s.id !== schedule.id)
+      );
       try {
         await completeSchedule(schedule.id, scheduleDate, user.uid);
+        // 캘린더 월간 데이터도 무효화
+        queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
       } catch {
         // Rollback on failure
-        setUpcomingSchedules(prev =>
-          [...prev, schedule].sort((a, b) =>
-            a.start_date.localeCompare(b.start_date)
-          )
+        queryClient.setQueryData<Schedule[]>(upcomingQueryKey, (prev) =>
+          prev
+            ? [...prev, schedule].sort((a, b) => a.start_date.localeCompare(b.start_date))
+            : [schedule]
         );
       }
     },
-    [user]
+    [user, queryClient, upcomingQueryKey]
   );
 
   const [sheetVisible, setSheetVisible] = useState(false);
@@ -268,7 +261,7 @@ export default function HomeScreen() {
             {isScheduleLoading && !refreshing ? (
               <HomeScheduleSkeleton />
             ) : scheduleError ? (
-              <Pressable onPress={fetchUpcomingSchedules}>
+              <Pressable onPress={() => refetch()}>
                 <Card>
                   <CardContent>
                     <View className="items-center py-4 gap-2">
