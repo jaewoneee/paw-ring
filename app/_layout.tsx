@@ -223,6 +223,13 @@ function RootLayoutNav() {
               }}
             />
             <Stack.Screen
+              name="activity-feed"
+              options={{
+                title: '활동 기록',
+                headerBackButtonDisplayMode: 'minimal',
+              }}
+            />
+            <Stack.Screen
               name="invite/[inviteId]"
               options={{
                 title: '초대',

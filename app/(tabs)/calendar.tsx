@@ -156,8 +156,11 @@ export default function CalendarScreen() {
         } else {
           await completeSchedule(schedule.id, occurrenceDate, user.uid);
         }
-        // 홈 화면 upcoming도 갱신
+        // 홈 화면 upcoming + 활동 피드 갱신
         queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
+        if (selectedPet?.id) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.activityFeed.byPet(selectedPet.id) });
+        }
       } catch (err) {
         // 실패 시 롤백
         updateCompletionStatus(

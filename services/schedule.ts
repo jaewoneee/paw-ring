@@ -1,6 +1,7 @@
 import dayjs, { formatISODate, toLocalISOString } from "@/utils/dayjs";
 import { supabase } from "@/lib/supabase";
 import type {
+  ActivityFeedItem,
   CreateScheduleInput,
   Schedule,
   ScheduleCompletion,
@@ -331,6 +332,41 @@ export async function getCompletionsByRange(
 
   if (error) throw error;
   return (data ?? []) as ScheduleCompletion[];
+}
+
+/** 활동 피드 조회 (완료된 스케줄 타임라인) */
+export async function getActivityFeed(
+  petId: string,
+  limit: number = 20,
+  offset: number = 0
+): Promise<ActivityFeedItem[]> {
+  const { data, error } = await supabase
+    .from("schedule_completions")
+    .select(`
+      id,
+      schedule_id,
+      completion_date,
+      completed_at,
+      completed_by,
+      schedules!inner (title, category, pet_id),
+      users!schedule_completions_completed_by_fkey (nickname, profile_image)
+    `)
+    .eq("schedules.pet_id", petId)
+    .order("completed_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw error;
+
+  return (data ?? []).map((row: any) => ({
+    id: row.id,
+    schedule_id: row.schedule_id,
+    completion_date: row.completion_date,
+    completed_at: row.completed_at,
+    schedule_title: row.schedules.title,
+    category_id: row.schedules.category,
+    completed_by_nickname: row.users?.nickname ?? "알 수 없음",
+    completed_by_profile_image: row.users?.profile_image ?? null,
+  }));
 }
 
 /** 단건 스케줄 조회 */

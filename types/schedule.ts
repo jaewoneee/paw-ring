@@ -52,6 +52,18 @@ export interface ScheduleCompletion {
   completed_at: string;
 }
 
+/** 활동 피드 아이템 (schedule_completions + schedule + user JOIN) */
+export interface ActivityFeedItem {
+  id: string;
+  schedule_id: string;
+  completion_date: string;
+  completed_at: string;
+  schedule_title: string;
+  category_id: string;
+  completed_by_nickname: string;
+  completed_by_profile_image: string | null;
+}
+
 /** 스케줄 생성 입력 */
 export interface CreateScheduleInput {
   pet_id: string;

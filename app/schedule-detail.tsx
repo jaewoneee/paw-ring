@@ -98,6 +98,9 @@ export default function ScheduleDetailScreen() {
         setIsCompleted(true);
       }
       queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
+      if (schedule.pet_id) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.activityFeed.byPet(schedule.pet_id) });
+      }
     } catch (err) {
       console.error("[ScheduleDetail] toggle complete failed:", err);
       Alert.alert("오류", "완료 상태 변경에 실패했습니다.");

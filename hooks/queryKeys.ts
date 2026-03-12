@@ -27,6 +27,9 @@ export const queryKeys = {
   pendingInvites: {
     byUser: (userId: string) => ['pending-invites', userId] as const,
   },
+  activityFeed: {
+    byPet: (petId: string) => ['activity-feed', petId] as const,
+  },
   invites: {
     detail: (inviteId: string) => ['invites', inviteId] as const,
   },

@@ -35,10 +35,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { StackedScheduleList } from '@/components/calendar/StackedScheduleList';
 import { HomeScheduleSkeleton } from '@/components/ui/Skeleton';
+import { useCategoryContext } from '@/contexts/CategoryContext';
+import { useActivityFeed } from '@/hooks/useActivityFeed';
 import { queryKeys } from '@/hooks/queryKeys';
 import { completeSchedule, getUpcomingSchedules } from '@/services/schedule';
 import { removeShare } from '@/services/sharing';
 import type { Schedule } from '@/types/schedule';
+import dayjs from '@/utils/dayjs';
 
 const ACTION_WIDTH = 72;
 
@@ -101,6 +104,11 @@ export default function HomeScreen() {
 
   const isScheduleLoading = isPending && !!selectedPet?.id;
   const scheduleError = queryError ? '일정을 불러오지 못했습니다' : null;
+
+  const { getCategoryMeta } = useCategoryContext();
+  const { activities, isLoading: isActivityLoading } = useActivityFeed(selectedPet?.id, 5);
+  const isShared = selectedPet && 'isShared' in selectedPet;
+
   const [refreshing, setRefreshing] = useState(false);
 
   const handleRefresh = useCallback(async () => {
@@ -119,8 +127,9 @@ export default function HomeScreen() {
       );
       try {
         await completeSchedule(schedule.id, scheduleDate, user.uid);
-        // 캘린더 월간 데이터도 무효화
+        // 캘린더 월간 데이터 + 활동 피드 무효화
         queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
+        queryClient.invalidateQueries({ queryKey: queryKeys.activityFeed.byPet(selectedPet!.id) });
       } catch {
         // Rollback on failure
         queryClient.setQueryData<Schedule[]>(upcomingQueryKey, (prev) =>
@@ -315,32 +324,63 @@ export default function HomeScreen() {
             )}
           </View>
 
-          {/* 내 반려동물 */}
-          {/* <View className="gap-2">
-            <Typography variant="body-lg" className="font-semibold">
-              내 반려동물
-            </Typography>
-            <Card>
-              <CardContent>
-                <View className="items-center py-4 gap-3">
-                  <PawPrint size={24} color={colors.mutedForeground} />
-                  <Typography variant="body-sm" className="text-muted-foreground text-center">
-                    {isLoggedIn
-                      ? "아직 등록된 반려동물이 없어요"
-                      : "로그인 후 반려동물을 등록할 수 있어요"}
+          {/* 최근 활동 */}
+          {isLoggedIn && selectedPet && activities.length > 0 && (
+            <View className="gap-1">
+              <View className="flex-row items-center justify-between">
+                <Typography variant="body-xl" className="font-semibold">
+                  최근 활동
+                </Typography>
+                <Pressable
+                  onPress={() => router.push('/activity-feed')}
+                  accessibilityLabel="활동 기록 전체 보기"
+                  accessibilityRole="button"
+                >
+                  <Typography variant="body-sm" style={{ color: colors.primary }}>
+                    전체 보기
                   </Typography>
-                  {isLoggedIn && (
-                    <Button
-                      variant="outline"
-                      onPress={() => router.push("/add-pet")}
-                    >
-                      반려동물 등록하기
-                    </Button>
-                  )}
-                </View>
-              </CardContent>
-            </Card>
-          </View> */}
+                </Pressable>
+              </View>
+              <Card>
+                <CardContent className="py-2">
+                  {activities.map((item, index) => {
+                    const category = getCategoryMeta(item.category_id);
+                    const time = dayjs(item.completed_at).format('HH:mm');
+                    return (
+                      <Pressable
+                        key={item.id}
+                        className={`flex-row items-center py-2.5 gap-3 ${
+                          index < activities.length - 1 ? 'border-b border-border' : ''
+                        }`}
+                        onPress={() =>
+                          router.push({
+                            pathname: '/schedule-detail',
+                            params: { id: item.schedule_id },
+                          })
+                        }
+                      >
+                        <View
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: category.color }}
+                        />
+                        <Typography className="flex-1" variant="body-sm" numberOfLines={1}>
+                          {item.schedule_title}
+                        </Typography>
+                        {isShared && (
+                          <Typography variant="caption" className="text-muted-foreground">
+                            {item.completed_by_nickname}
+                          </Typography>
+                        )}
+                        <Typography variant="caption" className="text-muted-foreground">
+                          {time}
+                        </Typography>
+                      </Pressable>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            </View>
+          )}
         </View>
       </ScrollView>
 
