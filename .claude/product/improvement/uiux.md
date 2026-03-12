@@ -54,3 +54,40 @@
 2. 다크 배경 대비 **contrast ratio < 3** (WCAG AA UI 컴포넌트 기준)이면 보정 대상
 3. HSL 색공간에서 lightness를 이진 탐색으로 올려 최소 contrast ratio 3을 달성
 4. 밝은 색상은 그대로 통과 — 불필요한 변환 없음
+
+---
+
+## 3. 접근성 (2026-03-10)
+
+### 문제
+
+- 32~36px 크기의 터치 타겟 다수 존재 (Apple HIG 최소 44px 미달)
+- TabBar 외 접근성 라벨이 전무
+
+### 개선 항목
+
+| # | 항목 | 상태 |
+|---|------|------|
+| 3.1 | 터치 타겟 44px 미만 버튼 확대 | ✅ |
+| 3.2 | 인터랙티브 요소에 accessibilityLabel/Role 추가 (17개) | ✅ |
+
+### 수정 파일
+
+- `calendar.tsx` — 카테고리/알림/공유 버튼 (w-8→w-10), FAB 접근성 라벨
+- `index.tsx` — 알림/다크모드/반려동물 선택 버튼 (w-9→w-11)
+- `MonthCalendar.tsx`, `WeekCalendar.tsx` — 이전/다음 버튼 (w-9→w-11)
+- `ScheduleItem.tsx` — 체크박스/완료 버튼 확대
+- `add-schedule.tsx`, `edit-schedule.tsx` — 요일 선택 (w-9→w-10)
+- `category-manage.tsx` — 색상 선택 (w-9→w-10)
+
+---
+
+## 4. 디자인 시스템 (2026-03-10)
+
+### 개선 항목
+
+| # | 항목 | 상태 |
+|---|------|------|
+| 4.1 | Typography 스케일 정리 (body-xl/body-lg 중복 해소, caption 추가) | ✅ |
+| 4.2 | 인라인 fontSize → Typography 마이그레이션 (7개 파일) | ✅ |
+| 4.3 | 미사용 Text import 정리 | ✅ |
