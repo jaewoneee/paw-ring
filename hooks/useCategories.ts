@@ -1,13 +1,15 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { useAuth } from "@/hooks/useAuth";
+import { usePets } from "@/contexts/PetContext";
 import { queryKeys } from "@/hooks/queryKeys";
 import {
   createCategory,
   deleteCategory,
   getCategories,
+  getCategoriesByOwnerIds,
   updateCategory,
 } from "@/services/category";
 import { ensureReadableColor } from "@/utils/color";
@@ -18,6 +20,7 @@ import type { ScheduleCategoryItem } from "@/types/schedule";
 
 export function useCategories() {
   const { user } = useAuth();
+  const { sharedPets } = usePets();
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
   const queryClient = useQueryClient();
@@ -30,6 +33,27 @@ export function useCategories() {
     enabled: !!user,
     staleTime: 5 * 60 * 1000,
   });
+
+  // 공유받은 캘린더 오너들의 카테고리도 함께 로딩
+  const sharedOwnerIds = useMemo(
+    () => [...new Set(sharedPets.map((p) => p.owner_id))],
+    [sharedPets]
+  );
+
+  const { data: sharedCategories = [] } = useQuery({
+    queryKey: ['categories', 'shared', ...sharedOwnerIds],
+    queryFn: () => getCategoriesByOwnerIds(sharedOwnerIds),
+    enabled: sharedOwnerIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // 내 카테고리 + 공유 오너 카테고리 통합 (내 카테고리 우선)
+  const allCategories = useMemo(() => {
+    if (sharedCategories.length === 0) return categories;
+    const myIds = new Set(categories.map((c) => c.id));
+    const extra = sharedCategories.filter((c) => !myIds.has(c.id));
+    return [...categories, ...extra];
+  }, [categories, sharedCategories]);
 
   // "기타" 카테고리가 없으면 자동 생성 (queryFn 외부에서 side effect 분리)
   useEffect(() => {
@@ -63,8 +87,8 @@ export function useCategories() {
         color: ensureReadableColor(meta.color, isDark),
       });
 
-      // 1. ID 기준 조회
-      const found = categories.find((c) => c.id === categoryId);
+      // 1. ID 기준 조회 (내 카테고리 + 공유 오너 카테고리)
+      const found = allCategories.find((c) => c.id === categoryId);
       if (found) return adjustColor(found);
 
       // 2. 레거시 slug 기반 fallback (slug → 카테고리 이름 매핑)
@@ -78,13 +102,13 @@ export function useCategories() {
       };
       const name = SLUG_TO_NAME[categoryId];
       if (name) {
-        const byName = categories.find((c) => c.name === name);
+        const byName = allCategories.find((c) => c.name === name);
         if (byName) return adjustColor(byName);
       }
 
       return adjustColor({ id: categoryId, name: "기타", color: "#6B7280", icon: "tag" });
     },
-    [categories, isDark]
+    [allCategories, isDark]
   );
 
   const addCategory = useCallback(

@@ -57,6 +57,21 @@ export async function getCategories(
   return data as ScheduleCategoryItem[];
 }
 
+/** 여러 사용자의 카테고리 목록 조회 (공유 캘린더 오너 포함) */
+export async function getCategoriesByOwnerIds(
+  ownerIds: string[]
+): Promise<ScheduleCategoryItem[]> {
+  if (ownerIds.length === 0) return [];
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("*")
+    .in("owner_id", ownerIds)
+    .order("sort_order", { ascending: true });
+
+  if (error) throw error;
+  return data as ScheduleCategoryItem[];
+}
+
 /** 카테고리 단건 조회 */
 export async function getCategoryById(
   id: string
