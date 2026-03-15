@@ -22,6 +22,7 @@ import { CategoryProvider } from '@/contexts/CategoryContext';
 import { PetProvider } from '@/contexts/PetContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useNotification } from '@/hooks/useNotification';
+import { HeaderBackButton } from '@/components/HeaderBackButton';
 
 // React Navigation focus 연동: 앱이 포그라운드로 돌아올 때 stale 쿼리 자동 refetch
 function onAppStateChange(status: AppStateStatus) {
@@ -155,87 +156,23 @@ function RootLayoutNav() {
           <Stack
             screenOptions={{
               headerTitleStyle: { fontFamily: 'Pretendard-SemiBold' },
+              headerBackVisible: false,
+              headerLeft: () => <HeaderBackButton />,
             }}
           >
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="add-pet"
-              options={{
-                title: '새 반려동물 등록',
-                headerBackButtonDisplayMode: 'minimal',
-              }}
-            />
-            <Stack.Screen
-              name="edit-pet"
-              options={{
-                title: '반려동물 수정',
-                headerBackButtonDisplayMode: 'minimal',
-              }}
-            />
-            <Stack.Screen
-              name="add-schedule"
-              options={{
-                title: '일정 추가',
-                headerBackButtonDisplayMode: 'minimal',
-              }}
-            />
-            <Stack.Screen
-              name="schedule-detail"
-              options={{
-                title: '일정 상세',
-                headerBackButtonDisplayMode: 'minimal',
-              }}
-            />
-            <Stack.Screen
-              name="edit-schedule"
-              options={{
-                title: '일정 수정',
-                headerBackButtonDisplayMode: 'minimal',
-              }}
-            />
-            <Stack.Screen
-              name="category-manage"
-              options={{
-                title: '카테고리 관리',
-                headerBackButtonDisplayMode: 'minimal',
-              }}
-            />
-            <Stack.Screen
-              name="settings/profile"
-              options={{
-                title: '프로필 수정',
-                headerBackButtonDisplayMode: 'minimal',
-              }}
-            />
-            <Stack.Screen
-              name="settings/change-password"
-              options={{
-                title: '비밀번호 변경',
-                headerBackButtonDisplayMode: 'minimal',
-              }}
-            />
-            <Stack.Screen
-              name="pet/sharing"
-              options={{
-                title: '캘린더 공유',
-                headerBackButtonDisplayMode: 'minimal',
-              }}
-            />
-            <Stack.Screen
-              name="activity-feed"
-              options={{
-                title: '활동 기록',
-                headerBackButtonDisplayMode: 'minimal',
-              }}
-            />
-            <Stack.Screen
-              name="invite/[inviteId]"
-              options={{
-                title: '초대',
-                headerBackButtonDisplayMode: 'minimal',
-              }}
-            />
+            <Stack.Screen name="add-pet" options={{ title: '새 반려동물 등록' }} />
+            <Stack.Screen name="edit-pet" options={{ title: '반려동물 수정' }} />
+            <Stack.Screen name="add-schedule" options={{ title: '일정 추가' }} />
+            <Stack.Screen name="schedule-detail" options={{ title: '일정 상세' }} />
+            <Stack.Screen name="edit-schedule" options={{ title: '일정 수정' }} />
+            <Stack.Screen name="category-manage" options={{ title: '카테고리 관리' }} />
+            <Stack.Screen name="settings/profile" options={{ title: '프로필 수정' }} />
+            <Stack.Screen name="settings/change-password" options={{ title: '비밀번호 변경' }} />
+            <Stack.Screen name="pet/sharing" options={{ title: '캘린더 공유' }} />
+            <Stack.Screen name="activity-feed" options={{ title: '활동 기록' }} />
+            <Stack.Screen name="invite/[inviteId]" options={{ title: '초대' }} />
           </Stack>
         </View>
       </ThemeProvider>
