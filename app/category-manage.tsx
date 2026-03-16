@@ -1,87 +1,31 @@
-import { Check, Pipette, Trash2 } from 'lucide-react-native';
-import { useState } from 'react';
-import { Alert, Pressable, ScrollView, TextInput, View } from 'react-native';
-import ColorPicker, { HueSlider, Panel1 } from 'reanimated-color-picker';
+import { Trash2 } from 'lucide-react-native';
+import { Alert, Pressable, ScrollView, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
-import { BottomSheet } from '@/components/ui/BottomSheet';
-import { Button } from '@/components/ui/Button';
 import { Screen } from '@/components/ui/Screen';
+import { Button } from '@/components/ui/Button';
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
-import { CATEGORY_COLOR_PRESETS } from '@/constants/Schedule';
 import { useCategoryContext } from '@/contexts/CategoryContext';
+import { usePets } from '@/contexts/PetContext';
 import { MIN_CATEGORY_COUNT } from '@/hooks/useCategories';
 import type { ScheduleCategoryItem } from '@/types/schedule';
+import { canDeleteCategory, canEditCategory, getDisplayCategories } from '@/utils/permissions';
 
 export default function CategoryManageScreen() {
+  const router = useRouter();
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
-  const { categories, addCategory, editCategory, removeCategory } =
-    useCategoryContext();
+  const { categories, allCategories, removeCategory } = useCategoryContext();
+  const { selectedPet } = usePets();
 
-  const [showSheet, setShowSheet] = useState(false);
-  const [editingCategory, setEditingCategory] =
-    useState<ScheduleCategoryItem | null>(null);
-  const [name, setName] = useState('');
-  const [selectedColor, setSelectedColor] = useState(CATEGORY_COLOR_PRESETS[0]);
-  const [saving, setSaving] = useState(false);
-  const [showCustomPicker, setShowCustomPicker] = useState(false);
-
-  const openAdd = () => {
-    setEditingCategory(null);
-    setName('');
-    setSelectedColor(CATEGORY_COLOR_PRESETS[0]);
-    setShowCustomPicker(false);
-    setShowSheet(true);
-  };
-
-  const openEdit = (cat: ScheduleCategoryItem) => {
-    setEditingCategory(cat);
-    setName(cat.name);
-    setSelectedColor(cat.color);
-    setShowCustomPicker(!CATEGORY_COLOR_PRESETS.includes(cat.color));
-    setShowSheet(true);
-  };
-
-  const handleSave = async () => {
-    const trimmed = name.trim();
-    if (!trimmed) {
-      Alert.alert('오류', '카테고리 이름을 입력해주세요');
-      return;
-    }
-
-    const isDuplicate = categories.some(
-      c => c.name === trimmed && c.id !== editingCategory?.id
-    );
-    if (isDuplicate) {
-      Alert.alert('오류', '이미 같은 이름의 카테고리가 있습니다');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      if (editingCategory) {
-        await editCategory(editingCategory.id, {
-          name: trimmed,
-          color: selectedColor,
-        });
-      } else {
-        await addCategory({ name: trimmed, color: selectedColor });
-      }
-      setShowSheet(false);
-    } catch (err) {
-      console.error('[CategoryManage] save failed:', err);
-      Alert.alert('오류', '저장에 실패했습니다.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const canDelete = categories.length > MIN_CATEGORY_COUNT;
+  const displayCategories = getDisplayCategories(selectedPet, categories, allCategories);
+  const canEdit = canEditCategory(selectedPet);
+  const canDelete = canDeleteCategory(selectedPet, displayCategories.length, MIN_CATEGORY_COUNT);
 
   const handleDelete = (cat: ScheduleCategoryItem) => {
-    if (!canDelete) {
+    if (!canEdit || !canDelete) {
       Alert.alert('삭제 불가', '카테고리는 최소 1개 이상 있어야 합니다.');
       return;
     }
@@ -121,18 +65,24 @@ export default function CategoryManageScreen() {
           >
             카테고리
           </Typography>
-          {categories.length > 0 ? (
+          {displayCategories.length > 0 ? (
             <View
               className="rounded-xl overflow-hidden"
               style={{ backgroundColor: colors.surfaceElevated }}
             >
-              {categories.map((cat, i) => (
+              {displayCategories.map((cat, i) => (
                 <Pressable
                   key={cat.id}
-                  onPress={() => openEdit(cat)}
+                  onPress={() => {
+                    if (!canEdit) return;
+                    router.push({
+                      pathname: '/category-edit',
+                      params: { id: cat.id, name: cat.name, color: cat.color },
+                    });
+                  }}
                   className="flex-row items-center px-4 py-3"
                   style={
-                    i < categories.length - 1
+                    i < displayCategories.length - 1
                       ? {
                           borderBottomWidth: 0.5,
                           borderBottomColor: colors.border,
@@ -148,14 +98,16 @@ export default function CategoryManageScreen() {
                   <Typography variant="body-md" className="flex-1">
                     {cat.name}
                   </Typography>
-                  <Pressable
-                    onPress={() => handleDelete(cat)}
-                    hitSlop={8}
-                    className="mr-3"
-                    style={!canDelete ? { opacity: 0.3 } : undefined}
-                  >
-                    <Trash2 size={16} color={colors.mutedForeground} />
-                  </Pressable>
+                  {!!canEdit && (
+                    <Pressable
+                      onPress={() => handleDelete(cat)}
+                      hitSlop={8}
+                      className="mr-3"
+                      style={!canDelete ? { opacity: 0.3 } : undefined}
+                    >
+                      <Trash2 size={16} color={colors.mutedForeground} />
+                    </Pressable>
+                  )}
                 </Pressable>
               ))}
             </View>
@@ -171,113 +123,12 @@ export default function CategoryManageScreen() {
           )}
         </View>
 
-        <Button onPress={openAdd}>+ 카테고리 추가</Button>
-      </ScrollView>
-
-      {/* 추가/수정 바텀시트 */}
-      <BottomSheet visible={showSheet} onClose={() => setShowSheet(false)}>
-        <View style={{ gap: 24 }}>
-          <Typography variant="body-lg" className="font-semibold text-center">
-            {editingCategory ? '카테고리 수정' : '카테고리 추가'}
-          </Typography>
-
-          {/* 이름 입력 */}
-          <View style={{ gap: 6 }}>
-            <Typography variant="body-sm" className="font-medium">
-              이름
-            </Typography>
-            <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder="카테고리 이름"
-              placeholderTextColor={colors.mutedForeground}
-              style={{
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: colors.surfaceElevated,
-                borderRadius: 12,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                fontSize: 16,
-                fontFamily: 'Pretendard',
-                color: colors.foreground,
-              }}
-            />
-          </View>
-
-          {/* 색상 선택 */}
-          <View style={{ gap: 6 }}>
-            <Typography variant="body-sm" className="font-medium">
-              색상
-            </Typography>
-            <View className="flex-row flex-wrap gap-4">
-              {CATEGORY_COLOR_PRESETS.map(color => {
-                const isActive = selectedColor === color && !showCustomPicker;
-                return (
-                  <Pressable
-                    key={color}
-                    onPress={() => {
-                      setSelectedColor(color);
-                      setShowCustomPicker(false);
-                    }}
-                    accessibilityLabel={`색상 ${color} ${isActive ? '선택됨' : '선택'}`}
-                    accessibilityRole="radio"
-                    className="size-8 p-2 rounded-full items-center justify-center"
-                    style={{
-                      backgroundColor: color,
-                      borderWidth: isActive ? 3 : 0,
-                      borderColor: colors.foreground,
-                    }}
-                  >
-                    {isActive && <Check size={14} color="#FFFFFF" />}
-                  </Pressable>
-                );
-              })}
-              {/* 커스텀 색상 버튼 */}
-              <Pressable
-                onPress={() => setShowCustomPicker(true)}
-                accessibilityLabel="커스텀 색상 선택"
-                accessibilityRole="button"
-                className="size-8 p-2  rounded-full items-center justify-center overflow-hidden"
-                style={{
-                  borderWidth: showCustomPicker ? 3 : 2,
-                  borderColor: showCustomPicker
-                    ? colors.foreground
-                    : colors.border,
-                  backgroundColor: showCustomPicker
-                    ? selectedColor
-                    : colors.surface,
-                }}
-              >
-                {showCustomPicker ? (
-                  <Check size={14} color="#FFFFFF" />
-                ) : (
-                  <Pipette size={14} color={colors.mutedForeground} />
-                )}
-              </Pressable>
-            </View>
-          </View>
-          {/* 커스텀 색상 피커 */}
-          {showCustomPicker && (
-            <View style={{ gap: 12 }}>
-              <ColorPicker
-                value={selectedColor}
-                onChangeJS={({ hex }) => setSelectedColor(hex)}
-              >
-                <Panel1 style={{ height: 150, borderRadius: 12 }} />
-                <HueSlider
-                  style={{ marginTop: 12, borderRadius: 8 }}
-                  thumbColor="#FFFFFF"
-                  thumbShape="pill"
-                />
-              </ColorPicker>
-            </View>
-          )}
-          <Button onPress={handleSave} loading={saving}>
-            저장
+        {!!canEdit && (
+          <Button onPress={() => router.push('/category-edit')}>
+            + 카테고리 추가
           </Button>
-        </View>
-      </BottomSheet>
+        )}
+      </ScrollView>
     </Screen>
   );
 }

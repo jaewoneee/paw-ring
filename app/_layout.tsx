@@ -168,6 +168,9 @@ function RootLayoutNav() {
             <Stack.Screen name="schedule-detail" options={{ title: '일정 상세' }} />
             <Stack.Screen name="edit-schedule" options={{ title: '일정 수정' }} />
             <Stack.Screen name="category-manage" options={{ title: '카테고리 관리' }} />
+            <Stack.Screen name="category-edit" options={({ route }) => ({
+              title: (route.params as { id?: string } | undefined)?.id ? '카테고리 수정' : '카테고리 추가',
+            })} />
             <Stack.Screen name="settings/profile" options={{ title: '프로필 수정' }} />
             <Stack.Screen name="settings/change-password" options={{ title: '비밀번호 변경' }} />
             <Stack.Screen name="pet/sharing" options={{ title: '캘린더 공유' }} />

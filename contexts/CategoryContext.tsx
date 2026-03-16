@@ -4,6 +4,7 @@ import type { ScheduleCategoryItem } from "@/types/schedule";
 
 interface CategoryContextType {
   categories: ScheduleCategoryItem[];
+  allCategories: ScheduleCategoryItem[];
   isLoading: boolean;
   refresh: () => Promise<void>;
   getCategoryMeta: (categoryId: string) => Pick<ScheduleCategoryItem, "name" | "color" | "icon"> & { id: string };

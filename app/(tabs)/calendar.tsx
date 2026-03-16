@@ -17,6 +17,7 @@ import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { usePets } from "@/contexts/PetContext";
+import { canEditSchedule, canManageMembers } from "@/utils/permissions";
 import { useAuth } from "@/hooks/useAuth";
 import { queryKeys } from "@/hooks/queryKeys";
 import { useMonthSchedules } from "@/hooks/useSchedules";
@@ -176,8 +177,7 @@ export default function CalendarScreen() {
     [user, updateCompletionStatus],
   );
 
-  const isShared = selectedPet && 'isShared' in selectedPet && selectedPet.isShared;
-  const isOwner = !isShared;
+  const isOwner = canManageMembers(selectedPet);
 
   const handleShareSettings = () => {
     if (!selectedPet) return;
@@ -231,7 +231,7 @@ export default function CalendarScreen() {
     );
   }
 
-  const canEdit = isOwner || ('isShared' in selectedPet && selectedPet.isShared && selectedPet.shareRole === 'editor');
+  const canEdit = canEditSchedule(selectedPet);
 
   // 주간 뷰: WeekCalendar(고정) + DayTimeGrid(스크롤)
   if (viewMode === "week") {

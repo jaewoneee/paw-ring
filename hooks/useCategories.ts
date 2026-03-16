@@ -148,6 +148,7 @@ export function useCategories() {
 
   return {
     categories,
+    allCategories,
     isLoading,
     refresh,
     getCategoryMeta,

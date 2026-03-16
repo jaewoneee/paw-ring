@@ -17,7 +17,9 @@ import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { REMINDER_OPTIONS } from "@/constants/Schedule";
 import { useCategoryContext } from "@/contexts/CategoryContext";
+import { usePets } from "@/contexts/PetContext";
 import { useAuth } from "@/hooks/useAuth";
+import { canEditSchedule } from "@/utils/permissions";
 import { queryKeys } from "@/hooks/queryKeys";
 import {
   completeSchedule,
@@ -43,6 +45,7 @@ export default function ScheduleDetailScreen() {
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
 
   const { user } = useAuth();
+  const { selectedPet } = usePets();
   const { getCategoryMeta } = useCategoryContext();
   const queryClient = useQueryClient();
   const [isCompleted, setIsCompleted] = useState(false);
@@ -209,6 +212,8 @@ export default function ScheduleDetailScreen() {
     );
   }
 
+  const canEdit = canEditSchedule(selectedPet);
+
   const meta = getCategoryMeta(schedule.category);
   const displayDate = occurrenceDate ?? schedule.start_date;
   const dateLabel = formatKoreanDate(displayDate);
@@ -348,15 +353,17 @@ export default function ScheduleDetailScreen() {
           </Button>
         )}
 
-        {/* 액션 버튼 */}
-        <View className="gap-3">
-          <Button variant="outline" onPress={handleEdit}>
-            수정
-          </Button>
-          <Button variant="outline" onPress={handleDelete}>
-            삭제
-          </Button>
-        </View>
+        {/* 액션 버튼 - 편집 권한 있을 때만 */}
+        {canEdit && (
+          <View className="gap-3">
+            <Button variant="outline" onPress={handleEdit}>
+              수정
+            </Button>
+            <Button variant="outline" onPress={handleDelete}>
+              삭제
+            </Button>
+          </View>
+        )}
       </ScrollView>
     </Screen>
   );
