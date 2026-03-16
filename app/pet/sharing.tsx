@@ -9,12 +9,13 @@ import {
   View,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { User, X } from 'lucide-react-native';
+import { ChevronDown, User, X } from 'lucide-react-native';
 
 import { useAuth } from "@/hooks/useAuth";
 import { useCalendarMembers } from "@/hooks/useCalendarMembers";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Screen } from "@/components/ui/Screen";
 import { Button } from "@/components/ui/Button";
 import { Text } from "@/components/ui/Text";
@@ -34,32 +35,27 @@ export default function SharingScreen() {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
   const [linkLoading, setLinkLoading] = useState(false);
+  const [roleSheetMember, setRoleSheetMember] = useState<CalendarShareWithDetails | null>(null);
+  const [roleChanging, setRoleChanging] = useState(false);
 
   const acceptedMembers = members.filter((m) => m.status === "accepted");
   const pendingMembers = members.filter((m) => m.status === "pending");
 
-  const handleChangeRole = (member: CalendarShareWithDetails) => {
-    const newRole: ShareRole = member.role === "viewer" ? "editor" : "viewer";
-    const roleLabel = newRole === "editor" ? "편집 가능" : "열람만";
-
-    Alert.alert(
-      "권한 변경",
-      `${member.shared_user.nickname}님의 권한을 "${roleLabel}"(으)로 변경할까요?`,
-      [
-        { text: "취소", style: "cancel" },
-        {
-          text: "변경",
-          onPress: async () => {
-            try {
-              await updateMemberRole(member.id, newRole);
-              refresh();
-            } catch {
-              Alert.alert("오류", "권한 변경에 실패했습니다");
-            }
-          },
-        },
-      ]
-    );
+  const handleSelectRole = async (newRole: ShareRole) => {
+    if (!roleSheetMember || newRole === roleSheetMember.role) {
+      setRoleSheetMember(null);
+      return;
+    }
+    setRoleChanging(true);
+    try {
+      await updateMemberRole(roleSheetMember.id, newRole);
+      refresh();
+      setRoleSheetMember(null);
+    } catch {
+      Alert.alert("오류", "권한 변경에 실패했습니다");
+    } finally {
+      setRoleChanging(false);
+    }
   };
 
   const handleRemoveMember = (member: CalendarShareWithDetails) => {
@@ -135,12 +131,15 @@ export default function SharingScreen() {
         </View>
 
         {/* 권한 변경 버튼 */}
-        <Pressable
-          onPress={() => handleChangeRole(member)}
-          className="px-3 py-1.5 rounded-lg bg-surface mr-2"
-        >
-          <Text className="text-sm text-muted-foreground">{roleLabel}</Text>
-        </Pressable>
+        {!isPending && (
+          <Pressable
+            onPress={() => setRoleSheetMember(member)}
+            className="flex-row items-center gap-1 px-3 py-1.5 rounded-lg bg-surface mr-2"
+          >
+            <Text className="text-sm text-muted-foreground">{roleLabel}</Text>
+            <ChevronDown size={13} color={colors.mutedForeground} />
+          </Pressable>
+        )}
 
         {/* 내보내기 버튼 */}
         <Pressable onPress={() => handleRemoveMember(member)}>
@@ -222,6 +221,56 @@ export default function SharingScreen() {
           </Button>
         </View>
       </ScrollView>
+
+      {/* 역할 선택 시트 */}
+      <BottomSheet
+        visible={!!roleSheetMember}
+        onClose={() => setRoleSheetMember(null)}
+      >
+        <View style={{ gap: 8 }}>
+          <Typography variant="body-lg" className="font-semibold text-center mb-2">
+            권한 변경
+          </Typography>
+          {roleSheetMember && (
+            <Typography variant="body-sm" className="text-muted-foreground text-center mb-2">
+              {roleSheetMember.shared_user.nickname}님의 권한
+            </Typography>
+          )}
+          {([
+            { role: 'viewer' as ShareRole, label: '열람', description: '스케줄 조회 및 완료 체크' },
+            { role: 'editor' as ShareRole, label: '편집', description: '스케줄 생성·수정·삭제 및 완료 체크' },
+          ] as const).map(({ role, label, description }) => {
+            const isSelected = roleSheetMember?.role === role;
+            return (
+              <Pressable
+                key={role}
+                onPress={() => handleSelectRole(role)}
+                disabled={roleChanging}
+                className="flex-row items-center px-4 py-3.5 rounded-xl"
+                style={{ backgroundColor: isSelected ? colors.primary + '18' : colors.surfaceElevated }}
+              >
+                <View style={{ flex: 1 }}>
+                  <Text
+                    className="text-base font-medium"
+                    style={{ color: isSelected ? colors.primary : colors.foreground }}
+                  >
+                    {label}
+                  </Text>
+                  <Text className="text-sm text-muted-foreground mt-0.5">{description}</Text>
+                </View>
+                {isSelected && (
+                  <View
+                    className="w-5 h-5 rounded-full items-center justify-center"
+                    style={{ backgroundColor: colors.primary }}
+                  >
+                    <Text className="text-xs text-white font-bold">✓</Text>
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      </BottomSheet>
     </Screen>
   );
 }

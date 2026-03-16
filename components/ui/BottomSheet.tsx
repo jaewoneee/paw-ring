@@ -1,29 +1,64 @@
-import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
-import { Animated, Modal, Pressable, StyleSheet, View } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import type { ReactNode } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  Easing,
+  Keyboard,
+  Modal,
+  Pressable,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  View,
+} from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 interface BottomSheetProps {
   visible: boolean;
   onClose: () => void;
   children: ReactNode;
+  className?: string;
 }
 
-export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
-  // 닫기 애니메이션 완료 후에만 Modal을 언마운트
+const CLOSE_DURATION = 260;
+
+export function BottomSheet({
+  visible,
+  onClose,
+  children,
+  className,
+}: BottomSheetProps) {
   const [mounted, setMounted] = useState(false);
   const overlay = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(300)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const sheetHeight = useRef(600); // 측정 전 충분히 큰 기본값
+
+  const animateClose = (onDone?: () => void) => {
+    Animated.parallel([
+      Animated.timing(overlay, {
+        toValue: 0,
+        duration: CLOSE_DURATION,
+        easing: Easing.in(Easing.ease),
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: sheetHeight.current,
+        duration: CLOSE_DURATION,
+        easing: Easing.in(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(onDone);
+  };
 
   useEffect(() => {
     if (visible) {
       setMounted(true);
-      translateY.setValue(300);
+      translateY.setValue(sheetHeight.current);
       overlay.setValue(0);
       Animated.parallel([
         Animated.timing(overlay, {
           toValue: 1,
-          duration: 150,
+          duration: 200,
+          easing: Easing.out(Easing.ease),
           useNativeDriver: true,
         }),
         Animated.spring(translateY, {
@@ -34,36 +69,12 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
         }),
       ]).start();
     } else if (mounted) {
-      Animated.parallel([
-        Animated.timing(overlay, {
-          toValue: 0,
-          duration: 150,
-          useNativeDriver: true,
-        }),
-        Animated.timing(translateY, {
-          toValue: 300,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setMounted(false);
-      });
+      animateClose(() => setMounted(false));
     }
   }, [visible]);
 
   const handleClose = () => {
-    Animated.parallel([
-      Animated.timing(overlay, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 300,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
+    animateClose(() => {
       setMounted(false);
       onClose();
     });
@@ -82,7 +93,7 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
       <Animated.View
         style={[
           StyleSheet.absoluteFill,
-          { backgroundColor: "rgba(0,0,0,0.4)", opacity: overlay },
+          { backgroundColor: 'rgba(0,0,0,0.4)', opacity: overlay },
         ]}
       >
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
@@ -92,16 +103,23 @@ export function BottomSheet({ visible, onClose, children }: BottomSheetProps) {
       <Animated.View
         style={{
           transform: [{ translateY }],
-          position: "absolute",
+          position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
         }}
-        className="bg-surface-elevated rounded-t-2xl pb-8 px-4 pt-3 min-h-[30vh]"
+        className={`bg-surface-elevated rounded-t-2xl pb-10 px-4 pt-3 min-h-[30vh] ${className || ''}`}
+        onLayout={e => {
+          sheetHeight.current = e.nativeEvent.layout.height;
+        }}
       >
-        <GestureHandlerRootView>
-          <View className="w-10 h-1 bg-border-strong rounded-full self-center mb-4" />
-          {children}
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={{ flex: 1 }}>
+              <View className="w-10 h-1 bg-border-strong rounded-full self-center mb-4" />
+              {children}
+            </View>
+          </TouchableWithoutFeedback>
         </GestureHandlerRootView>
       </Animated.View>
     </Modal>
