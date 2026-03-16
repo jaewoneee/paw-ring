@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Pressable, ScrollView, View } from "react-native";
 
+import { AppHeader } from "@/components/AppHeader";
 import { DayScheduleList } from "@/components/calendar/DayScheduleList";
 import { DayTimeGrid } from "@/components/calendar/DayTimeGrid";
 import { MonthCalendar } from "@/components/calendar/MonthCalendar";
@@ -235,8 +236,10 @@ export default function CalendarScreen() {
   // 주간 뷰: WeekCalendar(고정) + DayTimeGrid(스크롤)
   if (viewMode === "week") {
     return (
-      <Screen edges={["top", "bottom"]}>
+      <Screen edges={["bottom"]}>
         <View className="flex-1">
+          <AppHeader />
+
           {/* 뷰 모드 토글 */}
           <ViewModeToggle
             viewMode={viewMode}
@@ -294,8 +297,10 @@ export default function CalendarScreen() {
 
   // 월간 뷰: MonthCalendar(고정, 수직 스와이프) + DayScheduleList(스크롤)
   return (
-    <Screen edges={["top", "bottom"]}>
+    <Screen edges={["bottom"]}>
       <View className="flex-1">
+        <AppHeader />
+
         {/* 뷰 모드 토글 */}
         <ViewModeToggle
           viewMode={viewMode}
