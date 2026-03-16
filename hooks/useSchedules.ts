@@ -118,14 +118,14 @@ export function useMonthSchedules(
   const queryClient = useQueryClient();
   const queryKey = petId ? queryKeys.schedules.month(petId, year, month) : ['schedules', 'month', 'disabled'] as const;
 
-  const { data: schedules = [], isPending, error: queryError, refetch } = useQuery({
+  const { data: schedules = [], isPending, isFetching, error: queryError, refetch } = useQuery({
     queryKey,
     queryFn: () => fetchMonthSchedules(petId!, year, month),
     enabled: !!petId,
     staleTime: 30 * 1000,
   });
 
-  const isLoading = isPending && !!petId;
+  const isLoading = (isPending || isFetching) && !!petId;
   const error = queryError ? "일정을 불러오지 못했습니다" : null;
 
   const refresh = useCallback(() => {

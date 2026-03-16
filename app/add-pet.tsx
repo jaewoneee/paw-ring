@@ -121,9 +121,9 @@ export default function AddPetScreen() {
         birth_date: dateStr,
         profile_image: uploadedImageUrl,
       });
-      await refreshPets();
       selectPet(newPet);
       router.back();
+      refreshPets();
     } catch (err) {
       console.error('[AddPet] 등록 실패:', err);
       Alert.alert('오류', '반려동물 등록에 실패했습니다. 다시 시도해주세요.');

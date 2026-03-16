@@ -73,6 +73,7 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
 
   // 선택된 펫이 없거나 목록에서 사라졌으면 첫 번째로 설정
   useEffect(() => {
+    if (allPets.length === 0) return; // 쿼리 로딩 중이면 기존 선택 유지
     setSelectedPet((prev) => {
       if (prev) {
         const updated = allPets.find((p) => p.id === prev.id);
