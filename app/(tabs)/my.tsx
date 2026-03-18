@@ -73,8 +73,9 @@ export default function MyScreen() {
   const router = useRouter();
   const { user, userProfile, logout, updateProfile, deleteAccount } =
     useAuth();
-  const { colorScheme } = useColorScheme();
+  const { colorScheme, toggleColorScheme } = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
+  const isDark = colorScheme === "dark";
 
   const [notificationEnabled, setNotificationEnabled] = useState(
     userProfile?.notification_enabled ?? true
@@ -289,6 +290,24 @@ export default function MyScreen() {
                   <Switch
                     value={notificationEnabled}
                     onValueChange={handleToggleNotification}
+                  />
+                }
+              />
+            </Card>
+          </View>
+
+          {/* 화면 섹션 */}
+          <View className="gap-2">
+            <Typography variant="body-sm" className="text-muted-foreground ml-1">
+              화면
+            </Typography>
+            <Card>
+              <MenuItem
+                label="다크 모드"
+                rightElement={
+                  <Switch
+                    value={isDark}
+                    onValueChange={toggleColorScheme}
                   />
                 }
               />

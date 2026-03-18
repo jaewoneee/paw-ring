@@ -1,10 +1,15 @@
-import React, { createRef, useRef, useState } from 'react';
+import { useRouter } from 'expo-router';
+import {
+  Check,
+  ChevronDown,
+  PawPrint,
+  Plus,
+} from 'lucide-react-native';
+import React, { createRef, useCallback, useRef, useState } from 'react';
 import { Alert, Image, Pressable, View } from 'react-native';
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
-import { useRouter } from 'expo-router';
-import { Check, ChevronDown, Moon, PawPrint, Plus, Sun } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BottomSheet } from '@/components/ui/BottomSheet';
@@ -34,11 +39,7 @@ function SwipeAction({
         alignItems: 'center',
       }}
     >
-      <Typography
-        variant="body-sm"
-        className="font-semibold"
-        style={{ color }}
-      >
+      <Typography variant="body-sm" className="font-semibold" style={{ color }}>
         {label}
       </Typography>
     </Pressable>
@@ -49,11 +50,11 @@ export function AppHeader() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { pets, sharedPets, selectedPet, selectPet, refreshPets } = usePets();
-  const { colorScheme, toggleColorScheme } = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const colors = Colors[isDark ? 'dark' : 'light'];
+  const { colorScheme } = useColorScheme();
+  const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const [sheetVisible, setSheetVisible] = useState(false);
+  const closeSheet = useCallback(() => setSheetVisible(false), []);
   const swipeableRefsMap = useRef<
     Map<string, React.RefObject<SwipeableMethods | null>>
   >(new Map());
@@ -77,7 +78,7 @@ export function AppHeader() {
         <View className="flex-row items-center justify-between">
           {/* 반려동물 선택 */}
           <Pressable
-            className="flex-row items-center gap-3 flex-1 mr-3"
+            className="flex-row items-center gap-3  mr-3 min-h-[44px] w-fit min-w-[44px] bg-red-50"
             onPress={() => setSheetVisible(true)}
             accessibilityLabel={`반려동물 선택: ${selectedPet?.name ?? '미등록'}`}
             accessibilityRole="button"
@@ -98,26 +99,13 @@ export function AppHeader() {
             <ChevronDown size={12} color={colors.mutedForeground} />
           </Pressable>
 
-          {/* 다크모드 토글 */}
-          <Pressable
-            className="w-11 h-11 rounded-full items-center justify-center"
-            accessibilityLabel={isDark ? '라이트 모드로 전환' : '다크 모드로 전환'}
-            accessibilityRole="button"
-            onPress={toggleColorScheme}
-          >
-            {isDark ? (
-              <Sun size={20} color={colors.foreground} />
-            ) : (
-              <Moon size={20} color={colors.foreground} />
-            )}
-          </Pressable>
         </View>
       </View>
 
       {/* 반려동물 선택 바텀시트 */}
       <BottomSheet
         visible={sheetVisible}
-        onClose={() => setSheetVisible(false)}
+        onClose={closeSheet}
       >
         <View className="gap-2">
           <Typography className="font-semibold mb-1" variant="body-lg">
