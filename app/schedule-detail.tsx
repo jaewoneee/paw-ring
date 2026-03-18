@@ -35,7 +35,7 @@ import {
 } from "@/services/schedule";
 import { isFirstOrLastOccurrence } from "@/utils/rrule";
 import type { Schedule } from "@/types/schedule";
-import { formatTime } from "@/utils/date";
+import { formatTime12 } from "@/utils/dayjs";
 import { formatRRuleLabel } from "@/utils/rrule";
 
 export default function ScheduleDetailScreen() {
@@ -219,7 +219,9 @@ export default function ScheduleDetailScreen() {
   const dateLabel = formatKoreanDate(displayDate);
   const timeLabel = schedule.is_all_day
     ? "종일"
-    : formatTime(schedule.start_date);
+    : schedule.end_date
+      ? `${formatTime12(schedule.start_date)} - ${formatTime12(schedule.end_date)}`
+      : formatTime12(schedule.start_date);
   const reminderLabel =
     REMINDER_OPTIONS.find((r) => r.value === schedule.reminder)?.label ?? "없음";
 

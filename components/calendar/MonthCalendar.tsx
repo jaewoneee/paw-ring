@@ -1,5 +1,5 @@
 import { Text } from '@/components/ui/Text';
-import dayjs, { formatISODate, formatMonthLabel } from '@/utils/dayjs';
+import dayjs, { formatISODate } from '@/utils/dayjs';
 import React, { useCallback, useMemo } from 'react';
 import { Pressable, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -10,7 +10,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { useCategoryContext } from '@/contexts/CategoryContext';
@@ -31,7 +30,6 @@ interface MonthCalendarProps {
   onSelectDate: (date: string) => void;
   onPrevMonth: () => void;
   onNextMonth: () => void;
-  onGoToday: () => void;
 }
 
 export function MonthCalendar({
@@ -42,7 +40,6 @@ export function MonthCalendar({
   onSelectDate,
   onPrevMonth,
   onNextMonth,
-  onGoToday,
 }: MonthCalendarProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
@@ -50,8 +47,6 @@ export function MonthCalendar({
 
   const grid = useMemo(() => getMonthGrid(year, month), [year, month]);
   const today = formatISODate(dayjs());
-  const monthLabel = formatMonthLabel(dayjs().year(year).month(month));
-  const isCurrentMonth = year === dayjs().year() && month === dayjs().month();
 
   // 날짜별 스케줄 그룹핑
   const schedulesByDate = useMemo(() => {
@@ -132,34 +127,7 @@ export function MonthCalendar({
   }));
 
   return (
-    <View className="px-4 pt-2 pb-1">
-      {/* 월 헤더 */}
-      <View className="flex-row items-center justify-center mb-3">
-        <Pressable
-          onPress={onGoToday}
-          className="flex-row items-center gap-1.5"
-          accessibilityLabel="오늘로 이동"
-          accessibilityRole="button"
-        >
-          <Typography variant="body-xl" className="font-semibold">
-            {monthLabel}
-          </Typography>
-          {!isCurrentMonth && (
-            <View
-              className="px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: colors.primary + '18' }}
-            >
-              <Text
-                className="text-xs font-medium"
-                style={{ color: colors.primary }}
-              >
-                오늘
-              </Text>
-            </View>
-          )}
-        </Pressable>
-      </View>
-
+    <View className="px-4 pt-2">
       {/* 요일 헤더 */}
       <View
         className="flex-row mb-1 rounded-lg"
@@ -216,7 +184,7 @@ export function MonthCalendar({
                   <Pressable
                     key={dateStr}
                     onPress={() => onSelectDate(dateStr)}
-                    style={{ width: '14.28%', aspectRatio: 1 }}
+                    style={{ width: '14.28%', height: 44 }}
                     className="items-center justify-center"
                   >
                     <View
@@ -232,7 +200,7 @@ export function MonthCalendar({
                       ]}
                     >
                       <Text
-                        className="text-2xl"
+                        className="text-xl"
                         style={{
                           color: isSelected
                             ? colors.primaryForeground

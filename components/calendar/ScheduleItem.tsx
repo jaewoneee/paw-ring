@@ -16,7 +16,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { useCategoryContext } from '@/contexts/CategoryContext';
 import type { CompletionStatus, Schedule } from '@/types/schedule';
-import { formatISODate, formatTime12 } from '@/utils/dayjs';
+import { formatTime12 } from '@/utils/dayjs';
 
 /** FontAwesome icon name → Lucide component mapping for category icons */
 const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
@@ -169,7 +169,9 @@ export const ScheduleItem = React.memo(function ScheduleItem({
           <View className="flex-1" style={{ opacity: isCompleted ? 0.45 : 1 }}>
             {!schedule.is_all_day && (
               <Typography style={isStacked ? { color: textColor } : undefined}>
-                {`${occurrenceDate ?? formatISODate(schedule.start_date)} ${formatTime12(schedule.start_date)}`}
+                {schedule.end_date
+                  ? `${formatTime12(schedule.start_date)} - ${formatTime12(schedule.end_date)}`
+                  : formatTime12(schedule.start_date)}
               </Typography>
             )}
             <Typography

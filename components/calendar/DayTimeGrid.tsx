@@ -10,13 +10,7 @@ import dayjs, {
   formatTime24,
 } from '@/utils/dayjs';
 import { ChevronDown, ChevronUp } from 'lucide-react-native';
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { LayoutChangeEvent, Pressable, ScrollView, View } from 'react-native';
 
 const HOUR_HEIGHT = 60;
@@ -161,14 +155,7 @@ export function DayTimeGrid({
   };
 
   return (
-    <View className="flex-1">
-      {/* 선택 날짜 레이블 */}
-      <View className="py-2 px-4">
-        <Typography variant="body-md" className="font-semibold text-center">
-          {dateLabel}
-        </Typography>
-      </View>
-
+    <View className="flex-1 pt-2">
       {/* 종일 이벤트 */}
       {allDaySchedules.length > 0 && (
         <AllDaySection
@@ -269,7 +256,8 @@ export function DayTimeGrid({
                 const colWidth =
                   (availableWidth - gap * (totalColumns - 1)) / totalColumns;
                 const blockLeft = gridStart + column * (colWidth + gap);
-                const isBlockCompleted = instance.completionStatus === 'completed';
+                const isBlockCompleted =
+                  instance.completionStatus === 'completed';
 
                 return (
                   <Pressable
@@ -294,7 +282,9 @@ export function DayTimeGrid({
                       className="text-xs font-semibold"
                       style={{
                         color: colors.foreground,
-                        textDecorationLine: isBlockCompleted ? 'line-through' : 'none',
+                        textDecorationLine: isBlockCompleted
+                          ? 'line-through'
+                          : 'none',
                       }}
                       numberOfLines={1}
                     >
@@ -363,7 +353,11 @@ function AllDaySection({
                 variant="body-sm"
                 className="font-medium flex-1"
                 numberOfLines={1}
-                style={isItemCompleted ? { textDecorationLine: 'line-through' } : undefined}
+                style={
+                  isItemCompleted
+                    ? { textDecorationLine: 'line-through' }
+                    : undefined
+                }
               >
                 {s.schedule.title}
               </Typography>

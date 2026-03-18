@@ -46,7 +46,11 @@ function SwipeAction({
   );
 }
 
-export function AppHeader() {
+interface AppHeaderProps {
+  rightActions?: React.ReactNode;
+}
+
+export function AppHeader({ rightActions }: AppHeaderProps) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { pets, sharedPets, selectedPet, selectPet, refreshPets } = usePets();
@@ -78,7 +82,7 @@ export function AppHeader() {
         <View className="flex-row items-center justify-between">
           {/* 반려동물 선택 */}
           <Pressable
-            className="flex-row items-center gap-3  mr-3 min-h-[44px] w-fit min-w-[44px] bg-red-50"
+            className="flex-row items-center gap-3 mr-3 min-h-[44px] flex-1 flex-shrink"
             onPress={() => setSheetVisible(true)}
             accessibilityLabel={`반려동물 선택: ${selectedPet?.name ?? '미등록'}`}
             accessibilityRole="button"
@@ -99,6 +103,11 @@ export function AppHeader() {
             <ChevronDown size={12} color={colors.mutedForeground} />
           </Pressable>
 
+          {rightActions && (
+            <View className="flex-row items-center gap-1">
+              {rightActions}
+            </View>
+          )}
         </View>
       </View>
 

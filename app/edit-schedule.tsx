@@ -115,6 +115,7 @@ export default function EditScheduleScreen() {
       const effectiveStartDate = dayjs(data.start_date);
       setDate(effectiveStartDate.toDate());
       setTime(effectiveStartDate.toDate());
+      setTempTime(effectiveStartDate.toDate());
       setIsAllDay(data.is_all_day);
       setReminder(data.reminder);
       setIsCompletable(data.is_completable ?? false);
@@ -122,10 +123,15 @@ export default function EditScheduleScreen() {
 
       // Restore end date & end time
       if (data.end_date) {
-        setEndDate(dayjs(data.end_date).toDate());
-        setEndTime(dayjs(data.end_date).toDate());
+        const endDateObj = dayjs(data.end_date).toDate();
+        setEndDate(endDateObj);
+        setEndTime(endDateObj);
+        setTempEndTime(endDateObj);
       } else {
+        const fallbackEnd = effectiveStartDate.add(1, 'hour').toDate();
         setEndDate(effectiveStartDate.toDate());
+        setEndTime(fallbackEnd);
+        setTempEndTime(fallbackEnd);
       }
 
       // Restore recurrence
