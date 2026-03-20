@@ -103,13 +103,26 @@
 
 ---
 
-## 7. 사용자 설정 (Settings)
+## 8. 알림 내역 (Notification History)
+
+| #   | 기능                                         | 상태 | 상세 문서                                                      |
+| --- | -------------------------------------------- | ---- | -------------------------------------------------------------- |
+| 8.1 | 알림 내역 화면 (최신순 리스트 + 읽음 처리)   | ✅   | [notification-history.md](./feature/notification-history.md)   |
+| 8.2 | 알림 전체 읽음 처리                          | ✅   | [notification-history.md](./feature/notification-history.md)   |
+| 8.3 | 알림 발송 시 DB 저장 연동                    | ✅   | [notification-history.md](./feature/notification-history.md)   |
+| 8.4 | 탭 바 알림 뱃지 (안 읽은 수 표시)            | ⬜   | [notification-history.md](./feature/notification-history.md)   |
+| 8.5 | 알림에서 스케줄/캘린더로 딥링크              | ⬜   | [notification-history.md](./feature/notification-history.md)   |
+| 8.6 | 알림 종류별 필터                             | ⬜   | [notification-history.md](./feature/notification-history.md)   |
+
+---
+
+## 9. 사용자 설정 (Settings)
 
 | #   | 기능                                   | 상태 | 상세 문서                            |
 | --- | -------------------------------------- | ---- | ------------------------------------ |
-| 7.1 | 프로필 수정 (닉네임, 프로필 이미지)    | ✅   | [settings.md](./feature/settings.md) |
-| 7.2 | 알림 설정 (전체 ON/OFF)                | ✅   | [settings.md](./feature/settings.md) |
-| 7.3 | 앱 정보 / 이용약관 / 개인정보 처리방침 | 🔧   | [settings.md](./feature/settings.md) |
+| 9.1 | 프로필 수정 (닉네임, 프로필 이미지)    | ✅   | [settings.md](./feature/settings.md) |
+| 9.2 | 알림 설정 (전체 ON/OFF)                | ✅   | [settings.md](./feature/settings.md) |
+| 9.3 | 앱 정보 / 이용약관 / 개인정보 처리방침 | 🔧   | [settings.md](./feature/settings.md) |
 
 ---
 
@@ -138,4 +151,12 @@
 - 2.2, 2.3 (반려동물 수정/삭제)
 - 3.5 ~ 3.7, 3.9 ~ 3.11 (스케줄 수정/삭제/완료/카테고리/미실행 추적/커스텀 카테고리)
 - 5.4, 5.5 (공유 멤버 관리)
-- 6.1 ~ 6.3 (설정)
+- 8.1 ~ 8.3 (알림 내역 기본)
+- 9.1 ~ 9.3 (설정)
+
+### Phase 4 - 고도화
+
+> 알림 내역 확장 + 피드 필터
+
+- 8.4 ~ 8.6 (알림 뱃지, 딥링크, 필터)
+- 6.4 (카테고리/기간 필터)
