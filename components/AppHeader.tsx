@@ -1,10 +1,5 @@
 import { useRouter } from 'expo-router';
-import {
-  Check,
-  ChevronDown,
-  PawPrint,
-  Plus,
-} from 'lucide-react-native';
+import { Bell, Check, ChevronDown, PawPrint, Plus } from 'lucide-react-native';
 import React, { createRef, useCallback, useRef, useState } from 'react';
 import { Alert, Image, Pressable, View } from 'react-native';
 import ReanimatedSwipeable, {
@@ -17,6 +12,7 @@ import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { usePets } from '@/contexts/PetContext';
+import { useUnreadNotificationCount } from '@/hooks/useNotificationHistory';
 import { removeShare } from '@/services/sharing';
 
 const ACTION_WIDTH = 72;
@@ -57,6 +53,7 @@ export function AppHeader({ rightActions }: AppHeaderProps) {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
+  const unreadCount = useUnreadNotificationCount();
   const [sheetVisible, setSheetVisible] = useState(false);
   const closeSheet = useCallback(() => setSheetVisible(false), []);
   const swipeableRefsMap = useRef<
@@ -82,7 +79,7 @@ export function AppHeader({ rightActions }: AppHeaderProps) {
         <View className="flex-row items-center justify-between">
           {/* 반려동물 선택 */}
           <Pressable
-            className="flex-row items-center gap-3 mr-3 min-h-[44px] flex-1 flex-shrink"
+            className="flex-row items-center gap-3 mr-3 min-h-[44px] pr-1 flex-shrink w-fit"
             onPress={() => setSheetVisible(true)}
             accessibilityLabel={`반려동물 선택: ${selectedPet?.name ?? '미등록'}`}
             accessibilityRole="button"
@@ -97,25 +94,42 @@ export function AppHeader({ rightActions }: AppHeaderProps) {
                 <PawPrint size={18} color={colors.mutedForeground} />
               </View>
             )}
-            <Typography className="font-semibold" variant="body-lg">
+            <Typography className="font-semibold" variant="body-xl">
               {selectedPet?.name ?? '반려동물을 등록해주세요'}
             </Typography>
             <ChevronDown size={12} color={colors.mutedForeground} />
           </Pressable>
 
-          {rightActions && (
-            <View className="flex-row items-center gap-1">
-              {rightActions}
-            </View>
-          )}
+          <View className="flex-row items-center gap-1">
+            <Pressable
+              onPress={() => router.push('/notifications')}
+              className="w-10 h-10 items-center justify-center"
+              accessibilityLabel="알림"
+              accessibilityRole="button"
+            >
+              <Bell size={18} color={colors.foreground} />
+              {unreadCount > 0 && (
+                <View
+                  className="absolute top-1 right-1 min-w-[16px] h-4 rounded-full items-center justify-center px-1"
+                  style={{ backgroundColor: colors.error }}
+                >
+                  <Typography
+                    variant="body-sm"
+                    className="text-white font-bold"
+                    style={{ fontSize: 10, lineHeight: 14 }}
+                  >
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </Typography>
+                </View>
+              )}
+            </Pressable>
+            {rightActions}
+          </View>
         </View>
       </View>
 
       {/* 반려동물 선택 바텀시트 */}
-      <BottomSheet
-        visible={sheetVisible}
-        onClose={closeSheet}
-      >
+      <BottomSheet visible={sheetVisible} onClose={closeSheet}>
         <View className="gap-2">
           <Typography className="font-semibold mb-1" variant="body-lg">
             반려동물 선택

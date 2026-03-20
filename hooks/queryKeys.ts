@@ -33,4 +33,8 @@ export const queryKeys = {
   invites: {
     detail: (inviteId: string) => ['invites', inviteId] as const,
   },
+  notifications: {
+    all: (userId: string) => ['notifications', userId] as const,
+    unreadCount: (userId: string) => ['notifications', 'unread', userId] as const,
+  },
 } as const;

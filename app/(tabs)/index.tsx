@@ -25,6 +25,7 @@ import { StackedScheduleList } from '@/components/calendar/StackedScheduleList';
 import { HomeScheduleSkeleton } from '@/components/ui/Skeleton';
 import { useCategoryContext } from '@/contexts/CategoryContext';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
+
 import { queryKeys } from '@/hooks/queryKeys';
 import { completeSchedule, getUpcomingSchedules } from '@/services/schedule';
 import type { Schedule } from '@/types/schedule';

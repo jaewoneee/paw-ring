@@ -13,6 +13,9 @@ import { getSchedulesByRange } from "@/services/schedule";
 import { refreshAllNotifications } from "@/utils/notificationScheduler";
 import { isPetNotificationEnabled } from "@/services/petNotification";
 import dayjs, { formatISODate } from "@/utils/dayjs";
+import { createNotification, cleanOldNotifications } from "@/services/notificationHistory";
+import { queryKeys } from "@/hooks/queryKeys";
+import { useQueryClient } from "@tanstack/react-query";
 
 /**
  * 알림 초기화 및 권한 상태 관리 훅
@@ -25,6 +28,7 @@ export function useNotification() {
   const { user, userProfile } = useAuth();
   const { selectedPet } = usePets();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [permissionStatus, setPermissionStatus] =
     useState<Notifications.PermissionStatus | null>(null);
   const [pushToken, setPushToken] = useState<string | null>(null);
@@ -47,6 +51,9 @@ export function useNotification() {
 
       const status = await getNotificationPermissionStatus();
       setPermissionStatus(status);
+
+      // 30일 이상 오래된 알림 정리
+      cleanOldNotifications(user.uid).catch(() => {});
     })();
   }, [user, userProfile?.notification_enabled]);
 
@@ -79,6 +86,23 @@ export function useNotification() {
     notificationListener.current =
       Notifications.addNotificationReceivedListener((notification) => {
         console.log("[Notification] 알림 수신:", notification);
+
+        // 알림 내역 DB에 저장
+        if (user) {
+          const { title, body, data } = notification.request.content;
+          createNotification({
+            userId: user.uid,
+            type: "schedule_reminder",
+            title: title ?? "",
+            body: body ?? undefined,
+            data: (data as Record<string, unknown>) ?? {},
+          })
+            .then(() => {
+              queryClient.invalidateQueries({ queryKey: queryKeys.notifications.all(user.uid) });
+              queryClient.invalidateQueries({ queryKey: queryKeys.notifications.unreadCount(user.uid) });
+            })
+            .catch((err) => console.warn("[Notification] 알림 내역 저장 실패:", err));
+        }
       });
 
     responseListener.current =

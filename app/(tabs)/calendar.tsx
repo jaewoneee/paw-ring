@@ -4,7 +4,7 @@ import dayjs, {
   formatShortMonth,
 } from '@/utils/dayjs';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import {
   AlertCircle,
   Bell,
@@ -13,10 +13,10 @@ import {
   CalendarDays,
   CalendarRange,
   Plus,
+  Settings,
   Share2,
   Tag,
 } from 'lucide-react-native';
-import { useFocusEffect } from 'expo-router';
 import React, {
   useCallback,
   useEffect,
@@ -32,6 +32,7 @@ import { DayTimeGrid } from '@/components/calendar/DayTimeGrid';
 import { MonthCalendar } from '@/components/calendar/MonthCalendar';
 import { WeekCalendar } from '@/components/calendar/WeekCalendar';
 import { Card, CardContent } from '@/components/ui/Card';
+import { Popover, PopoverItem } from '@/components/ui/Popover';
 import { Screen } from '@/components/ui/Screen';
 import { DayScheduleSkeleton } from '@/components/ui/Skeleton';
 import { Typography } from '@/components/ui/Typography';
@@ -242,69 +243,13 @@ export default function CalendarScreen() {
 
   const isOwner = canManageMembers(selectedPet);
 
-  const headerRightActions = useMemo(
-    () => (
-      <>
-        <Pressable
-          onPress={() => router.push('/category-manage')}
-          className="w-10 h-10 items-center justify-center rounded-full"
-          style={{ backgroundColor: colors.surface }}
-          accessibilityLabel="카테고리 관리"
-          accessibilityRole="button"
-        >
-          <Tag size={16} color={colors.mutedForeground} />
-        </Pressable>
-        <Pressable
-          onPress={handleTogglePetNotification}
-          className="w-10 h-10 items-center justify-center rounded-full"
-          style={{ backgroundColor: colors.surface }}
-          accessibilityLabel={
-            petNotificationEnabled ? '알림 끄기' : '알림 켜기'
-          }
-          accessibilityRole="button"
-        >
-          {petNotificationEnabled ? (
-            <Bell size={16} color={colors.primary} />
-          ) : (
-            <BellOff size={16} color={colors.mutedForeground} />
-          )}
-        </Pressable>
-        {isOwner && (
-          <Pressable
-            onPress={() => {
-              if (!selectedPet) return;
-              router.push({
-                pathname: '/pet/sharing',
-                params: { petId: selectedPet.id, petName: selectedPet.name },
-              });
-            }}
-            className="w-10 h-10 items-center justify-center rounded-full"
-            style={{ backgroundColor: colors.surface }}
-            accessibilityLabel="공유 설정"
-            accessibilityRole="button"
-          >
-            <Share2 size={16} color={colors.mutedForeground} />
-          </Pressable>
-        )}
-      </>
-    ),
-    [
-      colors,
-      petNotificationEnabled,
-      isOwner,
-      selectedPet,
-      handleTogglePetNotification,
-      router,
-    ]
-  );
-
-  const handleShareSettings = () => {
+  const handleShareSettings = useCallback(() => {
     if (!selectedPet) return;
     router.push({
       pathname: '/pet/sharing',
       params: { petId: selectedPet.id, petName: selectedPet.name },
     });
-  };
+  }, [selectedPet, router]);
 
   const handleAddSchedule = () => {
     router.push({ pathname: '/add-schedule', params: { date: selectedDate } });
@@ -356,7 +301,7 @@ export default function CalendarScreen() {
     return (
       <Screen edges={['bottom']}>
         <View className="flex-1">
-          <AppHeader rightActions={headerRightActions} />
+          <AppHeader />
 
           {/* 뷰 모드 토글 */}
           <CalendarToolbar
@@ -366,6 +311,11 @@ export default function CalendarScreen() {
             isCurrentPeriod={isCurrentPeriod}
             onGoToday={handleGoToday}
             colors={colors}
+            isOwner={isOwner}
+            onShareSettings={handleShareSettings}
+            onCategoryManage={() => router.push('/category-manage')}
+            petNotificationEnabled={petNotificationEnabled}
+            onTogglePetNotification={handleTogglePetNotification}
           />
 
           <WeekCalendar
@@ -421,7 +371,7 @@ export default function CalendarScreen() {
   return (
     <Screen edges={['bottom']}>
       <View className="flex-1">
-        <AppHeader rightActions={headerRightActions} />
+        <AppHeader />
 
         {/* 뷰 모드 토글 */}
         <CalendarToolbar
@@ -431,6 +381,11 @@ export default function CalendarScreen() {
           isCurrentPeriod={isCurrentPeriod}
           onGoToday={handleGoToday}
           colors={colors}
+          isOwner={isOwner}
+          onShareSettings={handleShareSettings}
+          onCategoryManage={() => router.push('/category-manage')}
+          petNotificationEnabled={petNotificationEnabled}
+          onTogglePetNotification={handleTogglePetNotification}
         />
 
         <MonthCalendar
@@ -501,6 +456,11 @@ function CalendarToolbar({
   isCurrentPeriod,
   onGoToday,
   colors,
+  isOwner,
+  onShareSettings,
+  onCategoryManage,
+  petNotificationEnabled,
+  onTogglePetNotification,
 }: {
   viewMode: CalendarViewMode;
   onChangeMode: (mode: CalendarViewMode) => void;
@@ -508,11 +468,16 @@ function CalendarToolbar({
   isCurrentPeriod: boolean;
   onGoToday: () => void;
   colors: (typeof Colors)['light'] | (typeof Colors)['dark'];
+  isOwner: boolean;
+  onShareSettings: () => void;
+  onCategoryManage: () => void;
+  petNotificationEnabled: boolean;
+  onTogglePetNotification: () => void;
 }) {
   return (
-    <View className="flex-row justify-between items-center px-4 pb-2 ">
+    <View className="flex-row justify-between items-center px-4 pb-2">
       <View className="flex-row items-center gap-2">
-        <Typography variant="body-xl" className="font-semibold">
+        <Typography variant="h3" className="font-semibold ">
           {monthLabel}
         </Typography>
         {!isCurrentPeriod && (
@@ -533,21 +498,67 @@ function CalendarToolbar({
           </Pressable>
         )}
       </View>
-      <Pressable
-        onPress={() => onChangeMode(viewMode === 'month' ? 'week' : 'month')}
-        className="w-9 h-9 items-center justify-center rounded-full bg-surface-elevated"
-        // style={{ backgroundColor: colors.surface }}
-        accessibilityLabel={
-          viewMode === 'month' ? '주간 보기로 전환' : '월간 보기로 전환'
-        }
-        accessibilityRole="button"
-      >
-        {viewMode === 'month' ? (
-          <CalendarRange size={16} color={colors.mutedForeground} />
-        ) : (
-          <CalendarDays size={16} color={colors.mutedForeground} />
+      {/* 우측 tool */}
+      <View className="flex-row items-center gap-2">
+        {/* 공유 설정 (오너만) */}
+        {isOwner && (
+          <Pressable
+            onPress={onShareSettings}
+            className="w-9 h-9 items-center justify-center rounded-full bg-surface-elevated"
+            accessibilityLabel="공유 설정"
+            accessibilityRole="button"
+          >
+            <Share2 size={16} color={colors.mutedForeground} />
+          </Pressable>
         )}
-      </Pressable>
+
+        {/* 캘린더 설정 팝오버 */}
+        <Popover
+          trigger={({ onPress }) => (
+            <Pressable
+              onPress={onPress}
+              className="w-9 h-9 items-center justify-center rounded-full bg-surface-elevated"
+              accessibilityLabel="캘린더 설정"
+              accessibilityRole="button"
+            >
+              <Settings size={16} color={colors.mutedForeground} />
+            </Pressable>
+          )}
+        >
+          <PopoverItem
+            label="카테고리 관리"
+            icon={<Tag size={16} color={colors.mutedForeground} />}
+            onPress={onCategoryManage}
+          />
+          <PopoverItem
+            label={petNotificationEnabled ? '알림 끄기' : '알림 켜기'}
+            icon={
+              petNotificationEnabled ? (
+                <Bell size={16} color={colors.primary} />
+              ) : (
+                <BellOff size={16} color={colors.mutedForeground} />
+              )
+            }
+            onPress={onTogglePetNotification}
+          />
+        </Popover>
+
+        {/* 뷰 모드 전환 */}
+        <Pressable
+          onPress={() => onChangeMode(viewMode === 'month' ? 'week' : 'month')}
+          className="w-9 h-9 items-center justify-center rounded-full bg-surface-elevated"
+          accessibilityLabel={
+            viewMode === 'month' ? '주간 보기로 전환' : '월간 보기로 전환'
+          }
+          accessibilityRole="button"
+        >
+          {viewMode === 'month' ? (
+            <CalendarRange size={16} color={colors.mutedForeground} />
+          ) : (
+            <CalendarDays size={16} color={colors.mutedForeground} />
+          )}
+        </Pressable>
+      </View>
     </View>
   );
 }

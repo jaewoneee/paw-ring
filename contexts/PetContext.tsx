@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback, useState, useEffect } from "react";
+import React, { createContext, useContext, useCallback, useState, useEffect, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { queryKeys } from "@/hooks/queryKeys";
@@ -53,22 +53,29 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     staleTime: 5 * 60 * 1000,
   });
 
-  const sharedPets: SharedPet[] = rawSharedPets.map((s) => ({
-    id: s.pet_id,
-    owner_id: s.owner_id,
-    name: s.pet.name,
-    species: "dog" as const,
-    birth_date: "",
-    profile_image: s.pet.profile_image,
-    created_at: s.created_at,
-    updated_at: s.updated_at,
-    isShared: true as const,
-    shareId: s.id,
-    shareRole: s.role,
-    ownerNickname: s.owner.nickname,
-  }));
+  const sharedPets: SharedPet[] = useMemo(
+    () =>
+      rawSharedPets.map((s) => ({
+        id: s.pet_id,
+        owner_id: s.owner_id,
+        name: s.pet.name,
+        species: "dog" as const,
+        birth_date: "",
+        profile_image: s.pet.profile_image,
+        created_at: s.created_at,
+        updated_at: s.updated_at,
+        isShared: true as const,
+        shareId: s.id,
+        shareRole: s.role,
+        ownerNickname: s.owner.nickname,
+      })),
+    [rawSharedPets]
+  );
 
-  const allPets: PetOrShared[] = [...pets, ...sharedPets];
+  const allPets: PetOrShared[] = useMemo(
+    () => [...pets, ...sharedPets],
+    [pets, sharedPets]
+  );
   const isLoading = (isPetsLoading || isSharedLoading) && !!user;
 
   // 선택된 펫이 없거나 목록에서 사라졌으면 첫 번째로 설정
@@ -76,8 +83,8 @@ export function PetProvider({ children }: { children: React.ReactNode }) {
     if (allPets.length === 0) return; // 쿼리 로딩 중이면 기존 선택 유지
     setSelectedPet((prev) => {
       if (prev) {
-        const updated = allPets.find((p) => p.id === prev.id);
-        if (updated) return updated;
+        const stillExists = allPets.some((p) => p.id === prev.id);
+        if (stillExists) return prev;
       }
       return allPets[0] ?? null;
     });

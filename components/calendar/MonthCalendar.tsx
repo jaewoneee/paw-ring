@@ -127,7 +127,7 @@ export function MonthCalendar({
   }));
 
   return (
-    <View className="px-4 pt-2">
+    <View className=" pt-2">
       {/* 요일 헤더 */}
       <View
         className="flex-row mb-1 rounded-lg"
@@ -136,7 +136,7 @@ export function MonthCalendar({
         {WEEKDAYS.map((day, i) => (
           <View
             key={day}
-            style={{ width: '14.28%' }}
+            style={{ width: `${100 / 7}%` }}
             className="items-center py-1.5"
           >
             <Text
@@ -184,7 +184,7 @@ export function MonthCalendar({
                   <Pressable
                     key={dateStr}
                     onPress={() => onSelectDate(dateStr)}
-                    style={{ width: '14.28%', height: 44 }}
+                    style={{ width: `${100 / 7}%`, height: 44 }}
                     className="items-center justify-center"
                   >
                     <View
