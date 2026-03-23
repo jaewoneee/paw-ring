@@ -110,9 +110,9 @@
 | 8.1 | 알림 내역 화면 (최신순 리스트 + 읽음 처리)   | ✅   | [notification-history.md](./feature/notification-history.md)   |
 | 8.2 | 알림 전체 읽음 처리                          | ✅   | [notification-history.md](./feature/notification-history.md)   |
 | 8.3 | 알림 발송 시 DB 저장 연동                    | ✅   | [notification-history.md](./feature/notification-history.md)   |
-| 8.4 | 탭 바 알림 뱃지 (안 읽은 수 표시)            | ⬜   | [notification-history.md](./feature/notification-history.md)   |
-| 8.5 | 알림에서 스케줄/캘린더로 딥링크              | ⬜   | [notification-history.md](./feature/notification-history.md)   |
-| 8.6 | 알림 종류별 필터                             | ⬜   | [notification-history.md](./feature/notification-history.md)   |
+| 8.4 | 탭 바 알림 뱃지 (안 읽은 수 표시)            | ✅   | [notification-history.md](./feature/notification-history.md)   |
+| 8.5 | 알림에서 스케줄/캘린더로 딥링크              | ✅   | [notification-history.md](./feature/notification-history.md)   |
+| 8.6 | 알림 종류별 필터                             | ✅   | [notification-history.md](./feature/notification-history.md)   |
 
 ---
 

@@ -1,12 +1,13 @@
-import { useCallback, useState } from "react";
-import { FlatList, Pressable, View } from "react-native";
+import { useRouter } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
+import { FlatList, Pressable, ScrollView, View } from "react-native";
 
 import { Screen } from "@/components/ui/Screen";
 import { Typography } from "@/components/ui/Typography";
 import { useColorScheme } from "@/components/useColorScheme";
 import Colors from "@/constants/Colors";
 import { useNotificationHistory } from "@/hooks/useNotificationHistory";
-import type { AppNotification } from "@/types/notification";
+import type { AppNotification, NotificationType } from "@/types/notification";
 import dayjs, { formatISODate } from "@/utils/dayjs";
 
 const TYPE_ICONS: Record<string, string> = {
@@ -14,6 +15,15 @@ const TYPE_ICONS: Record<string, string> = {
   share_invite: "👥",
   share_accepted: "🤝",
 };
+
+type FilterType = "all" | NotificationType;
+
+const FILTERS: { key: FilterType; label: string }[] = [
+  { key: "all", label: "전체" },
+  { key: "schedule_reminder", label: "스케줄" },
+  { key: "share_invite", label: "공유 초대" },
+  { key: "share_accepted", label: "공유 수락" },
+];
 
 function formatTimeLabel(dateStr: string): string {
   const now = dayjs();
@@ -55,12 +65,47 @@ function groupByDate(items: AppNotification[]) {
   return groups;
 }
 
+function navigateToNotification(
+  router: ReturnType<typeof useRouter>,
+  notification: AppNotification,
+) {
+  const { type, data } = notification;
+
+  switch (type) {
+    case "schedule_reminder":
+      if (data.scheduleId) {
+        router.push({
+          pathname: "/schedule-detail",
+          params: {
+            id: data.scheduleId as string,
+            ...(data.occurrenceDate ? { occurrenceDate: data.occurrenceDate as string } : {}),
+          },
+        });
+      }
+      break;
+    case "share_invite":
+      if (data.inviteId) {
+        router.push({
+          pathname: "/invite/[inviteId]",
+          params: { inviteId: data.inviteId as string },
+        });
+      }
+      break;
+    case "share_accepted":
+      // 캘린더 탭으로 이동
+      router.push("/(tabs)/calendar");
+      break;
+  }
+}
+
 export default function NotificationsScreen() {
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === "dark" ? "dark" : "light"];
+  const router = useRouter();
   const { notifications, isLoading, error, refetch, markAsRead, markAllAsRead } =
     useNotificationHistory();
   const [refreshing, setRefreshing] = useState(false);
+  const [filter, setFilter] = useState<FilterType>("all");
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -69,7 +114,11 @@ export default function NotificationsScreen() {
   }, [refetch]);
 
   const hasUnread = notifications.some((n) => !n.is_read);
-  const groups = groupByDate(notifications);
+  const filtered = useMemo(
+    () => filter === "all" ? notifications : notifications.filter((n) => n.type === filter),
+    [notifications, filter],
+  );
+  const groups = groupByDate(filtered);
 
   type FlatItem =
     | { type: "header"; date: string; label: string }
@@ -103,6 +152,7 @@ export default function NotificationsScreen() {
         style={!data.is_read ? { backgroundColor: colors.surface } : undefined}
         onPress={() => {
           if (!data.is_read) markAsRead(data.id);
+          navigateToNotification(router, data);
         }}
       >
         <Typography variant="body-lg" className="mt-0.5">
@@ -148,6 +198,36 @@ export default function NotificationsScreen() {
         )}
       </View>
 
+      {/* 필터 */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+        className="pb-2"
+      >
+        {FILTERS.map((f) => {
+          const active = filter === f.key;
+          return (
+            <Pressable
+              key={f.key}
+              onPress={() => setFilter(f.key)}
+              className="rounded-full px-3 py-1.5"
+              style={{
+                backgroundColor: active ? colors.primary : colors.surface,
+              }}
+            >
+              <Typography
+                variant="body-sm"
+                className="font-medium"
+                style={{ color: active ? "#fff" : colors.mutedForeground }}
+              >
+                {f.label}
+              </Typography>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
       {isLoading ? (
         <View className="flex-1 items-center justify-center">
           <Typography className="text-muted-foreground">불러오는 중...</Typography>
@@ -163,7 +243,7 @@ export default function NotificationsScreen() {
         <View className="flex-1 items-center justify-center gap-2">
           <Typography className="text-4xl">🔔</Typography>
           <Typography className="text-muted-foreground text-center">
-            아직 알림이 없어요
+            {filter === "all" ? "아직 알림이 없어요" : "해당 알림이 없어요"}
           </Typography>
         </View>
       ) : (
