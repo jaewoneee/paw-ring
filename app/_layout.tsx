@@ -175,6 +175,7 @@ function RootLayoutNav() {
             <Stack.Screen name="settings/change-password" options={{ title: '비밀번호 변경' }} />
             <Stack.Screen name="pet/sharing" options={{ title: '캘린더 공유' }} />
             <Stack.Screen name="activity-feed" options={{ title: '활동 기록' }} />
+            <Stack.Screen name="notifications" options={{ title: '알림' }} />
             <Stack.Screen name="invite/[inviteId]" options={{ title: '초대' }} />
           </Stack>
         </View>
