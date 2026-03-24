@@ -31,7 +31,7 @@
 | 2.3 | 스케줄 상세 `getScheduleById` → `useQuery` 전환 | ✅ |
 | 2.4 | 스케줄 수정 — 수정 후 `invalidateQueries` 적용 | ✅ |
 | 2.5 | 스케줄 추가/삭제 → `invalidateQueries` 적용 | ✅ |
-| 2.6 | 완료 토글 → optimistic update + `invalidateQueries` | ✅ |
+| 2.6 | 완료 토글 → `invalidateQueries`만 사용 (낙관적 업데이트 제거) | ✅ |
 | 2.7 | `useFocusEffect` 제거 (staleTime + focusManager로 대체) | ✅ |
 
 ### Phase 3: 반려동물 & 카테고리
@@ -65,7 +65,8 @@
 
 ```
 ['schedules', 'month', petId, year, month]    // 월간 캘린더
-['schedules', 'upcoming', petId]              // 홈 다가오는 일정
+['schedules', 'upcoming', petId]              // 홈 다가오는 일정 (deprecated)
+['schedules', 'week-instances', petId]        // 홈 이번 주 일정
 ['schedules', 'detail', scheduleId]           // 스케줄 상세
 ['pets', userId]                              // 내 반려동물
 ['pets', 'shared', userId]                    // 공유받은 반려동물
@@ -107,13 +108,14 @@
 | 반려동물 | Context `refreshPets()` | `useQuery` (5분 캐시) |
 | 카테고리 | Hook `useEffect` | `useQuery` (5분 캐시) |
 
-### 낙관적 업데이트 대상
+### 낙관적 업데이트 → 제거 완료
 
-| 동작 | 현재 구현 위치 | 전환 후 |
-|------|--------------|---------|
-| 스케줄 완료 토글 (홈) | `index.tsx` 수동 filter + rollback | `useMutation` onMutate/onError |
-| 스케줄 완료 토글 (캘린더) | `useSchedules.ts` updateCompletionStatus | `useMutation` onMutate/onError |
-| 알림 토글 | `calendar.tsx` 수동 toggle + rollback | `useMutation` onMutate/onError |
+낙관적 업데이트(`setQueryData`)는 `useFocusEffect`의 invalidation, prefix 매칭 refetch 등과 충돌하여 캐시 동기화 버그가 반복 발생했음. 체크 토글 등 API 응답이 빠른 작업에서는 UX 차이가 거의 없으므로, **모든 mutation은 API 성공 후 `invalidateQueries`만 호출하는 방식으로 통일.**
+
+| 동작 | 방식 |
+|------|------|
+| 스케줄 완료 토글 (홈/캘린더) | API 호출 → `invalidateQueries(['schedules'])` |
+| 알림 토글 | API 호출 → 로컬 state 반영 |
 
 ### 서비스 함수 (변경 없음)
 
