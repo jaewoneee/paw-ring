@@ -220,8 +220,10 @@ export default function CalendarScreen() {
         } else {
           await completeSchedule(schedule.id, occurrenceDate, user.uid);
         }
-        // 홈 화면 upcoming + 활동 피드 갱신
-        queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
+        // 홈 화면 upcoming + 활동 피드 갱신 (월간 쿼리는 낙관적 업데이트 유지)
+        if (selectedPet?.id) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.schedules.upcoming(selectedPet.id) });
+        }
         if (selectedPet?.id) {
           queryClient.invalidateQueries({
             queryKey: queryKeys.activityFeed.byPet(selectedPet.id),
