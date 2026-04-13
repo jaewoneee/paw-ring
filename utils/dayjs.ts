@@ -87,6 +87,17 @@ export function formatDateLabel(date: dayjs.ConfigType): string {
   return dayjs(date).format('M월 D일 (dd)');
 }
 
+/** 미래 기준 상대 날짜 라벨: "오늘", "내일", "3월 26일 (목)" */
+export function formatFutureDateLabel(date: dayjs.ConfigType): string {
+  const today = formatISODate(dayjs());
+  const tomorrow = formatISODate(dayjs().add(1, 'day'));
+  const target = formatISODate(dayjs(date));
+
+  if (target === today) return '오늘';
+  if (target === tomorrow) return '내일';
+  return dayjs(date).format('M월 D일 (dd)');
+}
+
 // --- 상대 시간 ---
 
 /** 상대 시간: "방금 전", "3분 전", "2시간 전", "3일 전", "1주일 전", "1개월 전" */

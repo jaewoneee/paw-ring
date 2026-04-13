@@ -83,20 +83,20 @@ async function fetchMonthSchedules(petId: string, year: number, month: number): 
     }
   }
 
-  // completion 상태 일괄 조회
+  // completion 상태 일괄 조회 (레코드 존재 = 완료)
   const allScheduleIds = [...new Set(
     instances.filter(i => i.schedule.is_completable).map(i => i.schedule.id)
   )];
   const completions = await getCompletionsByRange(allScheduleIds, start, end);
-  const completionMap = new Map<string, CompletionStatus>();
+  const completedSet = new Set<string>();
   for (const c of completions) {
     const normalizedDate = formatISODate(c.completion_date);
-    completionMap.set(`${c.schedule_id}_${normalizedDate}`, c.status);
+    completedSet.add(`${c.schedule_id}_${normalizedDate}`);
   }
 
   for (const instance of instances) {
     const key = `${instance.schedule.id}_${instance.occurrenceDate}`;
-    instance.completionStatus = completionMap.get(key) ?? null;
+    instance.completionStatus = completedSet.has(key) ? 'completed' : null;
   }
 
   instances.sort((a, b) => {

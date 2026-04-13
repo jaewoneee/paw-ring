@@ -16,7 +16,7 @@ import { useColorScheme } from '@/components/useColorScheme';
 import Colors from '@/constants/Colors';
 import { useCategoryContext } from '@/contexts/CategoryContext';
 import type { CompletionStatus, Schedule } from '@/types/schedule';
-import { formatTime12 } from '@/utils/dayjs';
+import { formatFutureDateLabel, formatTime12 } from '@/utils/dayjs';
 
 /** FontAwesome icon name → Lucide component mapping for category icons */
 const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
@@ -167,13 +167,27 @@ export const ScheduleItem = React.memo(function ScheduleItem({
 
           {/* 내용 */}
           <View className="flex-1" style={{ opacity: isCompleted ? 0.45 : 1 }}>
-            {!schedule.is_all_day && (
-              <Typography style={isStacked ? { color: textColor } : undefined}>
-                {schedule.end_date
-                  ? `${formatTime12(schedule.start_date)} - ${formatTime12(schedule.end_date)}`
-                  : formatTime12(schedule.start_date)}
-              </Typography>
-            )}
+            <View className="flex-row items-center gap-2">
+              {isStacked && occurrenceDate && (
+                <Typography
+                  variant="small"
+                  style={{
+                    color: isStacked
+                      ? (textColor ? textColor + 'B3' : undefined)
+                      : undefined,
+                  }}
+                >
+                  {formatFutureDateLabel(occurrenceDate)}
+                </Typography>
+              )}
+              {!schedule.is_all_day && (
+                <Typography style={isStacked ? { color: textColor } : undefined}>
+                  {schedule.end_date
+                    ? `${formatTime12(schedule.start_date)} - ${formatTime12(schedule.end_date)}`
+                    : formatTime12(schedule.start_date)}
+                </Typography>
+              )}
+            </View>
             <Typography
               variant="body-xl"
               className="font-semibold"

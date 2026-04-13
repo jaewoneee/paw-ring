@@ -6,6 +6,7 @@ import type {
   Schedule,
   ScheduleCompletion,
   ScheduleException,
+  ScheduleInstance,
   UpdateScheduleInput,
 } from "@/types/schedule";
 import { expandRRule } from "@/utils/rrule";
@@ -258,6 +259,177 @@ export async function getUpcomingSchedules(
   // parent_schedule_id 기반 중복 제거:
   // 같은 계열 중 가장 최신(자식) 스케줄만 표시
   return deduplicateByParent(Array.from(map.values()), todayDateStr, oneWeekLaterDateStr, true);
+}
+
+/** 이번 주 스케줄 인스턴스 조회 (홈 화면용, 완료+미완료 모두 포함) */
+export async function getWeekScheduleInstances(
+  petId: string
+): Promise<ScheduleInstance[]> {
+  const todayDateStr = formatISODate(dayjs());
+  const oneWeekLater = dayjs().add(7, "day");
+  const oneWeekLaterDateStr = formatISODate(oneWeekLater);
+  const startOfToday = `${todayDateStr}T00:00:00`;
+  const endOfWeek = `${oneWeekLaterDateStr}T23:59:59`;
+
+  const [schedulesRes, recurringRes] = await Promise.all([
+    supabase
+      .from("schedules")
+      .select("*")
+      .eq("pet_id", petId)
+      .gte("start_date", startOfToday)
+      .lte("start_date", endOfWeek)
+      .order("start_date", { ascending: true }),
+    supabase
+      .from("schedules")
+      .select("*")
+      .eq("pet_id", petId)
+      .eq("is_recurring", true)
+      .lt("start_date", startOfToday)
+      .or(`recurrence_end_date.gte.${todayDateStr},recurrence_end_date.is.null`),
+  ]);
+
+  if (schedulesRes.error) throw schedulesRes.error;
+  if (recurringRes.error) throw recurringRes.error;
+
+  const allSchedules = [
+    ...((schedulesRes.data ?? []) as Schedule[]),
+    ...((recurringRes.data ?? []) as Schedule[]),
+  ];
+
+  // id 기준 중복 제거 + parent 기반 중복 제거
+  const idMap = new Map<string, Schedule>();
+  for (const s of allSchedules) idMap.set(s.id, s);
+  const deduplicated = deduplicateByParent(
+    Array.from(idMap.values()),
+    todayDateStr,
+    oneWeekLaterDateStr,
+    true
+  );
+
+  // 반복 스케줄 예외 조회
+  const recurringIds = deduplicated.filter((s) => s.is_recurring).map((s) => s.id);
+  const exceptions = await getScheduleExceptions(recurringIds);
+  const exceptionMap = new Map<string, ScheduleException>();
+  for (const ex of exceptions) {
+    exceptionMap.set(`${ex.schedule_id}_${ex.exception_date}`, ex);
+  }
+
+  // 인스턴스 확장
+  const instances: ScheduleInstance[] = [];
+
+  for (const schedule of deduplicated) {
+    if (schedule.is_recurring && schedule.rrule) {
+      const occurrences = expandRRule(
+        schedule.start_date,
+        schedule.rrule,
+        todayDateStr,
+        oneWeekLaterDateStr,
+        schedule.recurrence_end_date,
+      );
+      for (const occurrenceDate of occurrences) {
+        const exception = exceptionMap.get(`${schedule.id}_${occurrenceDate}`);
+        if (exception?.type === "deleted") continue;
+
+        const effectiveSchedule =
+          exception?.type === "modified" && exception.modified_fields
+            ? { ...schedule, ...exception.modified_fields }
+            : schedule;
+
+        instances.push({
+          schedule: effectiveSchedule,
+          occurrenceDate,
+          isRecurringInstance: true,
+        });
+      }
+    } else {
+      const sDate = formatISODate(schedule.start_date);
+      const eDate = schedule.end_date ? formatISODate(schedule.end_date) : null;
+
+      if (eDate && eDate !== sDate) {
+        let d = dayjs(sDate);
+        const last = dayjs(eDate);
+        while (!d.isAfter(last, "day")) {
+          const occDate = formatISODate(d);
+          if (occDate >= todayDateStr && occDate <= oneWeekLaterDateStr) {
+            instances.push({
+              schedule,
+              occurrenceDate: occDate,
+              isRecurringInstance: false,
+            });
+          }
+          d = d.add(1, "day");
+        }
+      } else {
+        instances.push({
+          schedule,
+          occurrenceDate: sDate,
+          isRecurringInstance: false,
+        });
+      }
+    }
+  }
+
+  // completion 상태 일괄 조회 (레코드 존재 = 완료)
+  const completableIds = [...new Set(
+    instances.filter((i) => i.schedule.is_completable).map((i) => i.schedule.id)
+  )];
+  const completions = await getCompletionsByRange(completableIds, todayDateStr, oneWeekLaterDateStr);
+  const completedSet = new Set<string>();
+  for (const c of completions) {
+    const normalizedDate = formatISODate(c.completion_date);
+    completedSet.add(`${c.schedule_id}_${normalizedDate}`);
+  }
+
+  for (const instance of instances) {
+    const key = `${instance.schedule.id}_${instance.occurrenceDate}`;
+    instance.completionStatus = completedSet.has(key) ? 'completed' : null;
+  }
+
+  // 반복 스케줄: 스케줄당 가장 가까운 미완료 인스턴스 1개만 유지
+  // 모두 완료된 경우 가장 최근 완료 인스턴스 1개 유지
+  const recurringBest = new Map<string, ScheduleInstance>();
+  const nonRecurring: ScheduleInstance[] = [];
+
+  for (const inst of instances) {
+    if (!inst.isRecurringInstance) {
+      nonRecurring.push(inst);
+      continue;
+    }
+
+    const key = inst.schedule.id;
+    const existing = recurringBest.get(key);
+    const isCompleted = inst.completionStatus === 'completed';
+    const existingCompleted = existing?.completionStatus === 'completed';
+
+    if (!existing) {
+      recurringBest.set(key, inst);
+    } else if (!isCompleted && existingCompleted) {
+      // 미완료가 완료보다 우선
+      recurringBest.set(key, inst);
+    } else if (!isCompleted && !existingCompleted) {
+      // 둘 다 미완료면 날짜가 빠른 것
+      if (inst.occurrenceDate < existing.occurrenceDate) {
+        recurringBest.set(key, inst);
+      }
+    } else if (isCompleted && existingCompleted) {
+      // 둘 다 완료면 날짜가 늦은 것 (가장 최근)
+      if (inst.occurrenceDate > existing.occurrenceDate) {
+        recurringBest.set(key, inst);
+      }
+    }
+  }
+
+  const result = [...nonRecurring, ...recurringBest.values()];
+
+  // occurrenceDate → start_date 오름차순 정렬
+  result.sort((a, b) => {
+    if (a.occurrenceDate !== b.occurrenceDate) {
+      return a.occurrenceDate.localeCompare(b.occurrenceDate);
+    }
+    return a.schedule.start_date.localeCompare(b.schedule.start_date);
+  });
+
+  return result;
 }
 
 /** 특정 스케줄의 특정 날짜 완료 여부 조회 */

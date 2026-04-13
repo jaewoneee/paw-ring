@@ -81,8 +81,7 @@ export default function CalendarScreen() {
     updateCompletionStatus,
   } = useMonthSchedules(selectedPet?.id, year, month);
 
-  // 화면 복귀 시 일정 백그라운드 갱신 (수정/삭제 후 돌아왔을 때)
-  // invalidateQueries: 캐시 데이터를 유지한 채 백그라운드에서 새 데이터 페칭
+  // 화면 복귀 시 일정 갱신 (수정/삭제/완료 변경 후 돌아왔을 때)
   const queryClient = useQueryClient();
   useFocusEffect(
     useCallback(() => {
@@ -220,27 +219,19 @@ export default function CalendarScreen() {
         } else {
           await completeSchedule(schedule.id, occurrenceDate, user.uid);
         }
-        // 홈 화면 upcoming + 활동 피드 갱신 (월간 쿼리는 낙관적 업데이트 유지)
+        // 영향받는 쿼리만 invalidate (홈 화면 동기화)
         if (selectedPet?.id) {
-          queryClient.invalidateQueries({ queryKey: queryKeys.schedules.upcoming(selectedPet.id) });
-        }
-        if (selectedPet?.id) {
-          queryClient.invalidateQueries({
-            queryKey: queryKeys.activityFeed.byPet(selectedPet.id),
-          });
+          queryClient.invalidateQueries({ queryKey: queryKeys.schedules.weekInstances(selectedPet.id) });
+          queryClient.invalidateQueries({ queryKey: queryKeys.activityFeed.byPet(selectedPet.id) });
         }
       } catch (err) {
         // 실패 시 롤백
-        updateCompletionStatus(
-          schedule.id,
-          occurrenceDate,
-          completionStatus ?? null
-        );
+        updateCompletionStatus(schedule.id, occurrenceDate, completionStatus ?? null);
         console.error('[CalendarScreen] toggle complete failed:', err);
         Alert.alert('오류', '완료 상태 변경에 실패했습니다.');
       }
     },
-    [user, updateCompletionStatus]
+    [user, updateCompletionStatus, queryClient, selectedPet?.id]
   );
 
   const isOwner = canManageMembers(selectedPet);

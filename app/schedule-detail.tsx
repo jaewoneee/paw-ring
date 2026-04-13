@@ -100,8 +100,10 @@ export default function ScheduleDetailScreen() {
         await completeSchedule(schedule.id, completionDate, user.uid);
         setIsCompleted(true);
       }
-      queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
+      // 영향받는 쿼리만 invalidate (월간 캘린더 + 홈 주간 + 활동 피드)
+      queryClient.invalidateQueries({ queryKey: ['schedules', 'month'] });
       if (schedule.pet_id) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.schedules.weekInstances(schedule.pet_id) });
         queryClient.invalidateQueries({ queryKey: queryKeys.activityFeed.byPet(schedule.pet_id) });
       }
     } catch (err) {

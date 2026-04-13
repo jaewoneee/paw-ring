@@ -14,6 +14,7 @@ import {
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import React, { useCallback, useState } from 'react';
 import {
+  Alert,
   Pressable,
   RefreshControl,
   ScrollView,
@@ -23,13 +24,12 @@ import {
 import { AppHeader } from '@/components/AppHeader';
 import { StackedScheduleList } from '@/components/calendar/StackedScheduleList';
 import { HomeScheduleSkeleton } from '@/components/ui/Skeleton';
-import { useCategoryContext } from '@/contexts/CategoryContext';
-import { useActivityFeed } from '@/hooks/useActivityFeed';
 
 import { queryKeys } from '@/hooks/queryKeys';
-import { completeSchedule, getUpcomingSchedules } from '@/services/schedule';
-import type { Schedule } from '@/types/schedule';
-import dayjs from '@/utils/dayjs';
+import { completeSchedule, getWeekScheduleInstances } from '@/services/schedule';
+import type { ScheduleInstance } from '@/types/schedule';
+import dayjs, { formatISODate } from '@/utils/dayjs';
+import { expandRRule } from '@/utils/rrule';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -40,28 +40,24 @@ export default function HomeScreen() {
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const queryClient = useQueryClient();
-  const upcomingQueryKey = selectedPet?.id
-    ? queryKeys.schedules.upcoming(selectedPet.id)
-    : ['schedules', 'upcoming', 'disabled'] as const;
+  const weekQueryKey = selectedPet?.id
+    ? queryKeys.schedules.weekInstances(selectedPet.id)
+    : ['schedules', 'week-instances', 'disabled'] as const;
 
   const {
-    data: upcomingSchedules = [],
+    data: weekInstances = [],
     isPending,
     error: queryError,
     refetch,
   } = useQuery({
-    queryKey: upcomingQueryKey,
-    queryFn: () => getUpcomingSchedules(selectedPet!.id),
+    queryKey: weekQueryKey,
+    queryFn: () => getWeekScheduleInstances(selectedPet!.id),
     enabled: !!selectedPet?.id,
     staleTime: 30 * 1000,
   });
 
   const isScheduleLoading = isPending && !!selectedPet?.id;
   const scheduleError = queryError ? '일정을 불러오지 못했습니다' : null;
-
-  const { getCategoryMeta } = useCategoryContext();
-  const { activities, isLoading: isActivityLoading } = useActivityFeed(selectedPet?.id, 5);
-  const isShared = selectedPet && 'isShared' in selectedPet;
 
   const [refreshing, setRefreshing] = useState(false);
 
@@ -72,28 +68,62 @@ export default function HomeScreen() {
   }, [refetch]);
 
   const handleCompleteSchedule = useCallback(
-    async (schedule: Schedule) => {
+    async (instance: ScheduleInstance) => {
       if (!user) return;
-      const scheduleDate = schedule.start_date.split('T')[0];
-      // Optimistic: remove from list immediately
-      queryClient.setQueryData<Schedule[]>(upcomingQueryKey, (prev) =>
-        prev?.filter(s => s.id !== schedule.id)
-      );
-      try {
-        await completeSchedule(schedule.id, scheduleDate, user.uid);
-        // 캘린더 월간 데이터 + 활동 피드 무효화
-        queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
-        queryClient.invalidateQueries({ queryKey: queryKeys.activityFeed.byPet(selectedPet!.id) });
-      } catch {
-        // Rollback on failure
-        queryClient.setQueryData<Schedule[]>(upcomingQueryKey, (prev) =>
-          prev
-            ? [...prev, schedule].sort((a, b) => a.start_date.localeCompare(b.start_date))
-            : [schedule]
+
+      // 낙관적 업데이트 전 스냅샷 저장 (롤백용)
+      const prevData = queryClient.getQueryData<ScheduleInstance[]>(weekQueryKey);
+
+      // 낙관적 업데이트
+      queryClient.setQueryData<ScheduleInstance[]>(weekQueryKey, (prev) => {
+        if (!prev) return prev;
+        const { schedule, occurrenceDate } = instance;
+
+        // 반복 스케줄: 완료된 인스턴스를 다음 미완료 인스턴스로 교체 (서버 best-pick 시뮬레이션)
+        if (instance.isRecurringInstance && schedule.rrule) {
+          const todayStr = formatISODate(dayjs());
+          const weekLaterStr = formatISODate(dayjs().add(7, 'day'));
+          const occurrences = expandRRule(
+            schedule.start_date,
+            schedule.rrule,
+            todayStr,
+            weekLaterStr,
+            schedule.recurrence_end_date,
+          );
+          const nextOccurrence = occurrences.find(d => d > occurrenceDate);
+
+          if (nextOccurrence) {
+            // 다음 미완료 인스턴스로 교체
+            return prev.map(inst =>
+              inst.schedule.id === schedule.id && inst.occurrenceDate === occurrenceDate
+                ? { ...inst, occurrenceDate: nextOccurrence, completionStatus: null }
+                : inst
+            );
+          }
+          // 이번 주 내 더 이상 미완료 없음 → 완료 표시
+        }
+
+        return prev.map(inst =>
+          inst.schedule.id === schedule.id && inst.occurrenceDate === occurrenceDate
+            ? { ...inst, completionStatus: 'completed' as const }
+            : inst
         );
+      });
+
+      try {
+        await completeSchedule(instance.schedule.id, instance.occurrenceDate, user.uid);
+        // 영향받는 쿼리만 invalidate (캘린더 월간 + 활동 피드)
+        queryClient.invalidateQueries({ queryKey: ['schedules', 'month'] });
+        if (selectedPet?.id) {
+          queryClient.invalidateQueries({ queryKey: queryKeys.activityFeed.byPet(selectedPet.id) });
+        }
+      } catch {
+        // 실패 시 스냅샷으로 롤백
+        queryClient.setQueryData<ScheduleInstance[]>(weekQueryKey, prevData);
+        Alert.alert('오류', '완료 상태 변경에 실패했습니다.');
       }
     },
-    [user, queryClient, upcomingQueryKey]
+    [user, queryClient, weekQueryKey, selectedPet?.id]
   );
 
   const greeting = userProfile?.nickname
@@ -146,10 +176,10 @@ export default function HomeScreen() {
             </Card>
           )}
 
-          {/* 다가오는 일정 */}
+          {/* 이번 주 일정 */}
           <View className="gap-1">
             <Typography variant="body-xl" className="font-semibold">
-              다가오는 일정
+              이번 주 일정
             </Typography>
             {isScheduleLoading && !refreshing ? (
               <HomeScheduleSkeleton />
@@ -178,7 +208,7 @@ export default function HomeScreen() {
               </Pressable>
             ) : !isLoggedIn ||
               !selectedPet ||
-              upcomingSchedules.length === 0 ? (
+              weekInstances.length === 0 ? (
               <Card>
                 <CardContent>
                   <View className="items-center py-4 gap-2">
@@ -188,7 +218,7 @@ export default function HomeScreen() {
                       className="text-muted-foreground text-center"
                     >
                       {isLoggedIn
-                        ? '등록된 일정이 없어요\n일정을 추가해보세요'
+                        ? '이번 주 등록된 일정이 없어요\n일정을 추가해보세요'
                         : '로그인 후 일정을 확인할 수 있어요'}
                     </Typography>
                   </View>
@@ -196,75 +226,17 @@ export default function HomeScreen() {
               </Card>
             ) : (
               <StackedScheduleList
-                schedules={upcomingSchedules}
-                onPressSchedule={s =>
+                instances={weekInstances}
+                onPressSchedule={inst =>
                   router.push({
                     pathname: '/schedule-detail',
-                    params: { id: s.id },
+                    params: { id: inst.schedule.id },
                   })
                 }
                 onCompleteSchedule={handleCompleteSchedule}
               />
             )}
           </View>
-
-          {/* 최근 활동 */}
-          {isLoggedIn && selectedPet && activities.length > 0 && (
-            <View className="gap-1">
-              <View className="flex-row items-center justify-between">
-                <Typography variant="body-xl" className="font-semibold">
-                  최근 활동
-                </Typography>
-                <Pressable
-                  onPress={() => router.push('/activity-feed')}
-                  accessibilityLabel="활동 기록 전체 보기"
-                  accessibilityRole="button"
-                >
-                  <Typography variant="body-sm" style={{ color: colors.primary }}>
-                    전체 보기
-                  </Typography>
-                </Pressable>
-              </View>
-              <Card>
-                <CardContent className="py-2">
-                  {activities.map((item, index) => {
-                    const category = getCategoryMeta(item.category_id);
-                    const time = dayjs(item.completed_at).format('HH:mm');
-                    return (
-                      <Pressable
-                        key={item.id}
-                        className={`flex-row items-center py-2.5 gap-3 ${
-                          index < activities.length - 1 ? 'border-b border-border' : ''
-                        }`}
-                        onPress={() =>
-                          router.push({
-                            pathname: '/schedule-detail',
-                            params: { id: item.schedule_id },
-                          })
-                        }
-                      >
-                        <View
-                          className="w-2.5 h-2.5 rounded-full"
-                          style={{ backgroundColor: category.color }}
-                        />
-                        <Typography className="flex-1" variant="body-sm" numberOfLines={1}>
-                          {item.schedule_title}
-                        </Typography>
-                        {isShared && (
-                          <Typography variant="caption" className="text-muted-foreground">
-                            {item.completed_by_nickname}
-                          </Typography>
-                        )}
-                        <Typography variant="caption" className="text-muted-foreground">
-                          {time}
-                        </Typography>
-                      </Pressable>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            </View>
-          )}
         </View>
       </ScrollView>
     </Screen>

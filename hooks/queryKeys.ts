@@ -6,6 +6,8 @@ export const queryKeys = {
       ['schedules', 'month', petId, year, month] as const,
     upcoming: (petId: string) =>
       ['schedules', 'upcoming', petId] as const,
+    weekInstances: (petId: string) =>
+      ['schedules', 'week-instances', petId] as const,
     detail: (id: string) =>
       ['schedules', 'detail', id] as const,
   },
