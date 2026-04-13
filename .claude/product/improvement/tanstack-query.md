@@ -108,14 +108,16 @@
 | 반려동물 | Context `refreshPets()` | `useQuery` (5분 캐시) |
 | 카테고리 | Hook `useEffect` | `useQuery` (5분 캐시) |
 
-### 낙관적 업데이트 → 제거 완료
+### 낙관적 업데이트 → 재도입 (완료 토글)
 
-낙관적 업데이트(`setQueryData`)는 `useFocusEffect`의 invalidation, prefix 매칭 refetch 등과 충돌하여 캐시 동기화 버그가 반복 발생했음. 체크 토글 등 API 응답이 빠른 작업에서는 UX 차이가 거의 없으므로, **모든 mutation은 API 성공 후 `invalidateQueries`만 호출하는 방식으로 통일.**
+초기에는 낙관적 업데이트를 제거하고 `invalidateQueries`만 사용했으나, 완료 체크 시 ~0.2초 딜레이로 즉각 피드백이 없는 문제가 있어 **완료 토글에 한해 낙관적 업데이트를 재도입**함.
 
 | 동작 | 방식 |
 |------|------|
-| 스케줄 완료 토글 (홈/캘린더) | API 호출 → `invalidateQueries(['schedules'])` |
+| 스케줄 완료 토글 (홈/캘린더) | `setQueryData`로 즉시 반영 → API 호출 → 성공 시 `invalidateQueries` → 실패 시 롤백 |
 | 알림 토글 | API 호출 → 로컬 state 반영 |
+
+> 개선 과제: [optimistic-update.md](./optimistic-update.md)
 
 ### 서비스 함수 (변경 없음)
 
