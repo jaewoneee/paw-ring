@@ -50,31 +50,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
 
-      if (firebaseUser) {
-        let profile = await getUserProfile(firebaseUser.uid);
-        // Supabase에 프로필이 없으면 자동 생성 (Firestore → Supabase 마이그레이션 대응)
-        if (!profile) {
-          await createUserProfile(firebaseUser.uid, {
-            email: firebaseUser.email ?? "",
-            nickname: firebaseUser.displayName ?? "사용자",
-            provider: firebaseUser.providerData[0]?.providerId === "google.com"
-              ? "google"
-              : "email",
-            profile_image: firebaseUser.photoURL ?? undefined,
-          });
-          profile = await getUserProfile(firebaseUser.uid);
+      try {
+        if (firebaseUser) {
+          let profile = await getUserProfile(firebaseUser.uid);
+          // Supabase에 프로필이 없으면 자동 생성 (Firestore → Supabase 마이그레이션 대응)
+          if (!profile) {
+            await createUserProfile(firebaseUser.uid, {
+              email: firebaseUser.email ?? "",
+              nickname: firebaseUser.displayName ?? "사용자",
+              provider: firebaseUser.providerData[0]?.providerId === "google.com"
+                ? "google"
+                : "email",
+              profile_image: firebaseUser.photoURL ?? undefined,
+            });
+            profile = await getUserProfile(firebaseUser.uid);
+          }
+          // Firebase emailVerified → Supabase email_verified 동기화
+          if (profile && firebaseUser.emailVerified && !profile.email_verified) {
+            await updateUserProfile(firebaseUser.uid, { email_verified: true });
+            profile = { ...profile, email_verified: true };
+          }
+          setUserProfile(profile);
+        } else {
+          setUserProfile(null);
         }
-        // Firebase emailVerified → Supabase email_verified 동기화
-        if (profile && firebaseUser.emailVerified && !profile.email_verified) {
-          await updateUserProfile(firebaseUser.uid, { email_verified: true });
-          profile = { ...profile, email_verified: true };
-        }
-        setUserProfile(profile);
-      } else {
-        setUserProfile(null);
+      } catch (err) {
+        console.error('[AuthContext] 프로필 로드 실패:', err);
+      } finally {
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     });
 
     return unsubscribe;
