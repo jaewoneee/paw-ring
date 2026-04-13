@@ -8,8 +8,8 @@ import {
   Utensils,
   type LucideIcon,
 } from 'lucide-react-native';
-import React, { useCallback, useRef } from 'react';
-import { Animated, Pressable, View } from 'react-native';
+import React, { useCallback } from 'react';
+import { Pressable, View } from 'react-native';
 
 import { Typography } from '@/components/ui/Typography';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -62,42 +62,13 @@ export const ScheduleItem = React.memo(function ScheduleItem({
   const isStacked = variant === 'stacked';
   const isCompleted = completionStatus === 'completed';
 
-  // slide-out 애니메이션 (stacked variant 전용)
-  const slideAnim = useRef(isStacked ? new Animated.Value(0) : null).current;
-  const isAnimating = useRef(false);
-
   const handleComplete = useCallback(() => {
-    if (!onComplete || isAnimating.current || !slideAnim) return;
-    isAnimating.current = true;
-
-    Animated.timing(slideAnim, {
-      toValue: 1,
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      onComplete(schedule);
-    });
-  }, [onComplete, schedule, slideAnim]);
-
-  const animStyle = slideAnim
-    ? {
-        transform: [
-          {
-            translateX: slideAnim.interpolate({
-              inputRange: [0, 1],
-              outputRange: [0, -400],
-            }),
-          },
-        ],
-        opacity: slideAnim.interpolate({
-          inputRange: [0, 0.5, 1],
-          outputRange: [1, 0.5, 0],
-        }),
-      }
-    : undefined;
+    if (!onComplete) return;
+    onComplete(schedule);
+  }, [onComplete, schedule]);
 
   return (
-    <Animated.View style={animStyle}>
+    <View>
       <Pressable
         onPress={() => onPress(schedule)}
         className="flex-row items-center rounded-xl overflow-hidden"
@@ -209,9 +180,13 @@ export const ScheduleItem = React.memo(function ScheduleItem({
               }}
               hitSlop={8}
               className="w-10 h-10 rounded-full items-center justify-center"
-              style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-              accessibilityLabel={`${schedule.title} 완료`}
-              accessibilityRole="button"
+              style={{
+                backgroundColor: isCompleted
+                  ? 'rgba(255,255,255,0.35)'
+                  : 'rgba(255,255,255,0.2)',
+              }}
+              accessibilityLabel={isCompleted ? `${schedule.title} 완료 취소` : `${schedule.title} 완료`}
+              accessibilityRole="checkbox"
             >
               <Check size={14} color={textColor ?? colors.mutedForeground} />
             </Pressable>
@@ -220,6 +195,6 @@ export const ScheduleItem = React.memo(function ScheduleItem({
           ) : null}
         </View>
       </Pressable>
-    </Animated.View>
+    </View>
   );
 });

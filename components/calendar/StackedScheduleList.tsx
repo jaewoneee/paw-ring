@@ -94,7 +94,6 @@ export function StackedScheduleList({
       <View style={{ gap: EXPANDED_GAP }}>
         {instances.map((inst, index) => {
           const { cardColor, textColor } = getColors(index);
-          const isCompleted = inst.completionStatus === 'completed';
 
           return (
             <ScheduleItem
@@ -106,7 +105,7 @@ export function StackedScheduleList({
               cardColor={cardColor}
               textColor={textColor}
               onPress={() => onPressSchedule(inst)}
-              onComplete={!isCompleted ? (() => onCompleteSchedule?.(inst)) : undefined}
+              onComplete={onCompleteSchedule ? (() => onCompleteSchedule(inst)) : undefined}
             />
           );
         })}
@@ -130,7 +129,6 @@ export function StackedScheduleList({
         {/* 항상 보이는 상위 N개 */}
         {visibleItems.map((inst, index) => {
           const { cardColor, textColor } = getColors(index);
-          const isCompleted = inst.completionStatus === 'completed';
 
           return (
             <View
@@ -151,7 +149,7 @@ export function StackedScheduleList({
                 cardColor={cardColor}
                 textColor={textColor}
                 onPress={() => onPressSchedule(inst)}
-                onComplete={!isCompleted ? (() => onCompleteSchedule?.(inst)) : undefined}
+                onComplete={onCompleteSchedule ? (() => onCompleteSchedule(inst)) : undefined}
               />
             </View>
           );
@@ -161,7 +159,6 @@ export function StackedScheduleList({
         {stackedItems.map((inst, stackIndex) => {
           const globalIndex = VISIBLE_COUNT + stackIndex;
           const { cardColor, textColor } = getColors(globalIndex);
-          const isCompleted = inst.completionStatus === 'completed';
 
           const collapsedTop = visibleHeight + stackIndex * COLLAPSED_VISIBLE;
           const expandedTop = visibleHeight + stackIndex * (CARD_HEIGHT + EXPANDED_GAP);
@@ -198,7 +195,7 @@ export function StackedScheduleList({
                     onPressSchedule(inst);
                   }
                 }}
-                onComplete={!isCompleted ? (() => onCompleteSchedule?.(inst)) : undefined}
+                onComplete={onCompleteSchedule ? (() => onCompleteSchedule(inst)) : undefined}
               />
             </Animated.View>
           );

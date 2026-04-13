@@ -26,10 +26,8 @@ import { StackedScheduleList } from '@/components/calendar/StackedScheduleList';
 import { HomeScheduleSkeleton } from '@/components/ui/Skeleton';
 
 import { queryKeys } from '@/hooks/queryKeys';
-import { completeSchedule, getWeekScheduleInstances } from '@/services/schedule';
+import { completeSchedule, getWeekScheduleInstances, uncompleteSchedule } from '@/services/schedule';
 import type { ScheduleInstance } from '@/types/schedule';
-import dayjs, { formatISODate } from '@/utils/dayjs';
-import { expandRRule } from '@/utils/rrule';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -70,56 +68,38 @@ export default function HomeScreen() {
   const handleCompleteSchedule = useCallback(
     async (instance: ScheduleInstance) => {
       if (!user) return;
-
-      // 낙관적 업데이트 전 스냅샷 저장 (롤백용)
-      const prevData = queryClient.getQueryData<ScheduleInstance[]>(weekQueryKey);
+      const { schedule, occurrenceDate, completionStatus } = instance;
+      const wasCompleted = completionStatus === 'completed';
+      const newStatus = wasCompleted ? null : ('completed' as const);
 
       // 낙관적 업데이트
-      queryClient.setQueryData<ScheduleInstance[]>(weekQueryKey, (prev) => {
-        if (!prev) return prev;
-        const { schedule, occurrenceDate } = instance;
-
-        // 반복 스케줄: 완료된 인스턴스를 다음 미완료 인스턴스로 교체 (서버 best-pick 시뮬레이션)
-        if (instance.isRecurringInstance && schedule.rrule) {
-          const todayStr = formatISODate(dayjs());
-          const weekLaterStr = formatISODate(dayjs().add(7, 'day'));
-          const occurrences = expandRRule(
-            schedule.start_date,
-            schedule.rrule,
-            todayStr,
-            weekLaterStr,
-            schedule.recurrence_end_date,
-          );
-          const nextOccurrence = occurrences.find(d => d > occurrenceDate);
-
-          if (nextOccurrence) {
-            // 다음 미완료 인스턴스로 교체
-            return prev.map(inst =>
-              inst.schedule.id === schedule.id && inst.occurrenceDate === occurrenceDate
-                ? { ...inst, occurrenceDate: nextOccurrence, completionStatus: null }
-                : inst
-            );
-          }
-          // 이번 주 내 더 이상 미완료 없음 → 완료 표시
-        }
-
-        return prev.map(inst =>
+      queryClient.setQueryData<ScheduleInstance[]>(weekQueryKey, (prev) =>
+        prev?.map(inst =>
           inst.schedule.id === schedule.id && inst.occurrenceDate === occurrenceDate
-            ? { ...inst, completionStatus: 'completed' as const }
+            ? { ...inst, completionStatus: newStatus }
             : inst
-        );
-      });
+        )
+      );
 
       try {
-        await completeSchedule(instance.schedule.id, instance.occurrenceDate, user.uid);
-        // 영향받는 쿼리만 invalidate (캘린더 월간 + 활동 피드)
-        queryClient.invalidateQueries({ queryKey: ['schedules', 'month'] });
+        if (wasCompleted) {
+          await uncompleteSchedule(schedule.id, occurrenceDate);
+        } else {
+          await completeSchedule(schedule.id, occurrenceDate, user.uid);
+        }
+        queryClient.invalidateQueries({ queryKey: queryKeys.schedules.all });
         if (selectedPet?.id) {
           queryClient.invalidateQueries({ queryKey: queryKeys.activityFeed.byPet(selectedPet.id) });
         }
       } catch {
-        // 실패 시 스냅샷으로 롤백
-        queryClient.setQueryData<ScheduleInstance[]>(weekQueryKey, prevData);
+        // 실패 시 롤백
+        queryClient.setQueryData<ScheduleInstance[]>(weekQueryKey, (prev) =>
+          prev?.map(inst =>
+            inst.schedule.id === schedule.id && inst.occurrenceDate === occurrenceDate
+              ? { ...inst, completionStatus: completionStatus ?? null }
+              : inst
+          )
+        );
         Alert.alert('오류', '완료 상태 변경에 실패했습니다.');
       }
     },
