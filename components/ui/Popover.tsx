@@ -79,7 +79,9 @@ export function Popover({ trigger, children, width = 200 }: PopoverProps) {
                 },
               ]}
             >
-              {children}
+              <PopoverContext.Provider value={close}>
+                {children}
+              </PopoverContext.Provider>
             </View>
           )}
         </Pressable>
@@ -87,6 +89,8 @@ export function Popover({ trigger, children, width = 200 }: PopoverProps) {
     </>
   );
 }
+
+export const PopoverContext = React.createContext<(() => void) | null>(null);
 
 interface PopoverItemProps {
   label: string;
@@ -96,12 +100,16 @@ interface PopoverItemProps {
 }
 
 export function PopoverItem({ label, icon, right, onPress }: PopoverItemProps) {
+  const closePopover = React.useContext(PopoverContext);
   const { colorScheme } = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   return (
     <Pressable
-      onPress={onPress}
+      onPress={() => {
+        closePopover?.();
+        onPress?.();
+      }}
       className="flex-row items-center px-4 py-3 gap-3"
       style={({ pressed }) => ({
         backgroundColor: pressed ? colors.surface : 'transparent',

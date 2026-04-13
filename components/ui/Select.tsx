@@ -47,7 +47,7 @@ export function Select<T extends string = string>({
         <Pressable
           onPress={open}
           className="flex-row items-center gap-1 rounded-full px-3 py-1.5"
-          style={{ backgroundColor: colors.surface }}
+          style={{ backgroundColor: colors.surfaceElevated }}
         >
           <Typography variant="body-lg" className="font-medium">
             {selectedLabel}
