@@ -10,7 +10,7 @@
 
 ### 기능명이 주어진 경우 (`$ARGUMENTS`가 비어있지 않은 경우)
 
-1. `.claude/product/feature-list.md`에서 해당 기능을 찾는다.
+1. `.claude/product/feature/README.md`에서 해당 기능을 찾는다.
 2. 상세 기획 문서가 있으면 읽어서 요구사항을 파악한다.
 3. 해당 기능과 관련된 코드 파일을 탐색한다 (services, hooks, components, app 등).
 4. 아래 리뷰 체크리스트를 기준으로 코드를 분석한다.
@@ -19,7 +19,7 @@
 
 ### 기능명이 없는 경우 (전체 리뷰)
 
-1. `.claude/product/feature-list.md`에서 ✅ 완료된 기능 목록을 파악한다.
+1. `.claude/product/feature/README.md`에서 ✅ 완료된 기능 목록을 파악한다.
 2. 최근 변경된 파일 위주로 리뷰 대상을 선정한다 (`git diff --name-only HEAD~5`).
 3. 아래 리뷰 체크리스트를 기준으로 코드를 분석한다.
 4. 발견된 개선점을 기능별로 그룹핑하여 사용자에게 보여준다.
